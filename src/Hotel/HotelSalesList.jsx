@@ -244,70 +244,70 @@ const HotelSalesList = () => {
                 <div className="edit-form">
                   <h4>Edit Hotel</h4>
                   <div className="form-grid">
-                    <div className="form-group">
+                    <div className="list-form-group">
                       <label>Hotel Name:</label>
                       <input
                         value={editingHotel.hotelName || ""}
                         onChange={(e) => setEditingHotel({...editingHotel, hotelName: e.target.value})}
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="list-form-group">
                       <label>Country:</label>
                       <input
                         value={editingHotel.country || ""}
                         onChange={(e) => setEditingHotel({...editingHotel, country: e.target.value})}
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="list-form-group">
                       <label>City:</label>
                       <input
                         value={editingHotel.city || ""}
                         onChange={(e) => setEditingHotel({...editingHotel, city: e.target.value})}
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="list-form-group">
                       <label>Address:</label>
                       <input
                         value={editingHotel.address || ""}
                         onChange={(e) => setEditingHotel({...editingHotel, address: e.target.value})}
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="list-form-group">
                       <label>Contact Number:</label>
                       <input
                         value={editingHotel.hotelContactNumber || ""}
                         onChange={(e) => setEditingHotel({...editingHotel, hotelContactNumber: e.target.value})}
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="list-form-group">
                       <label>Sales Person:</label>
                       <input
                         value={editingHotel.salesPersonName || ""}
                         onChange={(e) => setEditingHotel({...editingHotel, salesPersonName: e.target.value})}
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="list-form-group">
                       <label>Sales Email:</label>
                       <input
                         value={editingHotel.salesPersonEmail || ""}
                         onChange={(e) => setEditingHotel({...editingHotel, salesPersonEmail: e.target.value})}
                       />
                     </div>
-                    <div className="form-group">
+                    <div className="list-form-group">
                       <label>Sales Contact:</label>
                       <input
                         value={editingHotel.salesPersonContact || ""}
                         onChange={(e) => setEditingHotel({...editingHotel, salesPersonContact: e.target.value})}
                       />
                     </div>
-                    <div className="form-group full-width">
+                    <div className="list-form-group full-width">
                       <label>Special Remarks:</label>
                       <textarea
                         value={editingHotel.specialRemarks || ""}
                         onChange={(e) => setEditingHotel({...editingHotel, specialRemarks: e.target.value})}
                       />
                     </div>
-                    <div className="form-group full-width">
+                    <div className="list-form-group full-width">
                       <label>Facilities (comma separated):</label>
                       <input
                         value={editingHotel.facilitiesAvailable?.join(", ") || ""}
