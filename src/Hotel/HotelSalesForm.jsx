@@ -8,11 +8,30 @@ import countriesData from '../data/countries.json';
 import citiesData from '../data/cities.json';
 import hotelsData from '../data/hotels.json';
 
+// Import icons
+import { 
+  FaEye, FaEdit, FaTrash, FaSave, FaTimes, 
+  FaSearch, FaFilter, FaCheck, FaInfoCircle 
+} from 'react-icons/fa';
+
 const HotelManagementSystem = () => {
   const [activeTab, setActiveTab] = useState('add');
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  
+  const showNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
+  };
   
   return (
     <div className="hotel-management-system">
+      {/* Notification */}
+      {notification.show && (
+        <div className={`notification ${notification.type}`}>
+          {notification.message}
+        </div>
+      )}
+      
       <div className="tabs">
         <button 
           className={activeTab === 'add' ? 'active' : ''} 
@@ -29,15 +48,15 @@ const HotelManagementSystem = () => {
       </div>
       
       <div className="tab-content">
-        {activeTab === 'add' && <AddHotelTab />}
-        {activeTab === 'view' && <HotelSalesList />}
+        {activeTab === 'add' && <AddHotelTab showNotification={showNotification} />}
+        {activeTab === 'view' && <HotelSalesList showNotification={showNotification} />}
       </div>
     </div>
   );
 };
 
 // Add Hotel Tab Component
-const AddHotelTab = () => {
+const AddHotelTab = ({ showNotification }) => {
   const navigate = useNavigate();
 
   // State for form data
@@ -141,6 +160,8 @@ const AddHotelTab = () => {
       );
 
       if (response.ok) {
+        showNotification("Hotel created successfully!", "success");
+        
         // Ask user if they want to see the list
         const goToList = window.confirm(
           "Hotel Sale saved successfully! Do you want to see the hotel list?"
@@ -183,11 +204,11 @@ const AddHotelTab = () => {
           setHotelSearch('');
         }
       } else {
-        alert("Failed to save hotel sale.");
+        showNotification("Failed to save hotel sale.", "error");
       }
     } catch (error) {
       console.error("Error saving hotel sale:", error);
-      alert("Error saving hotel sale.");
+      showNotification("Error saving hotel sale.", "error");
     }
   };
 
@@ -562,11 +583,11 @@ const AddHotelTab = () => {
 };
 
 // Hotel Sales List Component (Enhanced version)
-const HotelSalesList = () => {
+const HotelSalesList = ({ showNotification }) => {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingHotel, setEditingHotel] = useState(null);
-  const [expandedHotel, setExpandedHotel] = useState(null);
+  const [viewDetailsHotel, setViewDetailsHotel] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
   const [filterCity, setFilterCity] = useState("");
@@ -583,6 +604,7 @@ const HotelSalesList = () => {
       setHotels(data);
     } catch (err) {
       console.error("Error fetching hotels:", err);
+      showNotification("Error fetching hotels", "error");
     }
     setLoading(false);
   };
@@ -598,8 +620,10 @@ const HotelSalesList = () => {
     try {
       await fetch(`${API_URL}/${id}`, { method: "DELETE" });
       setHotels((prev) => prev.filter((h) => h.id !== id));
+      showNotification("Hotel deleted successfully!", "success");
     } catch (err) {
       console.error("Error deleting hotel:", err);
+      showNotification("Error deleting hotel", "error");
     }
   };
 
@@ -613,8 +637,10 @@ const HotelSalesList = () => {
       });
       setEditingHotel(null);
       fetchHotels();
+      showNotification("Hotel updated successfully!", "success");
     } catch (err) {
       console.error("Error updating hotel:", err);
+      showNotification("Error updating hotel", "error");
     }
   };
 
@@ -645,12 +671,6 @@ const HotelSalesList = () => {
     <div className="hotel-sales-list">
       <div className="header-section">
         <h2>Hotel Sales List</h2>
-        {/* <button 
-          onClick={() => navigate("/")} 
-          className="back-btn"
-        >
-          ← Back to Form
-        </button> */}
       </div>
 
       {/* Search and Filters */}
@@ -662,7 +682,7 @@ const HotelSalesList = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <span className="search-icon">🔍</span>
+          <span className="search-icon"><FaSearch /></span>
         </div>
         
         <div className="filter-controls">
@@ -733,169 +753,245 @@ const HotelSalesList = () => {
               <div className="hotel-actions">
                 <button 
                   className="view-details-btn"
-                  onClick={() => setExpandedHotel(expandedHotel === hotel.id ? null : hotel.id)}
+                  onClick={() => setViewDetailsHotel(hotel)}
                 >
-                  {expandedHotel === hotel.id ? "Hide Details" : "View Details"}
+                  <FaEye /> View Details
                 </button>
                 
                 <div className="action-buttons">
                   <button 
                     className="edit-btn"
-                    onClick={() => setEditingHotel(editingHotel?.id === hotel.id ? null : hotel)}
+                    onClick={() => setEditingHotel(hotel)}
                   >
-                    {editingHotel?.id === hotel.id ? "Cancel Edit" : "✏️ Edit"}
+                    <FaEdit /> Edit
                   </button>
                   <button 
                     className="delete-btn"
                     onClick={() => deleteHotel(hotel.id)}
                   >
-                    🗑 Delete
+                    <FaTrash /> Delete
                   </button>
                 </div>
               </div>
-              
-              {/* Expanded Details View */}
-              {expandedHotel === hotel.id && (
-                <div className="hotel-details">
-                  <h4>Hotel Details</h4>
-                  <div className="details-grid">
-                    <div className="detail-item">
-                      <label>Address:</label>
-                      <span>{hotel.address}</span>
-                    </div>
-                    <div className="detail-item">
-                      <label>Contact Number:</label>
-                      <span>{hotel.hotelContactNumber}</span>
-                    </div>
-                    <div className="detail-item">
-                      <label>Sales Contact:</label>
-                      <span>{hotel.salesPersonContact}</span>
-                    </div>
-                    <div className="detail-item">
-                      <label>Reservation Contact:</label>
-                      <span>{hotel.reservationPersonContact}</span>
-                    </div>
-                    <div className="detail-item">
-                      <label>Accounts Person:</label>
-                      <span>{hotel.accountsPersonName} ({hotel.accountsPersonEmail})</span>
-                    </div>
-                    <div className="detail-item">
-                      <label>Reception:</label>
-                      <span>{hotel.receptionPersonName}</span>
-                    </div>
-                    <div className="detail-item">
-                      <label>Concierge:</label>
-                      <span>{hotel.conciergeName}</span>
-                    </div>
-                    <div className="detail-item full-width">
-                      <label>Special Remarks:</label>
-                      <span>{hotel.specialRemarks || "None"}</span>
-                    </div>
-                    <div className="detail-item full-width">
-                      <label>Facilities:</label>
-                      <span>{hotel.facilitiesAvailable?.join(", ") || "None listed"}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Edit Form */}
-              {editingHotel?.id === hotel.id && (
-                <div className="edit-form">
-                  <h4>Edit Hotel</h4>
-                  <div className="form-grid">
-                    <div className="form-group">
-                      <label>Hotel Name:</label>
-                      <input
-                        value={editingHotel.hotelName || ""}
-                        onChange={(e) => setEditingHotel({...editingHotel, hotelName: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Country:</label>
-                      <input
-                        value={editingHotel.country || ""}
-                        onChange={(e) => setEditingHotel({...editingHotel, country: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>City:</label>
-                      <input
-                        value={editingHotel.city || ""}
-                        onChange={(e) => setEditingHotel({...editingHotel, city: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Address:</label>
-                      <input
-                        value={editingHotel.address || ""}
-                        onChange={(e) => setEditingHotel({...editingHotel, address: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Contact Number:</label>
-                      <input
-                        value={editingHotel.hotelContactNumber || ""}
-                        onChange={(e) => setEditingHotel({...editingHotel, hotelContactNumber: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Sales Person:</label>
-                      <input
-                        value={editingHotel.salesPersonName || ""}
-                        onChange={(e) => setEditingHotel({...editingHotel, salesPersonName: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Sales Email:</label>
-                      <input
-                        value={editingHotel.salesPersonEmail || ""}
-                        onChange={(e) => setEditingHotel({...editingHotel, salesPersonEmail: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Sales Contact:</label>
-                      <input
-                        value={editingHotel.salesPersonContact || ""}
-                        onChange={(e) => setEditingHotel({...editingHotel, salesPersonContact: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group full-width">
-                      <label>Special Remarks:</label>
-                      <textarea
-                        value={editingHotel.specialRemarks || ""}
-                        onChange={(e) => setEditingHotel({...editingHotel, specialRemarks: e.target.value})}
-                      />
-                    </div>
-                    <div className="form-group full-width">
-                      <label>Facilities (comma separated):</label>
-                      <input
-                        value={editingHotel.facilitiesAvailable?.join(", ") || ""}
-                        onChange={(e) => setEditingHotel({
-                          ...editingHotel, 
-                          facilitiesAvailable: e.target.value.split(",").map(f => f.trim())
-                        })}
-                      />
-                    </div>
-                  </div>
-                  <div className="form-actions">
-                    <button 
-                      className="save-btn"
-                      onClick={() => saveHotel(editingHotel)}
-                    >
-                      💾 Save Changes
-                    </button>
-                    <button 
-                      className="cancel-btn"
-                      onClick={() => setEditingHotel(null)}
-                    >
-                      ❌ Cancel
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
+        </div>
+      )}
+      
+      {/* View Details Modal */}
+      {viewDetailsHotel && (
+        <div className="modal-overlay" onClick={() => setViewDetailsHotel(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{viewDetailsHotel.hotelName} Details</h3>
+              <button className="close-modal" onClick={() => setViewDetailsHotel(null)}>
+                <FaTimes />
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="details-grid">
+                <div className="detail-item">
+                  <label>Country:</label>
+                  <span>{viewDetailsHotel.country}</span>
+                </div>
+                <div className="detail-item">
+                  <label>City:</label>
+                  <span>{viewDetailsHotel.city}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Address:</label>
+                  <span>{viewDetailsHotel.address}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Contact Number:</label>
+                  <span>{viewDetailsHotel.hotelContactNumber}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Hotel Chain:</label>
+                  <span>{viewDetailsHotel.hotelChain || "N/A"}</span>
+                </div>
+                
+                <h4>Contact Persons</h4>
+                
+                <div className="detail-item">
+                  <label>Sales Person:</label>
+                  <span>{viewDetailsHotel.salesPersonName} ({viewDetailsHotel.salesPersonEmail}) - {viewDetailsHotel.salesPersonContact}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Reservation Person:</label>
+                  <span>{viewDetailsHotel.reservationPersonName} ({viewDetailsHotel.reservationPersonEmail}) - {viewDetailsHotel.reservationPersonContact}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Accounts Person:</label>
+                  <span>{viewDetailsHotel.accountsPersonName} ({viewDetailsHotel.accountsPersonEmail}) - {viewDetailsHotel.accountsPersonContact}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Reception Person:</label>
+                  <span>{viewDetailsHotel.receptionPersonName} ({viewDetailsHotel.receptionPersonEmail}) - {viewDetailsHotel.receptionPersonContact}</span>
+                </div>
+                <div className="detail-item">
+                  <label>Concierge:</label>
+                  <span>{viewDetailsHotel.conciergeName} ({viewDetailsHotel.conciergeEmail}) - {viewDetailsHotel.conciergeContact}</span>
+                </div>
+                
+                <div className="detail-item full-width">
+                  <label>Special Remarks:</label>
+                  <span>{viewDetailsHotel.specialRemarks || "None"}</span>
+                </div>
+                <div className="detail-item full-width">
+                  <label>Facilities:</label>
+                  <span>{viewDetailsHotel.facilitiesAvailable?.join(", ") || "None listed"}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="close-btn" onClick={() => setViewDetailsHotel(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Edit Hotel Modal */}
+      {editingHotel && (
+        <div className="modal-overlay" onClick={() => setEditingHotel(null)}>
+          <div className="modal-content edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Edit {editingHotel.hotelName}</h3>
+              <button className="close-modal" onClick={() => setEditingHotel(null)}>
+                <FaTimes />
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Hotel Name:</label>
+                  <input
+                    value={editingHotel.hotelName || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, hotelName: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Country:</label>
+                  <input
+                    value={editingHotel.country || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, country: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>City:</label>
+                  <input
+                    value={editingHotel.city || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, city: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Address:</label>
+                  <input
+                    value={editingHotel.address || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, address: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Contact Number:</label>
+                  <input
+                    value={editingHotel.hotelContactNumber || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, hotelContactNumber: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Hotel Chain:</label>
+                  <input
+                    value={editingHotel.hotelChain || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, hotelChain: e.target.value})}
+                  />
+                </div>
+                
+                <h4>Contact Persons</h4>
+                
+                <div className="form-group">
+                  <label>Sales Person:</label>
+                  <input
+                    value={editingHotel.salesPersonName || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, salesPersonName: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Sales Email:</label>
+                  <input
+                    value={editingHotel.salesPersonEmail || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, salesPersonEmail: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Sales Contact:</label>
+                  <input
+                    value={editingHotel.salesPersonContact || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, salesPersonContact: e.target.value})}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Reservation Person:</label>
+                  <input
+                    value={editingHotel.reservationPersonName || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, reservationPersonName: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Reservation Email:</label>
+                  <input
+                    value={editingHotel.reservationPersonEmail || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, reservationPersonEmail: e.target.value})}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Reservation Contact:</label>
+                  <input
+                    value={editingHotel.reservationPersonContact || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, reservationPersonContact: e.target.value})}
+                  />
+                </div>
+                
+                <div className="form-group full-width">
+                  <label>Special Remarks:</label>
+                  <textarea
+                    value={editingHotel.specialRemarks || ""}
+                    onChange={(e) => setEditingHotel({...editingHotel, specialRemarks: e.target.value})}
+                  />
+                </div>
+                <div className="form-group full-width">
+                  <label>Facilities (comma separated):</label>
+                  <input
+                    value={editingHotel.facilitiesAvailable?.join(", ") || ""}
+                    onChange={(e) => setEditingHotel({
+                      ...editingHotel, 
+                      facilitiesAvailable: e.target.value.split(",").map(f => f.trim())
+                    })}
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button 
+                className="save-btn"
+                onClick={() => saveHotel(editingHotel)}
+              >
+                <FaSave /> Save Changes
+              </button>
+              <button 
+                className="cancel-btn"
+                onClick={() => setEditingHotel(null)}
+              >
+                <FaTimes /> Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
