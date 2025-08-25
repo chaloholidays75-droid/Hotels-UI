@@ -638,7 +638,9 @@ const HotelSalesForm = () => {
 
         <button type="submit" className="submit-btn">Submit Form</button>
 
-        <button
+
+      </form>
+                  <button
           type="button"
           className="view-list-btn"
           onClick={() => navigate("/list")}
@@ -647,7 +649,6 @@ const HotelSalesForm = () => {
           View Hotel List
         </button>
 
-      </form>
     </div>
   );
 };
