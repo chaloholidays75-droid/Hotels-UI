@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './HotelSalesForm.css';
 import { createHotelSale} from '../api.js';
+import { useNavigate } from "react-router-dom";
 
 // Import JSON files (assuming they're in the same directory)
 import countriesData from '../data/countries.json';
@@ -8,6 +9,8 @@ import citiesData from '../data/cities.json';
 import hotelsData from '../data/hotels.json';
 
 const HotelSalesForm = () => {
+  const navigate = useNavigate();
+
   // State for form data
   const [formData, setFormData] = useState({
     country: '',
@@ -635,14 +638,15 @@ const HotelSalesForm = () => {
 
         <button type="submit" className="submit-btn">Submit Form</button>
 
-         <button
-         
-        className="view-list-btn"
-        onClick={() => navigate("/list")}
-        style={{ marginTop: "20px" }}
-      >
-        View Hotel List
-      </button>
+        <button
+          type="button"
+          className="view-list-btn"
+          onClick={() => navigate("/list")}
+          style={{ marginTop: "20px" }}
+        >
+          View Hotel List
+        </button>
+
       </form>
     </div>
   );
