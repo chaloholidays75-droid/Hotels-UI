@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './HotelSalesForm.css';
-import { createHotelSale} from '../api.js';
+import { createHotelSale } from '../api.js';
 import { useNavigate } from "react-router-dom";
 
 // Import JSON files (assuming they're in the same directory)
@@ -8,7 +8,36 @@ import countriesData from '../data/countries.json';
 import citiesData from '../data/cities.json';
 import hotelsData from '../data/hotels.json';
 
-const HotelSalesForm = () => {
+const HotelManagementSystem = () => {
+  const [activeTab, setActiveTab] = useState('add');
+  
+  return (
+    <div className="hotel-management-system">
+      <div className="tabs">
+        <button 
+          className={activeTab === 'add' ? 'active' : ''} 
+          onClick={() => setActiveTab('add')}
+        >
+          Add Hotel
+        </button>
+        <button 
+          className={activeTab === 'view' ? 'active' : ''} 
+          onClick={() => setActiveTab('view')}
+        >
+          View Hotels
+        </button>
+      </div>
+      
+      <div className="tab-content">
+        {activeTab === 'add' && <AddHotelTab />}
+        {activeTab === 'view' && <ViewHotelsTab />}
+      </div>
+    </div>
+  );
+};
+
+// Add Hotel Tab Component
+const AddHotelTab = () => {
   const navigate = useNavigate();
 
   // State for form data
@@ -160,7 +189,6 @@ const HotelSalesForm = () => {
       alert("Error saving hotel sale.");
     }
   };
-
 
   // Handle country selection
   const handleCountrySelect = (code, name) => {
@@ -330,7 +358,7 @@ const HotelSalesForm = () => {
 
   return (
     <div className="hotel-form-container">
-      <h2>Hotel Information Form</h2>
+      <h2>Add Hotel Information</h2>
       <form onSubmit={handleSubmit}>
         {/* Hotel Information Section */}
         <div className="form-section">
@@ -451,7 +479,7 @@ const HotelSalesForm = () => {
                     className="dropdown-option manual-option"
                     onClick={handleManualHotel}
                   >
-                    <div className="hotel-name">Use "{hotelSearch}" as hotel name</div>
+                    <div className="hotel-name">Use " {hotelSearch} " as hotel name</div>
                     <div className="hotel-address">Enter address manually</div>
                   </div>
                 )}
@@ -487,7 +515,7 @@ const HotelSalesForm = () => {
               value={formData.address}
               onChange={handleChange}
               placeholder="Hotel address"
-              readOnly={isHotelFromDatabase}  // ✅ fixed
+              readOnly={isHotelFromDatabase}
               required
             />
             {isHotelFromDatabase && (
@@ -496,9 +524,6 @@ const HotelSalesForm = () => {
               </div>
             )}
           </div>
-
-        
-
         </div>
 
         {/* Contact Persons Section */}
@@ -512,28 +537,6 @@ const HotelSalesForm = () => {
           {renderContactSection("Concierge", "concierge")}
         </div>
 
-        {/* Credit Information Section */}
-        {/* <div className="form-section">
-          <h3>Credit Information</h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="creditCategory">Credit Category:</label>
-              <select
-                id="creditCategory"
-                name="creditCategory"
-                value={formData.creditCategory}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Category</option>
-                <option value="standard">Standard</option>
-                <option value="premium">Premium</option>
-                <option value="vip">VIP</option>
-              </select>
-            </div>
-          </div>
-        </div> */}
-
         {/* Special Remarks Section */}
         <div className="form-section">
           <h3>Special Remarks</h3>
@@ -546,27 +549,66 @@ const HotelSalesForm = () => {
               onChange={handleChange}
               placeholder="Enter any special remarks or notes about this hotel"
               rows="4"
-              cols="7"
             />
           </div>
         </div>
 
-
         <button type="submit" className="submit-btn">Submit Form</button>
-
-
       </form>
-                  <button
-          type="button"
-          className="view-list-btn"
-          onClick={() => navigate("/list")}
-          style={{ marginTop: "20px" }}
-        >
-          View Hotel List
-        </button>
-
     </div>
   );
 };
 
-export default HotelSalesForm;
+// View Hotels Tab Component
+const ViewHotelsTab = () => {
+  const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchHotels = async () => {
+      try {
+        const response = await fetch("https://hotels-8v0p.onrender.com/api/hotelsales");
+        if (!response.ok) {
+          throw new Error('Failed to fetch hotels');
+        }
+        const data = await response.json();
+        setHotels(data);
+        setLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setLoading(false);
+      }
+    };
+
+    fetchHotels();
+  }, []);
+
+  if (loading) return <div className="loading">Loading hotels...</div>;
+  if (error) return <div className="error">Error: {error}</div>;
+
+  return (
+    <div className="view-hotels-container">
+      <h2>View Hotels</h2>
+      {hotels.length === 0 ? (
+        <p>No hotels found. Add some hotels using the "Add Hotel" tab.</p>
+      ) : (
+        <div className="hotels-list">
+          {hotels.map(hotel => (
+            <div key={hotel._id || hotel.id} className="hotel-card">
+              <h3>{hotel.hotelName}</h3>
+              <p><strong>Country:</strong> {hotel.country}</p>
+              <p><strong>City:</strong> {hotel.city}</p>
+              <p><strong>Address:</strong> {hotel.address}</p>
+              <p><strong>Contact:</strong> {hotel.hotelContactNumber}</p>
+              <p><strong>Sales Person:</strong> {hotel.salesPersonName} ({hotel.salesPersonEmail})</p>
+              <button className="view-details-btn">View Details</button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default HotelManagementSystem;
