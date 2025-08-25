@@ -555,6 +555,14 @@ const AddHotelTab = () => {
 
         <button type="submit" className="submit-btn">Submit Form</button>
       </form>
+                        <button
+          type="button"
+          className="view-list-btn"
+          onClick={() => navigate("/list")}
+          style={{ marginTop: "20px" }}
+        >
+          View Hotel List
+        </button>
     </div>
   );
 };
