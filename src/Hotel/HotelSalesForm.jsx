@@ -546,6 +546,7 @@ const HotelSalesForm = () => {
               onChange={handleChange}
               placeholder="Enter any special remarks or notes about this hotel"
               rows="4"
+              cols="7"
             />
           </div>
         </div>
