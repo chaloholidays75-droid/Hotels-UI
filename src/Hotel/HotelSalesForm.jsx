@@ -645,12 +645,12 @@ const HotelSalesList = () => {
     <div className="hotel-sales-list">
       <div className="header-section">
         <h2>Hotel Sales List</h2>
-        <button 
+        {/* <button 
           onClick={() => navigate("/")} 
           className="back-btn"
         >
           ← Back to Form
-        </button>
+        </button> */}
       </div>
 
       {/* Search and Filters */}
