@@ -158,10 +158,6 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
 
 // Add Hotel Tab Component
 const AddHotelTab = ({ showNotification }) => {
-  const facilitiesOptions = [
-    'Wi-Fi', 'Pool', 'Gym', 'Spa', 'Restaurant', 'Bar', 'Parking', 
-    'Conference Rooms', 'Room Service', 'Pet Friendly', 'Airport Shuttle'
-  ];
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     country: '',
@@ -365,12 +361,7 @@ const AddHotelTab = ({ showNotification }) => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     if (type === 'checkbox') {
-      setFormData(prev => ({
-        ...prev,
-        facilitiesAvailable: checked 
-          ? [...prev.facilitiesAvailable, name]
-          : prev.facilitiesAvailable.filter(item => item !== name)
-      }));
+     
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -598,7 +589,7 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
           </div>
 
-          <div className="form-group">
+          {/* <div className="form-group">
             <label>Facilities Available</label>
             <div className="facilities-grid">
               {facilitiesOptions.map(facility => (
@@ -614,7 +605,7 @@ const AddHotelTab = ({ showNotification }) => {
                 </label>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="form-section">
@@ -850,10 +841,10 @@ const HotelSalesList = ({ showNotification }) => {
 
   const API_URL = "https://hotels-8v0p.onrender.com/api/hotelsales";
 
-  const facilitiesOptions = [
-    'Wi-Fi', 'Pool', 'Gym', 'Spa', 'Restaurant', 'Bar', 'Parking', 
-    'Conference Rooms', 'Room Service', 'Pet Friendly', 'Airport Shuttle'
-  ];
+  // const facilitiesOptions = [
+  //   'Wi-Fi', 'Pool', 'Gym', 'Spa', 'Restaurant', 'Bar', 'Parking', 
+  //   'Conference Rooms', 'Room Service', 'Pet Friendly', 'Airport Shuttle'
+  // ];
 
   const fetchHotels = async () => {
     setLoading(true);
@@ -1234,7 +1225,7 @@ const HotelSalesList = ({ showNotification }) => {
               </div>
             </div>
             
-            {viewHotel.facilitiesAvailable?.length > 0 && (
+            {/* {viewHotel.facilitiesAvailable?.length > 0 && (
               <div className="modal-section">
                 <h4><FaStar /> Facilities Available</h4>
                 <div className="facilities-list">
@@ -1243,7 +1234,7 @@ const HotelSalesList = ({ showNotification }) => {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
             
             <div className="modal-section">
               <h4><FaUserTie /> Contact Persons</h4>
@@ -1326,7 +1317,7 @@ const HotelSalesList = ({ showNotification }) => {
         )}
       </Modal>
       
-      <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel Information" size="large">
+      {/* <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel Information" size="large">
         {editingHotel && (
           <EditHotelForm 
             hotel={editingHotel} 
@@ -1335,13 +1326,13 @@ const HotelSalesList = ({ showNotification }) => {
             facilitiesOptions={facilitiesOptions}
           />
         )}
-      </Modal>
+      </Modal> */}
     </div>
   );
 };
 
 // Edit Hotel Form Component
-const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
+const EditHotelForm = ({ hotel, onSave, onCancel}) => {
   const [formData, setFormData] = useState(hotel);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -1380,14 +1371,14 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
     }));
   };
 
-  const toggleFacility = (facility) => {
-    setFormData(prev => ({
-      ...prev,
-      facilitiesAvailable: prev.facilitiesAvailable.includes(facility)
-        ? prev.facilitiesAvailable.filter(f => f !== facility)
-        : [...prev.facilitiesAvailable, facility]
-    }));
-  };
+  // const toggleFacility = (facility) => {
+  //   setFormData(prev => ({
+  //     ...prev,
+  //     facilitiesAvailable: prev.facilitiesAvailable.includes(facility)
+  //       ? prev.facilitiesAvailable.filter(f => f !== facility)
+  //       : [...prev.facilitiesAvailable, facility]
+  //   }));
+  // };
 
   return (
     <div className="edit-hotel-form">
@@ -1444,7 +1435,7 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
           </div>
         </div>
 
-        <div className="form-group">
+        {/* <div className="form-group">
           <label>Facilities Available</label>
           <div className="facilities-grid">
             {facilitiesOptions.map(facility => (
@@ -1459,7 +1450,7 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
               </label>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
       
       <div className="form-section">
