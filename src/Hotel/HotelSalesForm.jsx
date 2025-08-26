@@ -186,10 +186,7 @@ const AddHotelTab = ({ showNotification }) => {
   const citiesByCountry = citiesData;
   const hotelsInCity = formData.city ? hotelsData[formData.city] || [] : [];
 
-  const facilitiesOptions = [
-    'Wi-Fi', 'Pool', 'Gym', 'Spa', 'Restaurant', 'Bar', 'Parking', 
-    'Conference Rooms', 'Room Service', 'Pet Friendly', 'Airport Shuttle'
-  ];
+
 
   const getCurrentPhoneCode = () => {
     const country = countries.find(c => c.code === formData.countryCode);
@@ -359,9 +356,9 @@ const AddHotelTab = ({ showNotification }) => {
     if (type === 'checkbox') {
       setFormData(prev => ({
         ...prev,
-        facilitiesAvailable: checked 
-          ? [...prev.facilitiesAvailable, name]
-          : prev.facilitiesAvailable.filter(item => item !== name)
+        // facilitiesAvailable: checked 
+        //   ? [...prev.facilitiesAvailable, name]
+        //   : prev.facilitiesAvailable.filter(item => item !== name)
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -590,7 +587,7 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
           </div>
 
-          <div className="form-group">
+          {/* <div className="form-group">
             <label><FaStar /> Facilities Available</label>
             <div className="facilities-grid">
               {facilitiesOptions.map(facility => (
@@ -606,7 +603,7 @@ const AddHotelTab = ({ showNotification }) => {
                 </label>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         <div className="form-section">
