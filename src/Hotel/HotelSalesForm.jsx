@@ -22,6 +22,7 @@ const HotelManagementSystem = () => {
     setNotification({ show: true, message, type });
     setTimeout(() => setNotification({ show: false, message: '', type: '' }), 5000);
   }, []);
+  const facilitiesOptions = [];
 
   return (
     <div className="hotel-management-system">
