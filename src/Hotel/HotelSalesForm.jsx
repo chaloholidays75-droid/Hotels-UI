@@ -11,7 +11,7 @@ import {
   FaMoneyCheckAlt, FaReceipt, FaConciergeBell, FaChevronDown, FaFilter,FaCalendar,
   FaSort, FaSortUp, FaSortDown, FaEllipsisV, FaExternalLinkAlt,FaHotel,FaUsers,FaGlobe
 } from 'react-icons/fa';
-// import './HotelManagementSystem.css';
+import './HotelManagementSystem.css';
 
 // Main Component
 const HotelManagementSystem = () => {
