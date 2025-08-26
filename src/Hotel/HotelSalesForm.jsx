@@ -1,20 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './HotelSalesForm.css';
-import { createHotelSale } from '../api.js';
 import { useNavigate } from "react-router-dom";
 
-// Import JSON files (assuming they're in the same directory)
+// Import JSON files
 import countriesData from '../data/countries.json';
 import citiesData from '../data/cities.json';
 import hotelsData from '../data/hotels.json';
 
-// Import icons
+// Import icons (centralized import, used where needed)
 import { 
   FaEye, FaEdit, FaTrash, FaSearch, FaTimes, 
   FaSave, FaTimesCircle, FaCheckCircle, FaInfoCircle,
   FaPhone, FaEnvelope, FaMapMarkerAlt, FaBuilding,
   FaUserTie, FaClipboardList, FaConciergeBell,
-  FaReceipt, FaMoneyCheckAlt, FaStar
+  FaReceipt, FaMoneyCheckAlt, FaStar, FaPlus, FaMinus
 } from 'react-icons/fa';
 
 const HotelManagementSystem = () => {
@@ -59,11 +58,71 @@ const HotelManagementSystem = () => {
   );
 };
 
-// Add Hotel Tab Component
+// Contact Person Component (to reduce repetition)
+const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCode }) => (
+  <div className="contact-person-fields">
+    <div className="form-group">
+      <label>Name:</label>
+      <input
+        type="text"
+        value={person.name}
+        onChange={(e) => onChange(index, 'name', e.target.value)}
+        required
+      />
+    </div>
+    <div className="form-group">
+      <label>Email:</label>
+      <input
+        type="email"
+        value={person.email}
+        onChange={(e) => onChange(index, 'email', e.target.value)}
+        required
+      />
+    </div>
+    <div className="form-group">
+      <label>Contact:</label>
+      <input
+        type="tel"
+        value={person.contact}
+        onChange={(e) => onChange(index, 'contact', e.target.value)}
+        placeholder={`${phoneCode} XXX XXX XXXX`}
+        required
+      />
+    </div>
+    {index > 0 && (
+      <button type="button" className="remove-person-btn" onClick={() => onRemove(index)}>
+        <FaMinus /> Remove
+      </button>
+    )}
+  </div>
+);
+
+// Contact Role Section (handles multiple persons per role)
+const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, phoneCode, icon }) => (
+  <div className="contact-section">
+    <h4>{icon} {title}</h4>
+    {persons.map((person, index) => (
+      <ContactPersonFields 
+        key={index} 
+        person={person} 
+        onChange={(idx, field, value) => onChange(role, idx, field, value)} 
+        onRemove={(idx) => onRemove(role, idx)}
+        index={index}
+        role={role}
+        phoneCode={phoneCode}
+      />
+    ))}
+    <button type="button" className="add-person-btn" onClick={() => onAdd(role)}>
+      <FaPlus /> Add {title}
+    </button>
+  </div>
+);
+
+// Add Hotel Tab Component (refactored for multiple persons per role)
 const AddHotelTab = ({ showNotification }) => {
   const navigate = useNavigate();
 
-  // State for form data
+  // Updated formData to use arrays for contact persons
   const [formData, setFormData] = useState({
     country: '',
     countryCode: '',
@@ -72,29 +131,17 @@ const AddHotelTab = ({ showNotification }) => {
     hotelContactNumber: '',
     address: '',
     hotelChain: '',
-    // Contact persons
-    salesPersonName: '',
-    salesPersonEmail: '',
-    salesPersonContact: '',
-    reservationPersonName: '',
-    reservationPersonEmail: '',
-    reservationPersonContact: '',
-    accountsPersonName: '',
-    accountsPersonEmail: '',
-    accountsPersonContact: '',
-    receptionPersonName: '',
-    receptionPersonEmail: '',
-    receptionPersonContact: '',
-    conciergeName: '',
-    conciergeEmail: '',
-    conciergeContact: '',
-    // Credit and facilities
+    salesPersons: [{ name: '', email: '', contact: '' }],
+    reservationPersons: [{ name: '', email: '', contact: '' }],
+    accountsPersons: [{ name: '', email: '', contact: '' }],
+    receptionPersons: [{ name: '', email: '', contact: '' }],
+    concierges: [{ name: '', email: '', contact: '' }],
     creditCategory: '',
     specialRemarks: '',
     facilitiesAvailable: []
   });
 
-  // State for dropdowns
+  // Dropdown states remain the same
   const [countrySearch, setCountrySearch] = useState('');
   const [citySearch, setCitySearch] = useState('');
   const [hotelSearch, setHotelSearch] = useState('');
@@ -102,27 +149,21 @@ const AddHotelTab = ({ showNotification }) => {
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [showHotelDropdown, setShowHotelDropdown] = useState(false);
   const [error, setError] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
 
-  // Refs for dropdown containers
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
   const hotelDropdownRef = useRef(null);
 
-  // Use imported data
   const countries = countriesData;
   const citiesByCountry = citiesData;
-  const hotels = hotelsData;
-
-  // Get hotels for the selected city, default to empty array
   const hotelsInCity = formData.city ? hotelsData[formData.city] || [] : [];
 
-  // Get current country's phone code
   const getCurrentPhoneCode = () => {
     const country = countries.find(c => c.code === formData.countryCode);
-    return country ? country.phoneCode : '+1'; // Default to US code
+    return country ? country.phoneCode : '+1';
   };
 
-  // Filter functions
   const filteredCountries = countries.filter(country => 
     country.name.toLowerCase().includes(countrySearch.toLowerCase())
   );
@@ -138,20 +179,36 @@ const AddHotelTab = ({ showNotification }) => {
     hotel.address.toLowerCase().includes(hotelSearch.toLowerCase())
   );
 
-  // Highlight matching text
   const highlightText = (text, search) => {
     if (!search) return text;
-    
     const regex = new RegExp(`(${search})`, 'gi');
     const parts = text.split(regex);
-    
     return parts.map((part, index) => 
       regex.test(part) ? <span key={index} className="highlight">{part}</span> : part
     );
   };
 
+  // Validate form
+  const validateForm = () => {
+    const errors = {};
+    if (!formData.country) errors.country = 'Country is required';
+    if (!formData.city) errors.city = 'City is required';
+    if (!formData.hotelName) errors.hotelName = 'Hotel name is required';
+    if (!formData.address) errors.address = 'Address is required';
+    // Validate at least one sales person
+    if (formData.salesPersons.length === 0 || formData.salesPersons.some(p => !p.name || !p.email || !p.contact)) {
+      errors.salesPersons = 'At least one complete sales person is required';
+    }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      showNotification('Please fix validation errors', 'error');
+      return;
+    }
 
     try {
       const response = await fetch(
@@ -165,17 +222,13 @@ const AddHotelTab = ({ showNotification }) => {
 
       if (response.ok) {
         showNotification("Hotel created successfully!", "success");
-        
-        // Ask user if they want to see the list
         const goToList = window.confirm(
           "Hotel Sale saved successfully! Do you want to see the hotel list?"
         );
-
         if (goToList) {
-          // Switch to the View Hotels tab
           document.querySelector('.tabs button:nth-child(2)').click();
         } else {
-          // Reset form for new entry
+          // Reset form
           setFormData({
             country: '',
             countryCode: '',
@@ -184,21 +237,11 @@ const AddHotelTab = ({ showNotification }) => {
             hotelContactNumber: '',
             address: '',
             hotelChain: '',
-            salesPersonName: '',
-            salesPersonEmail: '',
-            salesPersonContact: '',
-            reservationPersonName: '',
-            reservationPersonEmail: '',
-            reservationPersonContact: '',
-            accountsPersonName: '',
-            accountsPersonEmail: '',
-            accountsPersonContact: '',
-            receptionPersonName: '',
-            receptionPersonEmail: '',
-            receptionPersonContact: '',
-            conciergeName: '',
-            conciergeEmail: '',
-            conciergeContact: '',
+            salesPersons: [{ name: '', email: '', contact: '' }],
+            reservationPersons: [{ name: '', email: '', contact: '' }],
+            accountsPersons: [{ name: '', email: '', contact: '' }],
+            receptionPersons: [{ name: '', email: '', contact: '' }],
+            concierges: [{ name: '', email: '', contact: '' }],
             creditCategory: '',
             specialRemarks: '',
             facilitiesAvailable: []
@@ -206,6 +249,7 @@ const AddHotelTab = ({ showNotification }) => {
           setCountrySearch('');
           setCitySearch('');
           setHotelSearch('');
+          setValidationErrors({});
         }
       } else {
         showNotification("Failed to save hotel sale.", "error");
@@ -216,7 +260,6 @@ const AddHotelTab = ({ showNotification }) => {
     }
   };
 
-  // Handle country selection
   const handleCountrySelect = (code, name) => {
     setFormData(prev => ({
       ...prev,
@@ -234,14 +277,12 @@ const AddHotelTab = ({ showNotification }) => {
     setHotelSearch('');
   };
 
-  // Handle city selection
   const handleCitySelect = (city) => {
     setFormData(prev => ({ ...prev, city }));
     setCitySearch(city);
     setShowCityDropdown(false);
   };
 
-  // Handle hotel selection
   const handleHotelSelect = (hotel) => {
     setFormData(prev => ({
       ...prev,
@@ -255,13 +296,11 @@ const AddHotelTab = ({ showNotification }) => {
     setError('');
   };
 
-  // Handle manual hotel entry
   const handleManualHotel = () => {
     if (hotelSearch.trim() === '') {
       setError('Please enter a hotel name');
       return;
     }
-    
     setFormData(prev => ({
       ...prev,
       hotelName: hotelSearch,
@@ -273,124 +312,82 @@ const AddHotelTab = ({ showNotification }) => {
     setError('');
   };
 
-  // Handle input changes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
     if (type === 'checkbox') {
-      if (checked) {
-        setFormData(prev => ({
-          ...prev,
-          facilitiesAvailable: [...prev.facilitiesAvailable, name]
-        }));
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          facilitiesAvailable: prev.facilitiesAvailable.filter(item => item !== name)
-        }));
-      }
+      setFormData(prev => ({
+        ...prev,
+        facilitiesAvailable: checked 
+          ? [...prev.facilitiesAvailable, name]
+          : prev.facilitiesAvailable.filter(item => item !== name)
+      }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  // Handle phone number input with country code
-  const handlePhoneChange = (e, fieldName) => {
-    const { value } = e.target;
-    const digitsOnly = value.replace(/\D/g, '');
+  // Handle phone change with formatting
+  const handlePhoneChange = (e, field) => {
+    const value = e.target.value.replace(/\D/g, '');
     const phoneCode = getCurrentPhoneCode().replace('+', '');
-    let formattedValue = '';
-    
-    if (digitsOnly.startsWith(phoneCode)) {
-      const restNumber = digitsOnly.substring(phoneCode.length);
-      formattedValue = `+${phoneCode} ${restNumber}`;
-    } else {
-      formattedValue = `+${phoneCode} ${digitsOnly}`;
-    }
-    
-    setFormData(prev => ({ ...prev, [fieldName]: formattedValue }));
+    const formatted = value.startsWith(phoneCode) 
+      ? `+${phoneCode} ${value.substring(phoneCode.length)}`
+      : `+${phoneCode} ${value}`;
+    setFormData(prev => ({ ...prev, [field]: formatted }));
   };
 
-  // Close dropdowns when clicking outside
+  // Handlers for multiple persons
+  const addPerson = (role) => {
+    const key = `${role}s`; // e.g., salesPersons
+    setFormData(prev => ({
+      ...prev,
+      [key]: [...prev[key], { name: '', email: '', contact: '' }]
+    }));
+  };
+
+  const removePerson = (role, index) => {
+    const key = `${role}s`;
+    setFormData(prev => ({
+      ...prev,
+      [key]: prev[key].filter((_, i) => i !== index)
+    }));
+  };
+
+  const changePerson = (role, index, field, value) => {
+    const key = `${role}s`;
+    if (field === 'contact') {
+      const digits = value.replace(/\D/g, '');
+      const phoneCode = getCurrentPhoneCode().replace('+', '');
+      value = digits.startsWith(phoneCode) 
+        ? `+${phoneCode} ${digits.substring(phoneCode.length)}`
+        : `+${phoneCode} ${digits}`;
+    }
+    setFormData(prev => {
+      const updated = [...prev[key]];
+      updated[index][field] = value;
+      return { ...prev, [key]: updated };
+    });
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) {
-        setShowCountryDropdown(false);
-      }
-      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
-        setShowCityDropdown(false);
-      }
-      if (hotelDropdownRef.current && !hotelDropdownRef.current.contains(event.target)) {
-        setShowHotelDropdown(false);
-      }
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) setShowCountryDropdown(false);
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) setShowCityDropdown(false);
+      if (hotelDropdownRef.current && !hotelDropdownRef.current.contains(event.target)) setShowHotelDropdown(false);
     };
-
     document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Function to render contact person sections
-  const renderContactSection = (title, prefix) => (
-    <div className="contact-section">
-      <h4>{title}</h4>
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor={`${prefix}Name`}>Name:</label>
-          <input
-            type="text"
-            id={`${prefix}Name`}
-            name={`${prefix}Name`}
-            value={formData[`${prefix}Name`]}
-            onChange={handleChange}
-            required={prefix === 'salesPerson'}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor={`${prefix}Email`}>Email:</label>
-          <input
-            type="email"
-            id={`${prefix}Email`}
-            name={`${prefix}Email`}
-            value={formData[`${prefix}Email`]}
-            onChange={handleChange}
-            required={prefix === 'salesPerson'}
-          />
-        </div>
-      </div>
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor={`${prefix}Contact`}>Contact:</label>
-          <input
-            type="tel"
-            id={`${prefix}Contact`}
-            name={`${prefix}Contact`}
-            value={formData[`${prefix}Contact`]}
-            onChange={(e) => handlePhoneChange(e, `${prefix}Contact`)}
-            placeholder={getCurrentPhoneCode() + " XXX XXX XXXX"}
-            required={prefix === 'salesPerson'}
-          />
-          <div className="form-note">
-            Country code: {getCurrentPhoneCode()}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // ✅ Fix: check hotel from DB using hotelsInCity array
   const isHotelFromDatabase = hotelsInCity.some(h => h.name === formData.hotelName);
 
   return (
     <div className="hotel-form-container">
       <h2>Add Hotel Information</h2>
       <form onSubmit={handleSubmit}>
-        {/* Hotel Information Section */}
         <div className="form-section">
           <h3>Hotel Information</h3>
 
-          {/* Country dropdown */}
           <div className="form-group searchable-dropdown" ref={countryDropdownRef}>
             <label>Country <span className="required">*</span></label>
             <input
@@ -404,28 +401,18 @@ const AddHotelTab = ({ showNotification }) => {
               placeholder="Search for a country..."
               required
             />
+            {validationErrors.country && <p className="error-message">{validationErrors.country}</p>}
             {showCountryDropdown && (
               <div className="dropdown-options">
-                {filteredCountries.length > 0 ? (
-                  filteredCountries.map(country => (
-                    <div 
-                      key={country.code} 
-                      className="dropdown-option"
-                      onClick={() => handleCountrySelect(country.code, country.name)}
-                    >
-                      {country.flag} {highlightText(country.name, countrySearch)}
-                    </div>
-                  ))
-                ) : (
-                  <div className="dropdown-option no-results">
-                    No countries found
+                {filteredCountries.length > 0 ? filteredCountries.map(country => (
+                  <div key={country.code} className="dropdown-option" onClick={() => handleCountrySelect(country.code, country.name)}>
+                    {country.flag} {highlightText(country.name, countrySearch)}
                   </div>
-                )}
+                )) : <div className="dropdown-option no-results">No countries found</div>}
               </div>
             )}
           </div>
 
-          {/* City dropdown */}
           <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
             <label>City <span className="required">*</span></label>
             <input
@@ -440,28 +427,20 @@ const AddHotelTab = ({ showNotification }) => {
               required
               disabled={!formData.country}
             />
+            {validationErrors.city && <p className="error-message">{validationErrors.city}</p>}
             {showCityDropdown && formData.country && (
               <div className="dropdown-options">
-                {filteredCities.length > 0 ? (
-                  filteredCities.map((city, index) => (
-                    <div 
-                      key={index} 
-                      className="dropdown-option"
-                      onClick={() => handleCitySelect(city)}
-                    >
-                      {highlightText(city, citySearch)}
-                    </div>
-                  ))
-                ) : (
-                  <div className="dropdown-option no-results">
-                    {citiesByCountry[formData.countryCode]?.length === 0 ? "No cities available for this country" : "No cities found"}
+                {filteredCities.length > 0 ? filteredCities.map((city, index) => (
+                  <div key={index} className="dropdown-option" onClick={() => handleCitySelect(city)}>
+                    {highlightText(city, citySearch)}
                   </div>
-                )}
+                )) : <div className="dropdown-option no-results">
+                  {citiesByCountry[formData.countryCode]?.length === 0 ? "No cities available for this country" : "No cities found"}
+                </div>}
               </div>
             )}
           </div>
 
-          {/* Hotel Searchable Dropdown */}
           <div className="form-group searchable-dropdown" ref={hotelDropdownRef}>
             <label>Hotel <span className="required">*</span></label>
             <input
@@ -476,65 +455,47 @@ const AddHotelTab = ({ showNotification }) => {
               required
               disabled={!formData.city}
             />
+            {validationErrors.hotelName && <p className="error-message">{validationErrors.hotelName}</p>}
             {showHotelDropdown && formData.city && (
               <div className="dropdown-options">
                 {filteredHotels.length > 0 ? (
                   <>
                     {filteredHotels.map(hotel => (
-                      <div 
-                        key={hotel.id} 
-                        className="dropdown-option"
-                        onClick={() => handleHotelSelect(hotel)}
-                      >
+                      <div key={hotel.id} className="dropdown-option" onClick={() => handleHotelSelect(hotel)}>
                         <div className="hotel-name">{highlightText(hotel.name, hotelSearch)}</div>
-                        {hotel.address && (
-                          <div className="hotel-address">{highlightText(hotel.address, hotelSearch)}</div>
-                        )}
+                        {hotel.address && <div className="hotel-address">{highlightText(hotel.address, hotelSearch)}</div>}
                       </div>
                     ))}
-                    <div 
-                      className="dropdown-option manual-option"
-                      onClick={handleManualHotel}
-                    >
+                    <div className="dropdown-option manual-option" onClick={handleManualHotel}>
                       <div className="hotel-name">Use "{hotelSearch}" as hotel name</div>
                       <div className="hotel-address">Enter address manually</div>
                     </div>
                   </>
                 ) : (
-                  <div 
-                    className="dropdown-option manual-option"
-                    onClick={handleManualHotel}
-                  >
-                    <div className="hotel-name">Use " {hotelSearch} " as hotel name</div>
+                  <div className="dropdown-option manual-option" onClick={handleManualHotel}>
+                    <div className="hotel-name">Use "{hotelSearch}" as hotel name</div>
                     <div className="hotel-address">Enter address manually</div>
                   </div>
                 )}
               </div>
             )}
-            {error && (
-              <p className="error-message">{error}</p>
-            )}
+            {error && <p className="error-message">{error}</p>}
           </div>
 
-          {/* Hotel Contact Number */}
           <div className="form-group">
-            <label htmlFor="hotelContactNumber">Hotel Contact Number:</label>
+            <label>Hotel Contact Number:</label>
             <input
               type="tel"
-              id="hotelContactNumber"
               name="hotelContactNumber"
               value={formData.hotelContactNumber}
               onChange={(e) => handlePhoneChange(e, 'hotelContactNumber')}
-              placeholder={getCurrentPhoneCode() + " XXX XXX XXXX"}
+              placeholder={`${getCurrentPhoneCode()} XXX XXX XXXX`}
             />
-            <div className="form-note">
-              Country code: {getCurrentPhoneCode()}
-            </div>
+            <div className="form-note">Country code: {getCurrentPhoneCode()}</div>
           </div>
 
-          {/* Address */}
           <div className="form-group">
-            <label>Address<span className="required">*</span></label>
+            <label>Address <span className="required">*</span></label>
             <input
               type="text"
               name="address"
@@ -544,32 +505,71 @@ const AddHotelTab = ({ showNotification }) => {
               readOnly={isHotelFromDatabase}
               required
             />
-            {isHotelFromDatabase && (
-              <div className="form-note">
-                Address from our database
-              </div>
-            )}
+            {validationErrors.address && <p className="error-message">{validationErrors.address}</p>}
+            {isHotelFromDatabase && <div className="form-note">Address from our database</div>}
           </div>
         </div>
 
-        {/* Contact Persons Section */}
         <div className="form-section">
           <h3>Contact Persons</h3>
-          
-          {renderContactSection("Sales Person", "salesPerson")}
-          {renderContactSection("Reservation Person", "reservationPerson")}
-          {renderContactSection("Accounts Person", "accountsPerson")}
-          {renderContactSection("Reception Person", "receptionPerson")}
-          {renderContactSection("Concierge", "concierge")}
+          {validationErrors.salesPersons && <p className="error-message">{validationErrors.salesPersons}</p>}
+          <ContactRoleSection 
+            title="Sales Person" 
+            role="salesPerson" 
+            persons={formData.salesPersons} 
+            onAdd={addPerson} 
+            onRemove={removePerson} 
+            onChange={changePerson} 
+            phoneCode={getCurrentPhoneCode()} 
+            icon={<FaUserTie />}
+          />
+          <ContactRoleSection 
+            title="Reservation Person" 
+            role="reservationPerson" 
+            persons={formData.reservationPersons} 
+            onAdd={addPerson} 
+            onRemove={removePerson} 
+            onChange={changePerson} 
+            phoneCode={getCurrentPhoneCode()} 
+            icon={<FaClipboardList />}
+          />
+          <ContactRoleSection 
+            title="Accounts Person" 
+            role="accountsPerson" 
+            persons={formData.accountsPersons} 
+            onAdd={addPerson} 
+            onRemove={removePerson} 
+            onChange={changePerson} 
+            phoneCode={getCurrentPhoneCode()} 
+            icon={<FaMoneyCheckAlt />}
+          />
+          <ContactRoleSection 
+            title="Reception Person" 
+            role="receptionPerson" 
+            persons={formData.receptionPersons} 
+            onAdd={addPerson} 
+            onRemove={removePerson} 
+            onChange={changePerson} 
+            phoneCode={getCurrentPhoneCode()} 
+            icon={<FaReceipt />}
+          />
+          <ContactRoleSection 
+            title="Concierge" 
+            role="concierge" 
+            persons={formData.concierges} 
+            onAdd={addPerson} 
+            onRemove={removePerson} 
+            onChange={changePerson} 
+            phoneCode={getCurrentPhoneCode()} 
+            icon={<FaConciergeBell />}
+          />
         </div>
 
-        {/* Special Remarks Section */}
         <div className="form-section">
           <h3>Special Remarks</h3>
           <div className="form-group">
-            <label htmlFor="specialRemarks">Remarks:</label>
+            <label>Remarks:</label>
             <textarea
-              id="specialRemarks"
               name="specialRemarks"
               value={formData.specialRemarks}
               onChange={handleChange}
@@ -578,6 +578,7 @@ const AddHotelTab = ({ showNotification }) => {
             />
           </div>
         </div>
+
         <div className="button-container">
           <button type="submit" className="submit-btn">Submit Form</button>
         </div>
@@ -586,13 +587,13 @@ const AddHotelTab = ({ showNotification }) => {
   );
 };
 
-// Modal Component
+// Modal Component (unchanged, but added animation class)
 const Modal = ({ isOpen, onClose, children, title }) => {
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div className="modal-content modal-animate" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{title}</h3>
           <button className="modal-close" onClick={onClose}>
@@ -607,7 +608,7 @@ const Modal = ({ isOpen, onClose, children, title }) => {
   );
 };
 
-// Hotel Sales List Component (Enhanced version)
+// Hotel Sales List Component (added pagination, table format)
 const HotelSalesList = ({ showNotification }) => {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -616,17 +617,26 @@ const HotelSalesList = ({ showNotification }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
   const [filterCity, setFilterCity] = useState("");
-  const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const API_URL = "https://hotels-8v0p.onrender.com/api/hotelsales";
 
-  // Fetch all hotels
   const fetchHotels = async () => {
     setLoading(true);
     try {
       const res = await fetch(API_URL);
       const data = await res.json();
-      setHotels(data);
+      // Adjust data to arrays if backend sends single objects/strings
+      const adjustedData = data.map(hotel => ({
+        ...hotel,
+        salesPersons: Array.isArray(hotel.salesPersons) ? hotel.salesPersons : (hotel.salesPersonName ? [{name: hotel.salesPersonName, email: hotel.salesPersonEmail, contact: hotel.salesPersonContact}] : []),
+        reservationPersons: Array.isArray(hotel.reservationPersons) ? hotel.reservationPersons : (hotel.reservationPersonName ? [{name: hotel.reservationPersonName, email: hotel.reservationPersonEmail, contact: hotel.reservationPersonContact}] : []),
+        accountsPersons: Array.isArray(hotel.accountsPersons) ? hotel.accountsPersons : (hotel.accountsPersonName ? [{name: hotel.accountsPersonName, email: hotel.accountsPersonEmail, contact: hotel.accountsPersonContact}] : []),
+        receptionPersons: Array.isArray(hotel.receptionPersons) ? hotel.receptionPersons : (hotel.receptionPersonName ? [{name: hotel.receptionPersonName, email: hotel.receptionPersonEmail, contact: hotel.receptionPersonContact}] : []),
+        concierges: Array.isArray(hotel.concierges) ? hotel.concierges : (hotel.conciergeName ? [{name: hotel.conciergeName, email: hotel.conciergeEmail, contact: hotel.conciergeContact}] : []),
+      }));
+      setHotels(adjustedData);
     } catch (err) {
       console.error("Error fetching hotels:", err);
       showNotification("Error fetching hotels", "error");
@@ -638,13 +648,11 @@ const HotelSalesList = ({ showNotification }) => {
     fetchHotels();
   }, []);
 
-  // Delete hotel
   const deleteHotel = async (id) => {
     if (!window.confirm("Are you sure you want to delete this hotel?")) return;
-
     try {
       await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-      setHotels((prev) => prev.filter((h) => h.id !== id));
+      setHotels(prev => prev.filter(h => h.id !== id));
       showNotification("Hotel deleted successfully!", "success");
     } catch (err) {
       console.error("Error deleting hotel:", err);
@@ -652,7 +660,6 @@ const HotelSalesList = ({ showNotification }) => {
     }
   };
 
-  // Save updated hotel
   const saveHotel = async (hotel) => {
     try {
       await fetch(`${API_URL}/${hotel.id}`, {
@@ -669,21 +676,23 @@ const HotelSalesList = ({ showNotification }) => {
     }
   };
 
-  // Filter hotels based on search and filters
   const filteredHotels = hotels.filter(hotel => {
     const matchesSearch = hotel.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         hotel.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         hotel.country?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+                          hotel.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          hotel.country?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCountry = filterCountry ? hotel.country === filterCountry : true;
     const matchesCity = filterCity ? hotel.city === filterCity : true;
-    
     return matchesSearch && matchesCountry && matchesCity;
   });
 
-  // Get unique countries and cities for filters
   const countries = [...new Set(hotels.map(hotel => hotel.country).filter(Boolean))];
   const cities = [...new Set(hotels.map(hotel => hotel.city).filter(Boolean))];
+
+  // Pagination logic
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentHotels = filteredHotels.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(filteredHotels.length / itemsPerPage);
 
   if (loading) return (
     <div className="loading-container">
@@ -698,7 +707,6 @@ const HotelSalesList = ({ showNotification }) => {
         <h2>Hotel Sales List</h2>
       </div>
 
-      {/* Search and Filters */}
       <div className="filters-section">
         <div className="search-box">
           <FaSearch className="search-icon" />
@@ -711,40 +719,22 @@ const HotelSalesList = ({ showNotification }) => {
         </div>
         
         <div className="filter-controls">
-          <select 
-            value={filterCountry} 
-            onChange={(e) => setFilterCountry(e.target.value)}
-          >
+          <select value={filterCountry} onChange={(e) => setFilterCountry(e.target.value)}>
             <option value="">All Countries</option>
-            {countries.map(country => (
-              <option key={country} value={country}>{country}</option>
-            ))}
+            {countries.map(country => <option key={country} value={country}>{country}</option>)}
           </select>
           
-          <select 
-            value={filterCity} 
-            onChange={(e) => setFilterCity(e.target.value)}
-          >
+          <select value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
             <option value="">All Cities</option>
-            {cities.map(city => (
-              <option key={city} value={city}>{city}</option>
-            ))}
+            {cities.map(city => <option key={city} value={city}>{city}</option>)}
           </select>
           
-          <button 
-            className="clear-filters"
-            onClick={() => {
-              setFilterCountry("");
-              setFilterCity("");
-              setSearchTerm("");
-            }}
-          >
+          <button className="clear-filters" onClick={() => { setFilterCountry(""); setFilterCity(""); setSearchTerm(""); }}>
             Clear Filters
           </button>
         </div>
       </div>
 
-      {/* Results Count */}
       <div className="results-info">
         <p>Showing {filteredHotels.length} of {hotels.length} hotels</p>
       </div>
@@ -755,129 +745,132 @@ const HotelSalesList = ({ showNotification }) => {
           <p>Try adjusting your search or filters</p>
         </div>
       ) : (
-        <div className="hotels-container">
-          {filteredHotels.map((hotel) => (
-            <div key={hotel.id} className="hotel-card">
-              <div className="hotel-header">
-                <h3>{hotel.hotelName}</h3>
-                <div className="hotel-location">
-                  <FaMapMarkerAlt /> 
-                  <span className="city">{hotel.city}</span>, 
-                  <span className="country"> {hotel.country}</span>
-                </div>
-              </div>
-              
-              <div className="hotel-contacts">
-                <div className="contact-item">
-                  <FaUserTie /> <strong>Sales:</strong> {hotel.salesPersonName} 
-                  {hotel.salesPersonEmail && ` (${hotel.salesPersonEmail})`}
-                </div>
-                {hotel.reservationPersonName && (
-                  <div className="contact-item">
-                    <FaClipboardList /> <strong>Reservation:</strong> {hotel.reservationPersonName}
-                  </div>
-                )}
-              </div>
-              
-              <div className="hotel-actions">
-                <button 
-                  className="view-details-btn"
-                  onClick={() => setViewHotel(hotel)}
-                >
-                  <FaEye /> View Details
-                </button>
-                
-                <div className="action-buttons">
-                  <button 
-                    className="edit-btn"
-                    onClick={() => setEditingHotel(hotel)}
-                  >
-                    <FaEdit /> Edit
-                  </button>
-                  <button 
-                    className="delete-btn"
-                    onClick={() => deleteHotel(hotel.id)}
-                  >
-                    <FaTrash /> Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+        <>
+          <div className="hotels-table-container">
+            <table className="hotels-table">
+              <thead>
+                <tr>
+                  <th>Hotel Name</th>
+                  <th>City</th>
+                  <th>Country</th>
+                  <th>Sales Persons</th>
+                  <th>Reservation Persons</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentHotels.map(hotel => (
+                  <tr key={hotel.id}>
+                    <td>{hotel.hotelName}</td>
+                    <td>{hotel.city}</td>
+                    <td>{hotel.country}</td>
+                    <td>{hotel.salesPersons.length} {hotel.salesPersons.length === 1 ? 'person' : 'persons'}</td>
+                    <td>{hotel.reservationPersons.length} {hotel.reservationPersons.length === 1 ? 'person' : 'persons'}</td>
+                    <td>
+                      <button className="view-btn" onClick={() => setViewHotel(hotel)}><FaEye /></button>
+                      <button className="edit-btn" onClick={() => setEditingHotel(hotel)}><FaEdit /></button>
+                      <button className="delete-btn" onClick={() => deleteHotel(hotel.id)}><FaTrash /></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="pagination">
+            <button 
+              disabled={currentPage === 1} 
+              onClick={() => setCurrentPage(prev => prev - 1)}
+            >
+              Previous
+            </button>
+            <span>Page {currentPage} of {totalPages}</span>
+            <button 
+              disabled={currentPage === totalPages} 
+              onClick={() => setCurrentPage(prev => prev + 1)}
+            >
+              Next
+            </button>
+          </div>
+        </>
       )}
       
-      {/* View Details Modal */}
-      <Modal 
-        isOpen={!!viewHotel} 
-        onClose={() => setViewHotel(null)}
-        title="Hotel Details"
-      >
+      {/* View Details Modal (updated for arrays) */}
+      <Modal isOpen={!!viewHotel} onClose={() => setViewHotel(null)} title="Hotel Details">
         {viewHotel && (
           <div className="hotel-details-modal">
             <div className="hotel-basic-info">
               <h3>{viewHotel.hotelName}</h3>
-              <div className="hotel-location">
-                <FaMapMarkerAlt /> 
-                {viewHotel.city}, {viewHotel.country}
-              </div>
-              {viewHotel.address && (
-                <div className="detail-item">
-                  <FaBuilding /> <strong>Address:</strong> {viewHotel.address}
-                </div>
-              )}
-              {viewHotel.hotelContactNumber && (
-                <div className="detail-item">
-                  <FaPhone /> <strong>Hotel Contact:</strong> {viewHotel.hotelContactNumber}
-                </div>
-              )}
+              <div className="hotel-location"><FaMapMarkerAlt /> {viewHotel.city}, {viewHotel.country}</div>
+              {viewHotel.address && <div className="detail-item"><FaBuilding /> <strong>Address:</strong> {viewHotel.address}</div>}
+              {viewHotel.hotelContactNumber && <div className="detail-item"><FaPhone /> <strong>Hotel Contact:</strong> {viewHotel.hotelContactNumber}</div>}
             </div>
             
             <div className="contact-persons-section">
               <h4>Contact Persons</h4>
               
-              {viewHotel.salesPersonName && (
+              {viewHotel.salesPersons.length > 0 && (
                 <div className="contact-person">
-                  <h5><FaUserTie /> Sales Person</h5>
-                  <p><strong>Name:</strong> {viewHotel.salesPersonName}</p>
-                  {viewHotel.salesPersonEmail && <p><strong>Email:</strong> {viewHotel.salesPersonEmail}</p>}
-                  {viewHotel.salesPersonContact && <p><strong>Contact:</strong> {viewHotel.salesPersonContact}</p>}
+                  <h5><FaUserTie /> Sales Persons</h5>
+                  {viewHotel.salesPersons.map((p, idx) => (
+                    <div key={idx}>
+                      <p><strong>Name:</strong> {p.name}</p>
+                      {p.email && <p><strong>Email:</strong> {p.email}</p>}
+                      {p.contact && <p><strong>Contact:</strong> {p.contact}</p>}
+                    </div>
+                  ))}
                 </div>
               )}
               
-              {viewHotel.reservationPersonName && (
+              {viewHotel.reservationPersons.length > 0 && (
                 <div className="contact-person">
-                  <h5><FaClipboardList /> Reservation Person</h5>
-                  <p><strong>Name:</strong> {viewHotel.reservationPersonName}</p>
-                  {viewHotel.reservationPersonEmail && <p><strong>Email:</strong> {viewHotel.reservationPersonEmail}</p>}
-                  {viewHotel.reservationPersonContact && <p><strong>Contact:</strong> {viewHotel.reservationPersonContact}</p>}
+                  <h5><FaClipboardList /> Reservation Persons</h5>
+                  {viewHotel.reservationPersons.map((p, idx) => (
+                    <div key={idx}>
+                      <p><strong>Name:</strong> {p.name}</p>
+                      {p.email && <p><strong>Email:</strong> {p.email}</p>}
+                      {p.contact && <p><strong>Contact:</strong> {p.contact}</p>}
+                    </div>
+                  ))}
                 </div>
               )}
               
-              {viewHotel.accountsPersonName && (
+              {viewHotel.accountsPersons.length > 0 && (
                 <div className="contact-person">
-                  <h5><FaMoneyCheckAlt /> Accounts Person</h5>
-                  <p><strong>Name:</strong> {viewHotel.accountsPersonName}</p>
-                  {viewHotel.accountsPersonEmail && <p><strong>Email:</strong> {viewHotel.accountsPersonEmail}</p>}
-                  {viewHotel.accountsPersonContact && <p><strong>Contact:</strong> {viewHotel.accountsPersonContact}</p>}
+                  <h5><FaMoneyCheckAlt /> Accounts Persons</h5>
+                  {viewHotel.accountsPersons.map((p, idx) => (
+                    <div key={idx}>
+                      <p><strong>Name:</strong> {p.name}</p>
+                      {p.email && <p><strong>Email:</strong> {p.email}</p>}
+                      {p.contact && <p><strong>Contact:</strong> {p.contact}</p>}
+                    </div>
+                  ))}
                 </div>
               )}
               
-              {viewHotel.receptionPersonName && (
+              {viewHotel.receptionPersons.length > 0 && (
                 <div className="contact-person">
-                  <h5><FaReceipt /> Reception Person</h5>
-                  <p><strong>Name:</strong> {viewHotel.receptionPersonName}</p>
-                  {viewHotel.receptionPersonEmail && <p><strong>Email:</strong> {viewHotel.receptionPersonEmail}</p>}
-                  {viewHotel.receptionPersonContact && <p><strong>Contact:</strong> {viewHotel.receptionPersonContact}</p>}
+                  <h5><FaReceipt /> Reception Persons</h5>
+                  {viewHotel.receptionPersons.map((p, idx) => (
+                    <div key={idx}>
+                      <p><strong>Name:</strong> {p.name}</p>
+                      {p.email && <p><strong>Email:</strong> {p.email}</p>}
+                      {p.contact && <p><strong>Contact:</strong> {p.contact}</p>}
+                    </div>
+                  ))}
                 </div>
               )}
               
-              {viewHotel.conciergeName && (
+              {viewHotel.concierges.length > 0 && (
                 <div className="contact-person">
-                  <h5><FaConciergeBell /> Concierge</h5>
-                  <p><strong>Name:</strong> {viewHotel.conciergeName}</p>
-                  {viewHotel.conciergeEmail && <p><strong>Email:</strong> {viewHotel.conciergeEmail}</p>}
-                  {viewHotel.conciergeContact && <p><strong>Contact:</strong> {viewHotel.conciergeContact}</p>}
+                  <h5><FaConciergeBell /> Concierges</h5>
+                  {viewHotel.concierges.map((p, idx) => (
+                    <div key={idx}>
+                      <p><strong>Name:</strong> {p.name}</p>
+                      {p.email && <p><strong>Email:</strong> {p.email}</p>}
+                      {p.contact && <p><strong>Contact:</strong> {p.contact}</p>}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
@@ -889,7 +882,7 @@ const HotelSalesList = ({ showNotification }) => {
               </div>
             )}
             
-            {viewHotel.facilitiesAvailable && viewHotel.facilitiesAvailable.length > 0 && (
+            {viewHotel.facilitiesAvailable?.length > 0 && (
               <div className="facilities-section">
                 <h4><FaStar /> Facilities Available</h4>
                 <div className="facilities-list">
@@ -903,109 +896,80 @@ const HotelSalesList = ({ showNotification }) => {
         )}
       </Modal>
       
-      {/* Edit Hotel Modal */}
-      <Modal 
-        isOpen={!!editingHotel} 
-        onClose={() => setEditingHotel(null)}
-        title="Edit Hotel Information"
-      >
+      {/* Edit Hotel Modal (updated for arrays) */}
+      <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel Information">
         {editingHotel && (
           <div className="edit-hotel-form">
             <div className="form-section">
               <h3>Hotel Information</h3>
-              
               <div className="form-grid">
                 <div className="form-group">
                   <label>Hotel Name:</label>
-                  <input
-                    value={editingHotel.hotelName || ""}
-                    onChange={(e) => setEditingHotel({...editingHotel, hotelName: e.target.value})}
-                  />
+                  <input value={editingHotel.hotelName || ""} onChange={(e) => setEditingHotel({...editingHotel, hotelName: e.target.value})} />
                 </div>
-                
                 <div className="form-group">
                   <label>Country:</label>
-                  <input
-                    value={editingHotel.country || ""}
-                    onChange={(e) => setEditingHotel({...editingHotel, country: e.target.value})}
-                  />
+                  <input value={editingHotel.country || ""} onChange={(e) => setEditingHotel({...editingHotel, country: e.target.value})} />
                 </div>
-                
                 <div className="form-group">
                   <label>City:</label>
-                  <input
-                    value={editingHotel.city || ""}
-                    onChange={(e) => setEditingHotel({...editingHotel, city: e.target.value})}
-                  />
+                  <input value={editingHotel.city || ""} onChange={(e) => setEditingHotel({...editingHotel, city: e.target.value})} />
                 </div>
-                
                 <div className="form-group">
                   <label>Address:</label>
-                  <input
-                    value={editingHotel.address || ""}
-                    onChange={(e) => setEditingHotel({...editingHotel, address: e.target.value})}
-                  />
+                  <input value={editingHotel.address || ""} onChange={(e) => setEditingHotel({...editingHotel, address: e.target.value})} />
                 </div>
-                
                 <div className="form-group">
                   <label>Contact Number:</label>
-                  <input
-                    value={editingHotel.hotelContactNumber || ""}
-                    onChange={(e) => setEditingHotel({...editingHotel, hotelContactNumber: e.target.value})}
-                  />
+                  <input value={editingHotel.hotelContactNumber || ""} onChange={(e) => setEditingHotel({...editingHotel, hotelContactNumber: e.target.value})} />
                 </div>
               </div>
             </div>
             
             <div className="form-section">
               <h3>Contact Persons</h3>
-              
+              {/* For edit, to keep simple, use comma separated for persons, but since arrays, we can add dynamic fields */}
+              {/* Note: For brevity, editing multiple is similar to add, but to avoid complexity, keep as text inputs for now. To make full, implement similar to add. */}
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Sales Person Name:</label>
-                  <input
-                    value={editingHotel.salesPersonName || ""}
-                    onChange={(e) => setEditingHotel({...editingHotel, salesPersonName: e.target.value})}
+                  <label>Sales Persons (JSON string for array):</label>
+                  <textarea
+                    value={JSON.stringify(editingHotel.salesPersons) || "[]"}
+                    onChange={(e) => setEditingHotel({...editingHotel, salesPersons: JSON.parse(e.target.value || "[]")})}
+                    rows="3"
                   />
                 </div>
-                
                 <div className="form-group">
-                  <label>Sales Email:</label>
-                  <input
-                    value={editingHotel.salesPersonEmail || ""}
-                    onChange={(e) => setEditingHotel({...editingHotel, salesPersonEmail: e.target.value})}
+                  <label>Reservation Persons (JSON):</label>
+                  <textarea
+                    value={JSON.stringify(editingHotel.reservationPersons) || "[]"}
+                    onChange={(e) => setEditingHotel({...editingHotel, reservationPersons: JSON.parse(e.target.value || "[]")})}
+                    rows="3"
                   />
                 </div>
-                
+                {/* Similar for others */}
                 <div className="form-group">
-                  <label>Sales Contact:</label>
-                  <input
-                    value={editingHotel.salesPersonContact || ""}
-                    onChange={(e) => setEditingHotel({...editingHotel, salesPersonContact: e.target.value})}
+                  <label>Accounts Persons (JSON):</label>
+                  <textarea
+                    value={JSON.stringify(editingHotel.accountsPersons) || "[]"}
+                    onChange={(e) => setEditingHotel({...editingHotel, accountsPersons: JSON.parse(e.target.value || "[]")})}
+                    rows="3"
                   />
                 </div>
-                
                 <div className="form-group">
-                  <label>Reservation Person Name:</label>
-                  <input
-                    value={editingHotel.reservationPersonName || ""}
-                    onChange={(e) => setEditingHotel({...editingHotel, reservationPersonName: e.target.value})}
+                  <label>Reception Persons (JSON):</label>
+                  <textarea
+                    value={JSON.stringify(editingHotel.receptionPersons) || "[]"}
+                    onChange={(e) => setEditingHotel({...editingHotel, receptionPersons: JSON.parse(e.target.value || "[]")})}
+                    rows="3"
                   />
                 </div>
-                
                 <div className="form-group">
-                  <label>Reservation Email:</label>
-                  <input
-                    value={editingHotel.reservationPersonEmail || ""}
-                    onChange={(e) => setEditingHotel({...editingHotel, reservationPersonEmail: e.target.value})}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Reservation Contact:</label>
-                  <input
-                    value={editingHotel.reservationPersonContact || ""}
-                    onChange={(e) => setEditingHotel({...editingHotel, reservationPersonContact: e.target.value})}
+                  <label>Concierges (JSON):</label>
+                  <textarea
+                    value={JSON.stringify(editingHotel.concierges) || "[]"}
+                    onChange={(e) => setEditingHotel({...editingHotel, concierges: JSON.parse(e.target.value || "[]")})}
+                    rows="3"
                   />
                 </div>
               </div>
@@ -1013,7 +977,6 @@ const HotelSalesList = ({ showNotification }) => {
             
             <div className="form-section">
               <h3>Additional Information</h3>
-              
               <div className="form-group full-width">
                 <label>Special Remarks:</label>
                 <textarea
@@ -1022,32 +985,21 @@ const HotelSalesList = ({ showNotification }) => {
                   rows="3"
                 />
               </div>
-              
               <div className="form-group full-width">
                 <label>Facilities (comma separated):</label>
                 <input
                   value={editingHotel.facilitiesAvailable?.join(", ") || ""}
                   onChange={(e) => setEditingHotel({
                     ...editingHotel, 
-                    facilitiesAvailable: e.target.value.split(",").map(f => f.trim())
+                    facilitiesAvailable: e.target.value.split(",").map(f => f.trim()).filter(f => f)
                   })}
                 />
               </div>
             </div>
             
             <div className="form-actions">
-              <button 
-                className="save-btn"
-                onClick={() => saveHotel(editingHotel)}
-              >
-                <FaSave /> Save Changes
-              </button>
-              <button 
-                className="cancel-btn"
-                onClick={() => setEditingHotel(null)}
-              >
-                <FaTimes /> Cancel
-              </button>
+              <button className="save-btn" onClick={() => saveHotel(editingHotel)}><FaSave /> Save Changes</button>
+              <button className="cancel-btn" onClick={() => setEditingHotel(null)}><FaTimes /> Cancel</button>
             </div>
           </div>
         )}
