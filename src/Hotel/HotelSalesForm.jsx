@@ -1,53 +1,58 @@
-import React, { useState, useRef, useEffect } from 'react';
-import './HotelSalesForm.css';
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  FaCheckCircle, FaTimesCircle, FaUserTie, FaEnvelope, FaPhone,
+  FaMinus, FaPlus, FaBuilding, FaMapMarkerAlt, FaStar, FaInfoCircle,
+  FaSave, FaTimes, FaEye, FaEdit, FaTrash, FaSearch, FaClipboardList,
+  FaMoneyCheckAlt, FaReceipt, FaConciergeBell, FaChevronDown, FaFilter,
+  FaSort, FaSortUp, FaSortDown, FaEllipsisV, FaExternalLinkAlt
+} from 'react-icons/fa';
+// import './HotelManagementSystem.css';
 
-// Import JSON files
-import countriesData from '../data/countries.json';
-import citiesData from '../data/cities.json';
-import hotelsData from '../data/hotels.json';
-
-// Import icons (Font Awesome 6)
-import { 
-  FaEye, FaEdit, FaTrash, FaSearch, FaTimes, 
-  FaSave, FaTimesCircle, FaCheckCircle, FaInfoCircle,
-  FaPhone, FaEnvelope, FaMapMarkerAlt, FaBuilding,
-  FaUserTie, FaClipboardList, FaConciergeBell,
-  FaReceipt, FaMoneyCheckAlt, FaStar, FaPlus, FaMinus
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+// Main Component
 const HotelManagementSystem = () => {
-  const [activeTab, setActiveTab] = useState('add');
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
-  
-  const showNotification = (message, type = 'success') => {
+  const [activeTab, setActiveTab] = useState('add');
+
+  const showNotification = useCallback((message, type) => {
     setNotification({ show: true, message, type });
-    setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
-  };
-  
+    setTimeout(() => setNotification({ show: false, message: '', type: '' }), 5000);
+  }, []);
+
   return (
     <div className="hotel-management-system">
       {notification.show && (
         <div className={`notification ${notification.type}`}>
-          <FontAwesomeIcon icon={notification.type === 'success' ? FaCheckCircle : FaTimesCircle} />
-          <span>{notification.message}</span>
+          <div className="notification-content">
+            {notification.type === 'success' ? <FaCheckCircle /> : <FaTimesCircle />}
+            <span>{notification.message}</span>
+            <button onClick={() => setNotification({ show: false, message: '', type: '' })}>
+              <FaTimes />
+            </button>
+          </div>
         </div>
       )}
       
-      <div className="tabs">
-        <button 
-          className={activeTab === 'add' ? 'active' : ''} 
-          onClick={() => setActiveTab('add')}
-        >
-          <FontAwesomeIcon icon={FaPlus} /> Add Hotel
-        </button>
-        <button 
-          className={activeTab === 'view' ? 'active' : ''} 
-          onClick={() => setActiveTab('view')}
-        >
-          <FontAwesomeIcon icon={FaEye} /> View Hotels
-        </button>
+      <div className="system-header">
+        <h1>Hotel Management System</h1>
+        <p>Manage hotel information, contacts, and facilities</p>
+      </div>
+      
+      <div className="tabs-container">
+        <div className="tabs">
+          <button 
+            className={activeTab === 'add' ? 'active' : ''} 
+            onClick={() => setActiveTab('add')}
+          >
+            <FaPlus /> Add Hotel
+          </button>
+          <button 
+            className={activeTab === 'view' ? 'active' : ''} 
+            onClick={() => setActiveTab('view')}
+          >
+            <FaBuilding /> View Hotels
+          </button>
+        </div>
       </div>
       
       <div className="tab-content">
@@ -61,48 +66,61 @@ const HotelManagementSystem = () => {
 // Contact Person Component
 const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCode }) => (
   <div className="contact-person-fields">
-    <div className="form-group">
-      <input
-        type="text"
-        value={person.name}
-        onChange={(e) => onChange(index, 'name', e.target.value)}
-        required
-        placeholder=" "
-      />
-      <label><FontAwesomeIcon icon={FaUserTie} /> Name <span className="required">*</span></label>
+    <div className="form-row">
+      <div className="form-group">
+        <label><FaUserTie /> Name <span className="required">*</span></label>
+        <input
+          type="text"
+          value={person.name}
+          onChange={(e) => onChange(index, 'name', e.target.value)}
+          required
+          placeholder="Full name"
+        />
+      </div>
+      <div className="form-group">
+        <label><FaEnvelope /> Email <span className="required">*</span></label>
+        <input
+          type="email"
+          value={person.email}
+          onChange={(e) => onChange(index, 'email', e.target.value)}
+          required
+          placeholder="email@example.com"
+        />
+      </div>
+      <div className="form-group">
+        <label><FaPhone /> Contact <span className="required">*</span></label>
+        <div className="phone-input-container">
+          <span className="phone-prefix">{phoneCode}</span>
+          <input
+            type="tel"
+            value={person.contact.replace(phoneCode, '').trim()}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '');
+              onChange(index, 'contact', `${phoneCode} ${digits}`);
+            }}
+            placeholder="XXX XXX XXXX"
+            required
+          />
+        </div>
+      </div>
+      {index > 0 && (
+        <div className="form-group remove-btn-container">
+          <button type="button" className="remove-person-btn" onClick={() => onRemove(index)}>
+            <FaMinus />
+          </button>
+        </div>
+      )}
     </div>
-    <div className="form-group">
-      <input
-        type="email"
-        value={person.email}
-        onChange={(e) => onChange(index, 'email', e.target.value)}
-        required
-        placeholder=" "
-      />
-      <label><FontAwesomeIcon icon={FaEnvelope} /> Email <span className="required">*</span></label>
-    </div>
-    <div className="form-group">
-      <input
-        type="tel"
-        value={person.contact}
-        onChange={(e) => onChange(index, 'contact', e.target.value)}
-        placeholder={`${phoneCode} XXX XXX XXXX`}
-        required
-      />
-      <label><FontAwesomeIcon icon={FaPhone} /> Contact <span className="required">*</span></label>
-    </div>
-    {index > 0 && (
-      <button type="button" className="remove-person-btn" onClick={() => onRemove(index)}>
-        <FontAwesomeIcon icon={FaMinus} /> Remove
-      </button>
-    )}
   </div>
 );
 
 // Contact Role Section
 const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, phoneCode, icon }) => (
   <div className="contact-section">
-    <h4><FontAwesomeIcon icon={icon} /> {title}</h4>
+    <div className="section-header">
+      <h4>{icon} {title}</h4>
+      <span className="person-count">{persons.length} {persons.length === 1 ? 'person' : 'persons'}</span>
+    </div>
     {persons.map((person, index) => (
       <ContactPersonFields 
         key={index} 
@@ -115,7 +133,7 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
       />
     ))}
     <button type="button" className="add-person-btn" onClick={() => onAdd(role)}>
-      <FontAwesomeIcon icon={FaPlus} /> Add {title}
+      <FaPlus /> Add {title}
     </button>
   </div>
 );
@@ -149,6 +167,7 @@ const AddHotelTab = ({ showNotification }) => {
   const [showHotelDropdown, setShowHotelDropdown] = useState(false);
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
@@ -198,9 +217,15 @@ const AddHotelTab = ({ showNotification }) => {
     if (!formData.city) errors.city = 'City is required';
     if (!formData.hotelName) errors.hotelName = 'Hotel name is required';
     if (!formData.address) errors.address = 'Address is required';
-    if (formData.salesPersons.length === 0 || formData.salesPersons.some(p => !p.name || !p.email || !p.contact)) {
-      errors.salesPersons = 'At least one complete sales person is required';
-    }
+    
+    // Validate contact persons
+    const contactRoles = ['salesPersons', 'reservationPersons', 'accountsPersons', 'receptionPersons', 'concierges'];
+    contactRoles.forEach(role => {
+      if (formData[role].some(p => !p.name || !p.email || !p.contact)) {
+        errors[role] = `All ${role.replace('Persons', ' persons')} must have complete information`;
+      }
+    });
+    
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -212,6 +237,7 @@ const AddHotelTab = ({ showNotification }) => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       const response = await fetch(
         "https://hotels-8v0p.onrender.com/api/hotelsales",
@@ -228,29 +254,9 @@ const AddHotelTab = ({ showNotification }) => {
           "Hotel Sale saved successfully! Do you want to see the hotel list?"
         );
         if (goToList) {
-          document.querySelector('.tabs button:nth-child(2)').click();
+          setActiveTab('view');
         } else {
-          setFormData({
-            country: '',
-            countryCode: '',
-            city: '',
-            hotelName: '',
-            hotelContactNumber: '',
-            address: '',
-            hotelChain: '',
-            salesPersons: [{ name: '', email: '', contact: '' }],
-            reservationPersons: [{ name: '', email: '', contact: '' }],
-            accountsPersons: [{ name: '', email: '', contact: '' }],
-            receptionPersons: [{ name: '', email: '', contact: '' }],
-            concierges: [{ name: '', email: '', contact: '' }],
-            creditCategory: '',
-            specialRemarks: '',
-            facilitiesAvailable: []
-          });
-          setCountrySearch('');
-          setCitySearch('');
-          setHotelSearch('');
-          setValidationErrors({});
+          resetForm();
         }
       } else {
         showNotification("Failed to save hotel sale.", "error");
@@ -258,7 +264,33 @@ const AddHotelTab = ({ showNotification }) => {
     } catch (error) {
       console.error("Error saving hotel sale:", error);
       showNotification("Error saving hotel sale.", "error");
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      country: '',
+      countryCode: '',
+      city: '',
+      hotelName: '',
+      hotelContactNumber: '',
+      address: '',
+      hotelChain: '',
+      salesPersons: [{ name: '', email: '', contact: '' }],
+      reservationPersons: [{ name: '', email: '', contact: '' }],
+      accountsPersons: [{ name: '', email: '', contact: '' }],
+      receptionPersons: [{ name: '', email: '', contact: '' }],
+      concierges: [{ name: '', email: '', contact: '' }],
+      creditCategory: '',
+      specialRemarks: '',
+      facilitiesAvailable: []
+    });
+    setCountrySearch('');
+    setCitySearch('');
+    setHotelSearch('');
+    setValidationErrors({});
   };
 
   const handleCountrySelect = (code, name) => {
@@ -382,30 +414,42 @@ const AddHotelTab = ({ showNotification }) => {
 
   return (
     <div className="hotel-form-container">
-      <h2><FontAwesomeIcon icon={FaBuilding} /> Add Hotel Information</h2>
-      <form onSubmit={handleSubmit}>
+      <div className="form-header">
+        <h2>Add Hotel Information</h2>
+        <p>Fill in the details below to add a new hotel to the system</p>
+      </div>
+      
+      <form onSubmit={handleSubmit} className="hotel-form">
         <div className="form-section">
-          <h3><FontAwesomeIcon icon={FaBuilding} /> Hotel Information</h3>
+          <div className="section-header">
+            <h3><FaBuilding /> Hotel Information</h3>
+          </div>
           <div className="form-grid">
             <div className="form-group searchable-dropdown" ref={countryDropdownRef}>
-              <input
-                type="text"
-                value={countrySearch}
-                onChange={(e) => {
-                  setCountrySearch(e.target.value);
-                  setShowCountryDropdown(true);
-                }}
-                onFocus={() => setShowCountryDropdown(true)}
-                placeholder=" "
-                required
-              />
-              <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Country <span className="required">*</span></label>
+              <label><FaMapMarkerAlt /> Country <span className="required">*</span></label>
+              <div className="dropdown-container">
+                <input
+                  type="text"
+                  value={countrySearch}
+                  onChange={(e) => {
+                    setCountrySearch(e.target.value);
+                    setShowCountryDropdown(true);
+                  }}
+                  onFocus={() => setShowCountryDropdown(true)}
+                  placeholder="Search for a country..."
+                  required
+                  className={validationErrors.country ? 'error' : ''}
+                />
+                <FaChevronDown className="dropdown-chevron" />
+              </div>
               {validationErrors.country && <p className="error-message">{validationErrors.country}</p>}
               {showCountryDropdown && (
                 <div className="dropdown-options">
                   {filteredCountries.length > 0 ? filteredCountries.map(country => (
                     <div key={country.code} className="dropdown-option" onClick={() => handleCountrySelect(country.code, country.name)}>
-                      {country.flag} {highlightText(country.name, countrySearch)}
+                      <span className="country-flag">{country.flag}</span>
+                      <span className="country-name">{highlightText(country.name, countrySearch)}</span>
+                      <span className="country-code">{country.code}</span>
                     </div>
                   )) : <div className="dropdown-option no-results">No countries found</div>}
                 </div>
@@ -413,19 +457,23 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
 
             <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
-              <input
-                type="text"
-                value={citySearch}
-                onChange={(e) => {
-                  setCitySearch(e.target.value);
-                  setShowCityDropdown(true);
-                }}
-                onFocus={() => setShowCityDropdown(true)}
-                placeholder=" "
-                required
-                disabled={!formData.country}
-              />
-              <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> City <span className="required">*</span></label>
+              <label><FaMapMarkerAlt /> City <span className="required">*</span></label>
+              <div className="dropdown-container">
+                <input
+                  type="text"
+                  value={citySearch}
+                  onChange={(e) => {
+                    setCitySearch(e.target.value);
+                    setShowCityDropdown(true);
+                  }}
+                  onFocus={() => setShowCityDropdown(true)}
+                  placeholder="Search for a city..."
+                  required
+                  disabled={!formData.country}
+                  className={validationErrors.city ? 'error' : ''}
+                />
+                <FaChevronDown className="dropdown-chevron" />
+              </div>
               {validationErrors.city && <p className="error-message">{validationErrors.city}</p>}
               {showCityDropdown && formData.country && (
                 <div className="dropdown-options">
@@ -441,28 +489,33 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
 
             <div className="form-group searchable-dropdown" ref={hotelDropdownRef}>
-              <input
-                type="text"
-                value={hotelSearch}
-                onChange={(e) => {
-                  setHotelSearch(e.target.value);
-                  setShowHotelDropdown(true);
-                }}
-                onFocus={() => setShowHotelDropdown(true)}
-                placeholder=" "
-                required
-                disabled={!formData.city}
-              />
-              <label><FontAwesomeIcon icon={FaBuilding} /> Hotel <span className="required">*</span></label>
+              <label><FaBuilding /> Hotel <span className="required">*</span></label>
+              <div className="dropdown-container">
+                <input
+                  type="text"
+                  value={hotelSearch}
+                  onChange={(e) => {
+                    setHotelSearch(e.target.value);
+                    setShowHotelDropdown(true);
+                  }}
+                  onFocus={() => setShowHotelDropdown(true)}
+                  placeholder="Search for a hotel..."
+                  required
+                  disabled={!formData.city}
+                  className={validationErrors.hotelName ? 'error' : ''}
+                />
+                <FaChevronDown className="dropdown-chevron" />
+              </div>
               {validationErrors.hotelName && <p className="error-message">{validationErrors.hotelName}</p>}
               {showHotelDropdown && formData.city && (
                 <div className="dropdown-options">
                   {filteredHotels.length > 0 ? (
                     <>
                       {filteredHotels.map(hotel => (
-                        <div key={hotel.id} className="dropdown-option" onClick={() => handleHotelSelect(hotel)}>
+                        <div key={hotel.id} className="dropdown-option hotel-option" onClick={() => handleHotelSelect(hotel)}>
                           <div className="hotel-name">{highlightText(hotel.name, hotelSearch)}</div>
                           {hotel.address && <div className="hotel-address">{highlightText(hotel.address, hotelSearch)}</div>}
+                          {hotel.chain && <div className="hotel-chain">{hotel.chain}</div>}
                         </div>
                       ))}
                       <div className="dropdown-option manual-option" onClick={handleManualHotel}>
@@ -482,47 +535,54 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
 
             <div className="form-group">
-              <input
-                type="tel"
-                name="hotelContactNumber"
-                value={formData.hotelContactNumber}
-                onChange={(e) => handlePhoneChange(e, 'hotelContactNumber')}
-                placeholder=" "
-              />
-              <label><FontAwesomeIcon icon={FaPhone} /> Hotel Contact Number</label>
+              <label><FaPhone /> Hotel Contact Number</label>
+              <div className="phone-input-container">
+                <span className="phone-prefix">{getCurrentPhoneCode()}</span>
+                <input
+                  type="tel"
+                  name="hotelContactNumber"
+                  value={formData.hotelContactNumber.replace(getCurrentPhoneCode(), '').trim()}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, '');
+                    handlePhoneChange({target: {value: digits}}, 'hotelContactNumber');
+                  }}
+                  placeholder="XXX XXX XXXX"
+                />
+              </div>
               <div className="form-note">Country code: {getCurrentPhoneCode()}</div>
             </div>
 
             <div className="form-group">
+              <label><FaMapMarkerAlt /> Address <span className="required">*</span></label>
               <input
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                placeholder=" "
+                placeholder="Hotel address"
                 readOnly={isHotelFromDatabase}
                 required
+                className={validationErrors.address ? 'error' : ''}
               />
-              <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Address <span className="required">*</span></label>
               {validationErrors.address && <p className="error-message">{validationErrors.address}</p>}
               {isHotelFromDatabase && <div className="form-note">Address from our database</div>}
             </div>
 
             <div className="form-group">
+              <label><FaBuilding /> Hotel Chain</label>
               <input
                 type="text"
                 name="hotelChain"
                 value={formData.hotelChain}
                 onChange={handleChange}
-                placeholder=" "
+                placeholder="Hotel chain (optional)"
                 readOnly={isHotelFromDatabase}
               />
-              <label><FontAwesomeIcon icon={FaBuilding} /> Hotel Chain</label>
             </div>
           </div>
 
           <div className="form-group">
-            <label><FontAwesomeIcon icon={FaStar} /> Facilities Available</label>
+            <label><FaStar /> Facilities Available</label>
             <div className="facilities-grid">
               {facilitiesOptions.map(facility => (
                 <label key={facility} className="facility-checkbox">
@@ -532,7 +592,8 @@ const AddHotelTab = ({ showNotification }) => {
                     checked={formData.facilitiesAvailable.includes(facility)}
                     onChange={handleChange}
                   />
-                  <span>{facility}</span>
+                  <span className="checkmark"></span>
+                  <span className="facility-label">{facility}</span>
                 </label>
               ))}
             </div>
@@ -540,7 +601,10 @@ const AddHotelTab = ({ showNotification }) => {
         </div>
 
         <div className="form-section">
-          <h3><FontAwesomeIcon icon={FaUserTie} /> Contact Persons</h3>
+          <div className="section-header">
+            <h3><FaUserTie /> Contact Persons</h3>
+            <p>Add contact information for different hotel departments</p>
+          </div>
           {validationErrors.salesPersons && <p className="error-message">{validationErrors.salesPersons}</p>}
           <ContactRoleSection 
             title="Sales Person" 
@@ -550,7 +614,7 @@ const AddHotelTab = ({ showNotification }) => {
             onRemove={removePerson} 
             onChange={changePerson} 
             phoneCode={getCurrentPhoneCode()} 
-            icon={FaUserTie}
+            icon={<FaUserTie />}
           />
           <ContactRoleSection 
             title="Reservation Person" 
@@ -560,7 +624,7 @@ const AddHotelTab = ({ showNotification }) => {
             onRemove={removePerson} 
             onChange={changePerson} 
             phoneCode={getCurrentPhoneCode()} 
-            icon={FaClipboardList}
+            icon={<FaClipboardList />}
           />
           <ContactRoleSection 
             title="Accounts Person" 
@@ -570,7 +634,7 @@ const AddHotelTab = ({ showNotification }) => {
             onRemove={removePerson} 
             onChange={changePerson} 
             phoneCode={getCurrentPhoneCode()} 
-            icon={FaMoneyCheckAlt}
+            icon={<FaMoneyCheckAlt />}
           />
           <ContactRoleSection 
             title="Reception Person" 
@@ -580,7 +644,7 @@ const AddHotelTab = ({ showNotification }) => {
             onRemove={removePerson} 
             onChange={changePerson} 
             phoneCode={getCurrentPhoneCode()} 
-            icon={FaReceipt}
+            icon={<FaReceipt />}
           />
           <ContactRoleSection 
             title="Concierge" 
@@ -590,43 +654,33 @@ const AddHotelTab = ({ showNotification }) => {
             onRemove={removePerson} 
             onChange={changePerson} 
             phoneCode={getCurrentPhoneCode()} 
-            icon={FaConciergeBell}
+            icon={<FaConciergeBell />}
           />
         </div>
 
         <div className="form-section">
-          <h3><FontAwesomeIcon icon={FaInfoCircle} /> Special Remarks</h3>
+          <div className="section-header">
+            <h3><FaInfoCircle /> Special Remarks</h3>
+          </div>
           <div className="form-group full-width">
             <textarea
               name="specialRemarks"
               value={formData.specialRemarks}
               onChange={handleChange}
-              placeholder=" "
-              rows="6"
+              placeholder="Enter any special remarks or notes about this hotel"
+              rows="5"
             />
-            <label>Remarks</label>
           </div>
         </div>
 
-        <div className="button-container">
-          <button type="submit" className="submit-btn"><FontAwesomeIcon icon={FaSave} /> Submit Form</button>
-          <button type="button" className="cancel-btn" onClick={() => setFormData({
-            country: '',
-            countryCode: '',
-            city: '',
-            hotelName: '',
-            hotelContactNumber: '',
-            address: '',
-            hotelChain: '',
-            salesPersons: [{ name: '', email: '', contact: '' }],
-            reservationPersons: [{ name: '', email: '', contact: '' }],
-            accountsPersons: [{ name: '', email: '', contact: '' }],
-            receptionPersons: [{ name: '', email: '', contact: '' }],
-            concierges: [{ name: '', email: '', contact: '' }],
-            creditCategory: '',
-            specialRemarks: '',
-            facilitiesAvailable: []
-          })}><FontAwesomeIcon icon={FaTimes} /> Reset</button>
+        <div className="form-actions">
+          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+            {isSubmitting ? <div className="spinner"></div> : <FaSave />}
+            {isSubmitting ? 'Submitting...' : 'Submit Form'}
+          </button>
+          <button type="button" className="btn btn-secondary" onClick={resetForm}>
+            Reset Form
+          </button>
         </div>
       </form>
     </div>
@@ -634,16 +688,16 @@ const AddHotelTab = ({ showNotification }) => {
 };
 
 // Modal Component
-const Modal = ({ isOpen, onClose, children, title }) => {
+const Modal = ({ isOpen, onClose, children, title, size = 'medium' }) => {
   if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content modal-animate" onClick={e => e.stopPropagation()}>
+      <div className={`modal-content modal-${size} modal-animate`} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h3><FontAwesomeIcon icon={FaInfoCircle} /> {title}</h3>
+          <h3>{title}</h3>
           <button className="modal-close" onClick={onClose}>
-            <FontAwesomeIcon icon={FaTimes} />
+            <FaTimes />
           </button>
         </div>
         <div className="modal-body">
@@ -664,6 +718,10 @@ const HotelSalesList = ({ showNotification }) => {
   const [filterCountry, setFilterCountry] = useState("");
   const [filterCity, setFilterCity] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState('hotelName');
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [selectedHotels, setSelectedHotels] = useState([]);
+  const [bulkAction, setBulkAction] = useState('');
   const itemsPerPage = 10;
 
   const API_URL = "https://hotels-8v0p.onrender.com/api/hotelsales";
@@ -710,6 +768,22 @@ const HotelSalesList = ({ showNotification }) => {
     }
   };
 
+  const deleteMultipleHotels = async () => {
+    if (!selectedHotels.length || !window.confirm(`Are you sure you want to delete ${selectedHotels.length} hotels?`)) return;
+    try {
+      await Promise.all(selectedHotels.map(id => 
+        fetch(`${API_URL}/${id}`, { method: "DELETE" })
+      ));
+      setHotels(prev => prev.filter(h => !selectedHotels.includes(h.id)));
+      setSelectedHotels([]);
+      setBulkAction('');
+      showNotification(`${selectedHotels.length} hotels deleted successfully!`, "success");
+    } catch (err) {
+      console.error("Error deleting hotels:", err);
+      showNotification("Error deleting hotels", "error");
+    }
+  };
+
   const saveHotel = async (hotel) => {
     try {
       await fetch(`${API_URL}/${hotel.id}`, {
@@ -726,7 +800,25 @@ const HotelSalesList = ({ showNotification }) => {
     }
   };
 
-  const filteredHotels = hotels.filter(hotel => {
+  const handleSort = (field) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedHotels = [...hotels].sort((a, b) => {
+    const aValue = a[sortField] || '';
+    const bValue = b[sortField] || '';
+    
+    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const filteredHotels = sortedHotels.filter(hotel => {
     const matchesSearch = hotel.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           hotel.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           hotel.country?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -743,6 +835,22 @@ const HotelSalesList = ({ showNotification }) => {
   const currentHotels = filteredHotels.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filteredHotels.length / itemsPerPage);
 
+  const toggleSelectHotel = (id) => {
+    setSelectedHotels(prev => 
+      prev.includes(id) 
+        ? prev.filter(hotelId => hotelId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedHotels.length === currentHotels.length) {
+      setSelectedHotels([]);
+    } else {
+      setSelectedHotels(currentHotels.map(hotel => hotel.id));
+    }
+  };
+
   if (loading) return (
     <div className="loading-container">
       <div className="spinner"></div>
@@ -752,47 +860,85 @@ const HotelSalesList = ({ showNotification }) => {
 
   return (
     <div className="hotel-sales-list">
-      <div className="header-section">
-        <h2><FontAwesomeIcon icon={FaBuilding} /> Hotel Sales List</h2>
+      <div className="list-header">
+        <h2>Hotel Management</h2>
+        <p>View and manage all hotels in the system</p>
       </div>
 
-      <div className="filters-section">
+      <div className="list-controls">
         <div className="search-box">
-          <FontAwesomeIcon icon={FaSearch} className="search-icon" />
+          <FaSearch className="search-icon" />
           <input
             type="text"
-            placeholder=" "
+            placeholder="Search by hotel, city, or country..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
-          <label>Search by hotel, city, or country</label>
         </div>
         
         <div className="filter-controls">
-          <div className="form-group">
+          <div className="filter-group">
+            <FaFilter />
             <select value={filterCountry} onChange={(e) => setFilterCountry(e.target.value)}>
               <option value="">All Countries</option>
               {countries.map(country => <option key={country} value={country}>{country}</option>)}
             </select>
-            <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Filter by Country</label>
           </div>
           
-          <div className="form-group">
+          <div className="filter-group">
+            <FaFilter />
             <select value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
               <option value="">All Cities</option>
               {cities.map(city => <option key={city} value={city}>{city}</option>)}
             </select>
-            <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Filter by City</label>
           </div>
           
-          <button className="clear-filters" onClick={() => { setFilterCountry(""); setFilterCity(""); setSearchTerm(""); }}>
-            <FontAwesomeIcon icon={FaTimes} /> Clear Filters
+          <button className="btn btn-secondary" onClick={() => { setFilterCountry(""); setFilterCity(""); setSearchTerm(""); }}>
+            Clear Filters
           </button>
         </div>
+
+        {selectedHotels.length > 0 && (
+          <div className="bulk-actions">
+            <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)}>
+              <option value="">Bulk Actions</option>
+              <option value="delete">Delete Selected</option>
+            </select>
+            <button 
+              className="btn btn-danger" 
+              onClick={deleteMultipleHotels}
+              disabled={!bulkAction}
+            >
+              Apply
+            </button>
+            <span className="selected-count">{selectedHotels.length} selected</span>
+          </div>
+        )}
       </div>
 
       <div className="results-info">
         <p>Showing {filteredHotels.length} of {hotels.length} hotels</p>
+        <div className="sort-controls">
+          <span>Sort by:</span>
+          <button 
+            className={`sort-btn ${sortField === 'hotelName' ? 'active' : ''}`}
+            onClick={() => handleSort('hotelName')}
+          >
+            Name {sortField === 'hotelName' && (sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />)}
+          </button>
+          <button 
+            className={`sort-btn ${sortField === 'city' ? 'active' : ''}`}
+            onClick={() => handleSort('city')}
+          >
+            City {sortField === 'city' && (sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />)}
+          </button>
+          <button 
+            className={`sort-btn ${sortField === 'country' ? 'active' : ''}`}
+            onClick={() => handleSort('country')}
+          >
+            Country {sortField === 'country' && (sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />)}
+          </button>
+        </div>
       </div>
 
       {filteredHotels.length === 0 ? (
@@ -806,26 +952,74 @@ const HotelSalesList = ({ showNotification }) => {
             <table className="hotels-table">
               <thead>
                 <tr>
-                  <th>Hotel Name</th>
-                  <th>City</th>
-                  <th>Country</th>
-                  <th>Sales Persons</th>
-                  <th>Reservation Persons</th>
+                  <th className="select-column">
+                    <input
+                      type="checkbox"
+                      checked={selectedHotels.length === currentHotels.length && currentHotels.length > 0}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
+                  <th onClick={() => handleSort('hotelName')}>
+                    Hotel Name {sortField === 'hotelName' && (sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />)}
+                  </th>
+                  <th onClick={() => handleSort('city')}>
+                    City {sortField === 'city' && (sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />)}
+                  </th>
+                  <th onClick={() => handleSort('country')}>
+                    Country {sortField === 'country' && (sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />)}
+                  </th>
+                  <th>Sales Contacts</th>
+                  <th>Reservation Contacts</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {currentHotels.map(hotel => (
-                  <tr key={hotel.id}>
-                    <td>{hotel.hotelName}</td>
-                    <td>{hotel.city}</td>
-                    <td>{hotel.country}</td>
-                    <td>{hotel.salesPersons.length} {hotel.salesPersons.length === 1 ? 'person' : 'persons'}</td>
-                    <td>{hotel.reservationPersons.length} {hotel.reservationPersons.length === 1 ? 'person' : 'persons'}</td>
+                  <tr key={hotel.id} className={selectedHotels.includes(hotel.id) ? 'selected' : ''}>
+                    <td className="select-column">
+                      <input
+                        type="checkbox"
+                        checked={selectedHotels.includes(hotel.id)}
+                        onChange={() => toggleSelectHotel(hotel.id)}
+                      />
+                    </td>
                     <td>
-                      <button className="view-btn" onClick={() => setViewHotel(hotel)}><FontAwesomeIcon icon={FaEye} /></button>
-                      <button className="edit-btn" onClick={() => setEditingHotel(hotel)}><FontAwesomeIcon icon={FaEdit} /></button>
-                      <button className="delete-btn" onClick={() => deleteHotel(hotel.id)}><FontAwesomeIcon icon={FaTrash} /></button>
+                      <div className="hotel-name-cell">
+                        <div className="hotel-name">{hotel.hotelName}</div>
+                        {hotel.hotelChain && <div className="hotel-chain">{hotel.hotelChain}</div>}
+                      </div>
+                    </td>
+                    <td>{hotel.city}</td>
+                    <td>
+                      <div className="country-cell">
+                        <span className="country-flag">
+                          {countriesData.find(c => c.name === hotel.country)?.flag}
+                        </span>
+                        {hotel.country}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="contact-count">
+                        {hotel.salesPersons.length} {hotel.salesPersons.length === 1 ? 'person' : 'persons'}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="contact-count">
+                        {hotel.reservationPersons.length} {hotel.reservationPersons.length === 1 ? 'person' : 'persons'}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        <button className="btn-icon view-btn" onClick={() => setViewHotel(hotel)} title="View details">
+                          <FaEye />
+                        </button>
+                        <button className="btn-icon edit-btn" onClick={() => setEditingHotel(hotel)} title="Edit">
+                          <FaEdit />
+                        </button>
+                        <button className="btn-icon delete-btn" onClick={() => deleteHotel(hotel.id)} title="Delete">
+                          <FaTrash />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -833,114 +1027,92 @@ const HotelSalesList = ({ showNotification }) => {
             </table>
           </div>
 
-          <div className="pagination">
-            <button 
-              disabled={currentPage === 1} 
-              onClick={() => setCurrentPage(prev => prev - 1)}
-            >
-              Previous
-            </button>
-            <span>Page {currentPage} of {totalPages}</span>
-            <button 
-              disabled={currentPage === totalPages} 
-              onClick={() => setCurrentPage(prev => prev + 1)}
-            >
-              Next
-            </button>
+          <div className="table-footer">
+            <div className="rows-info">
+              Showing {indexOfFirst + 1} to {Math.min(indexOfLast, filteredHotels.length)} of {filteredHotels.length} entries
+            </div>
+            <div className="pagination">
+              <button 
+                className="btn btn-secondary"
+                disabled={currentPage === 1} 
+                onClick={() => setCurrentPage(prev => prev - 1)}
+              >
+                Previous
+              </button>
+              <div className="page-numbers">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      className={currentPage === pageNum ? 'btn btn-primary' : 'btn btn-secondary'}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                {totalPages > 5 && <span>...</span>}
+              </div>
+              <button 
+                className="btn btn-secondary"
+                disabled={currentPage === totalPages} 
+                onClick={() => setCurrentPage(prev => prev + 1)}
+              >
+                Next
+              </button>
+            </div>
           </div>
         </>
       )}
       
-      <Modal isOpen={!!viewHotel} onClose={() => setViewHotel(null)} title="Hotel Details">
+      <Modal isOpen={!!viewHotel} onClose={() => setViewHotel(null)} title="Hotel Details" size="large">
         {viewHotel && (
           <div className="hotel-details-modal">
-            <div className="hotel-basic-info">
-              <h3>{viewHotel.hotelName}</h3>
-              <div className="hotel-location"><FontAwesomeIcon icon={FaMapMarkerAlt} /> {viewHotel.city}, {viewHotel.country}</div>
-              {viewHotel.address && <div className="detail-item"><FontAwesomeIcon icon={FaBuilding} /> <strong>Address:</strong> {viewHotel.address}</div>}
-              {viewHotel.hotelContactNumber && <div className="detail-item"><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {viewHotel.hotelContactNumber}</div>}
-              {viewHotel.hotelChain && <div className="detail-item"><FontAwesomeIcon icon={FaBuilding} /> <strong>Chain:</strong> {viewHotel.hotelChain}</div>}
-            </div>
-            
-            <div className="contact-persons-section">
-              <h4><FontAwesomeIcon icon={FaUserTie} /> Contact Persons</h4>
-              
-              {viewHotel.salesPersons.length > 0 && (
-                <div className="contact-person">
-                  <h5><FontAwesomeIcon icon={FaUserTie} /> Sales Persons</h5>
-                  {viewHotel.salesPersons.map((p, idx) => (
-                    <div key={idx} className="contact-person-details">
-                      <p><FontAwesomeIcon icon={FaUserTie} /> <strong>Name:</strong> {p.name}</p>
-                      {p.email && <p><FontAwesomeIcon icon={FaEnvelope} /> <strong>Email:</strong> {p.email}</p>}
-                      {p.contact && <p><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {p.contact}</p>}
-                    </div>
-                  ))}
+            <div className="modal-section">
+              <div className="hotel-basic-info">
+                <h3>{viewHotel.hotelName}</h3>
+                {viewHotel.hotelChain && <div className="hotel-chain-badge">{viewHotel.hotelChain}</div>}
+                <div className="hotel-location">
+                  <FaMapMarkerAlt /> 
+                  <span>{viewHotel.address}, {viewHotel.city}, {viewHotel.country}</span>
                 </div>
-              )}
-              
-              {viewHotel.reservationPersons.length > 0 && (
-                <div className="contact-person">
-                  <h5><FontAwesomeIcon icon={FaClipboardList} /> Reservation Persons</h5>
-                  {viewHotel.reservationPersons.map((p, idx) => (
-                    <div key={idx} className="contact-person-details">
-                      <p><FontAwesomeIcon icon={FaUserTie} /> <strong>Name:</strong> {p.name}</p>
-                      {p.email && <p><FontAwesomeIcon icon={FaEnvelope} /> <strong>Email:</strong> {p.email}</p>}
-                      {p.contact && <p><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {p.contact}</p>}
+                <div className="detail-grid">
+                  {viewHotel.hotelContactNumber && (
+                    <div className="detail-item">
+                      <FaPhone /> 
+                      <div>
+                        <div className="detail-label">Contact Number</div>
+                        <div className="detail-value">{viewHotel.hotelContactNumber}</div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-              
-              {viewHotel.accountsPersons.length > 0 && (
-                <div className="contact-person">
-                  <h5><FontAwesomeIcon icon={FaMoneyCheckAlt} /> Accounts Persons</h5>
-                  {viewHotel.accountsPersons.map((p, idx) => (
-                    <div key={idx} className="contact-person-details">
-                      <p><FontAwesomeIcon icon={FaUserTie} /> <strong>Name:</strong> {p.name}</p>
-                      {p.email && <p><FontAwesomeIcon icon={FaEnvelope} /> <strong>Email:</strong> {p.email}</p>}
-                      {p.contact && <p><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {p.contact}</p>}
+                  )}
+                  {viewHotel.creditCategory && (
+                    <div className="detail-item">
+                      <FaMoneyCheckAlt /> 
+                      <div>
+                        <div className="detail-label">Credit Category</div>
+                        <div className="detail-value">{viewHotel.creditCategory}</div>
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
-              
-              {viewHotel.receptionPersons.length > 0 && (
-                <div className="contact-person">
-                  <h5><FontAwesomeIcon icon={FaReceipt} /> Reception Persons</h5>
-                  {viewHotel.receptionPersons.map((p, idx) => (
-                    <div key={idx} className="contact-person-details">
-                      <p><FontAwesomeIcon icon={FaUserTie} /> <strong>Name:</strong> {p.name}</p>
-                      {p.email && <p><FontAwesomeIcon icon={FaEnvelope} /> <strong>Email:</strong> {p.email}</p>}
-                      {p.contact && <p><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {p.contact}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              {viewHotel.concierges.length > 0 && (
-                <div className="contact-person">
-                  <h5><FontAwesomeIcon icon={FaConciergeBell} /> Concierges</h5>
-                  {viewHotel.concierges.map((p, idx) => (
-                    <div key={idx} className="contact-person-details">
-                      <p><FontAwesomeIcon icon={FaUserTie} /> <strong>Name:</strong> {p.name}</p>
-                      {p.email && <p><FontAwesomeIcon icon={FaEnvelope} /> <strong>Email:</strong> {p.email}</p>}
-                      {p.contact && <p><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {p.contact}</p>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            
-            {viewHotel.specialRemarks && (
-              <div className="special-remarks-section">
-                <h4><FontAwesomeIcon icon={FaInfoCircle} /> Special Remarks</h4>
-                <p>{viewHotel.specialRemarks}</p>
               </div>
-            )}
+            </div>
             
             {viewHotel.facilitiesAvailable?.length > 0 && (
-              <div className="facilities-section">
-                <h4><FontAwesomeIcon icon={FaStar} /> Facilities Available</h4>
+              <div className="modal-section">
+                <h4><FaStar /> Facilities Available</h4>
                 <div className="facilities-list">
                   {viewHotel.facilitiesAvailable.map((facility, index) => (
                     <span key={index} className="facility-tag">{facility}</span>
@@ -948,227 +1120,302 @@ const HotelSalesList = ({ showNotification }) => {
                 </div>
               </div>
             )}
+            
+            <div className="modal-section">
+              <h4><FaUserTie /> Contact Persons</h4>
+              
+              <div className="contact-persons-grid">
+                {viewHotel.salesPersons.length > 0 && (
+                  <div className="contact-category">
+                    <h5><FaUserTie /> Sales Persons</h5>
+                    {viewHotel.salesPersons.map((p, idx) => (
+                      <div key={idx} className="contact-person-details">
+                        <div className="contact-name">{p.name}</div>
+                        {p.email && <div className="contact-email"><FaEnvelope /> {p.email}</div>}
+                        {p.contact && <div className="contact-phone"><FaPhone /> {p.contact}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {viewHotel.reservationPersons.length > 0 && (
+                  <div className="contact-category">
+                    <h5><FaClipboardList /> Reservation Persons</h5>
+                    {viewHotel.reservationPersons.map((p, idx) => (
+                      <div key={idx} className="contact-person-details">
+                        <div className="contact-name">{p.name}</div>
+                        {p.email && <div className="contact-email"><FaEnvelope /> {p.email}</div>}
+                        {p.contact && <div className="contact-phone"><FaPhone /> {p.contact}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {viewHotel.accountsPersons.length > 0 && (
+                  <div className="contact-category">
+                    <h5><FaMoneyCheckAlt /> Accounts Persons</h5>
+                    {viewHotel.accountsPersons.map((p, idx) => (
+                      <div key={idx} className="contact-person-details">
+                        <div className="contact-name">{p.name}</div>
+                        {p.email && <div className="contact-email"><FaEnvelope /> {p.email}</div>}
+                        {p.contact && <div className="contact-phone"><FaPhone /> {p.contact}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {viewHotel.receptionPersons.length > 0 && (
+                  <div className="contact-category">
+                    <h5><FaReceipt /> Reception Persons</h5>
+                    {viewHotel.receptionPersons.map((p, idx) => (
+                      <div key={idx} className="contact-person-details">
+                        <div className="contact-name">{p.name}</div>
+                        {p.email && <div className="contact-email"><FaEnvelope /> {p.email}</div>}
+                        {p.contact && <div className="contact-phone"><FaPhone /> {p.contact}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {viewHotel.concierges.length > 0 && (
+                  <div className="contact-category">
+                    <h5><FaConciergeBell /> Concierges</h5>
+                    {viewHotel.concierges.map((p, idx) => (
+                      <div key={idx} className="contact-person-details">
+                        <div className="contact-name">{p.name}</div>
+                        {p.email && <div className="contact-email"><FaEnvelope /> {p.email}</div>}
+                        {p.contact && <div className="contact-phone"><FaPhone /> {p.contact}</div>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {viewHotel.specialRemarks && (
+              <div className="modal-section">
+                <h4><FaInfoCircle /> Special Remarks</h4>
+                <div className="remarks-content">{viewHotel.specialRemarks}</div>
+              </div>
+            )}
           </div>
         )}
       </Modal>
       
-      <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel Information">
+      <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel Information" size="large">
         {editingHotel && (
-          <div className="edit-hotel-form">
-            <div className="form-section">
-              <h3><FontAwesomeIcon icon={FaBuilding} /> Hotel Information</h3>
-              <div className="form-grid">
-                <div className="form-group">
-                  <input 
-                    value={editingHotel.hotelName || ""} 
-                    onChange={(e) => setEditingHotel({...editingHotel, hotelName: e.target.value})} 
-                    required 
-                    placeholder=" "
-                  />
-                  <label><FontAwesomeIcon icon={FaBuilding} /> Hotel Name <span className="required">*</span></label>
-                </div>
-                <div className="form-group">
-                  <input 
-                    value={editingHotel.country || ""} 
-                    onChange={(e) => setEditingHotel({...editingHotel, country: e.target.value})} 
-                    required 
-                    placeholder=" "
-                  />
-                  <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Country <span className="required">*</span></label>
-                </div>
-                <div className="form-group">
-                  <input 
-                    value={editingHotel.city || ""} 
-                    onChange={(e) => setEditingHotel({...editingHotel, city: e.target.value})} 
-                    required 
-                    placeholder=" "
-                  />
-                  <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> City <span className="required">*</span></label>
-                </div>
-                <div className="form-group">
-                  <input 
-                    value={editingHotel.address || ""} 
-                    onChange={(e) => setEditingHotel({...editingHotel, address: e.target.value})} 
-                    required 
-                    placeholder=" "
-                  />
-                  <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Address <span className="required">*</span></label>
-                </div>
-                <div className="form-group">
-                  <input 
-                    value={editingHotel.hotelContactNumber || ""} 
-                    onChange={(e) => setEditingHotel({...editingHotel, hotelContactNumber: e.target.value})} 
-                    placeholder=" "
-                  />
-                  <label><FontAwesomeIcon icon={FaPhone} /> Contact Number</label>
-                </div>
-                <div className="form-group">
-                  <input 
-                    value={editingHotel.hotelChain || ""} 
-                    onChange={(e) => setEditingHotel({...editingHotel, hotelChain: e.target.value})} 
-                    placeholder=" "
-                  />
-                  <label><FontAwesomeIcon icon={FaBuilding} /> Hotel Chain</label>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label><FontAwesomeIcon icon={FaStar} /> Facilities Available</label>
-                <div className="facilities-grid">
-                  {facilitiesOptions.map(facility => (
-                    <label key={facility} className="facility-checkbox">
-                      <input
-                        type="checkbox"
-                        name={facility}
-                        checked={editingHotel.facilitiesAvailable?.includes(facility) || false}
-                        onChange={(e) => {
-                          const updatedFacilities = e.target.checked
-                            ? [...(editingHotel.facilitiesAvailable || []), facility]
-                            : (editingHotel.facilitiesAvailable || []).filter(item => item !== facility);
-                          setEditingHotel({...editingHotel, facilitiesAvailable: updatedFacilities});
-                        }}
-                      />
-                      <span>{facility}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="form-section">
-              <h3><FontAwesomeIcon icon={FaUserTie} /> Contact Persons</h3>
-              <ContactRoleSection 
-                title="Sales Person" 
-                role="salesPerson" 
-                persons={editingHotel.salesPersons} 
-                onAdd={() => setEditingHotel({
-                  ...editingHotel,
-                  salesPersons: [...editingHotel.salesPersons, { name: '', email: '', contact: '' }]
-                })}
-                onRemove={(role, index) => setEditingHotel({
-                  ...editingHotel,
-                  salesPersons: editingHotel.salesPersons.filter((_, i) => i !== index)
-                })}
-                onChange={(role, index, field, value) => {
-                  const updatedPersons = [...editingHotel.salesPersons];
-                  updatedPersons[index][field] = value;
-                  setEditingHotel({...editingHotel, salesPersons: updatedPersons});
-                }}
-                phoneCode={'+1'} // Default phone code, adjust as needed
-                icon={FaUserTie}
-              />
-              <ContactRoleSection 
-                title="Reservation Person" 
-                role="reservationPerson" 
-                persons={editingHotel.reservationPersons} 
-                onAdd={() => setEditingHotel({
-                  ...editingHotel,
-                  reservationPersons: [...editingHotel.reservationPersons, { name: '', email: '', contact: '' }]
-                })}
-                onRemove={(role, index) => setEditingHotel({
-                  ...editingHotel,
-                  reservationPersons: editingHotel.reservationPersons.filter((_, i) => i !== index)
-                })}
-                onChange={(role, index, field, value) => {
-                  const updatedPersons = [...editingHotel.reservationPersons];
-                  updatedPersons[index][field] = value;
-                  setEditingHotel({...editingHotel, reservationPersons: updatedPersons});
-                }}
-                phoneCode={'+1'}
-                icon={FaClipboardList}
-              />
-              <ContactRoleSection 
-                title="Accounts Person" 
-                role="accountsPerson" 
-                persons={editingHotel.accountsPersons} 
-                onAdd={() => setEditingHotel({
-                  ...editingHotel,
-                  accountsPersons: [...editingHotel.accountsPersons, { name: '', email: '', contact: '' }]
-                })}
-                onRemove={(role, index) => setEditingHotel({
-                  ...editingHotel,
-                  accountsPersons: editingHotel.accountsPersons.filter((_, i) => i !== index)
-                })}
-                onChange={(role, index, field, value) => {
-                  const updatedPersons = [...editingHotel.accountsPersons];
-                  updatedPersons[index][field] = value;
-                  setEditingHotel({...editingHotel, accountsPersons: updatedPersons});
-                }}
-                phoneCode={'+1'}
-                icon={FaMoneyCheckAlt}
-              />
-              <ContactRoleSection 
-                title="Reception Person" 
-                role="receptionPerson" 
-                persons={editingHotel.receptionPersons} 
-                onAdd={() => setEditingHotel({
-                  ...editingHotel,
-                  receptionPersons: [...editingHotel.receptionPersons, { name: '', email: '', contact: '' }]
-                })}
-                onRemove={(role, index) => setEditingHotel({
-                  ...editingHotel,
-                  receptionPersons: editingHotel.receptionPersons.filter((_, i) => i !== index)
-                })}
-                onChange={(role, index, field, value) => {
-                  const updatedPersons = [...editingHotel.receptionPersons];
-                  updatedPersons[index][field] = value;
-                  setEditingHotel({...editingHotel, receptionPersons: updatedPersons});
-                }}
-                phoneCode={'+1'}
-                icon={FaReceipt}
-              />
-              <ContactRoleSection 
-                title="Concierge" 
-                role="concierge" 
-                persons={editingHotel.concierges} 
-                onAdd={() => setEditingHotel({
-                  ...editingHotel,
-                  concierges: [...editingHotel.concierges, { name: '', email: '', contact: '' }]
-                })}
-                onRemove={(role, index) => setEditingHotel({
-                  ...editingHotel,
-                  concierges: editingHotel.concierges.filter((_, i) => i !== index)
-                })}
-                onChange={(role, index, field, value) => {
-                  const updatedPersons = [...editingHotel.concierges];
-                  updatedPersons[index][field] = value;
-                  setEditingHotel({...editingHotel, concierges: updatedPersons});
-                }}
-                phoneCode={'+1'}
-                icon={FaConciergeBell}
-              />
-            </div>
-
-            <div className="form-section">
-              <h3><FontAwesomeIcon icon={FaInfoCircle} /> Special Remarks</h3>
-              <div className="form-group full-width">
-                <textarea
-                  value={editingHotel.specialRemarks || ""}
-                  onChange={(e) => setEditingHotel({...editingHotel, specialRemarks: e.target.value})}
-                  placeholder=" "
-                  rows="6"
-                />
-                <label>Remarks</label>
-              </div>
-            </div>
-
-            <div className="form-actions">
-              <button 
-                className="save-btn" 
-                onClick={() => saveHotel(editingHotel)}
-              >
-                <FontAwesomeIcon icon={FaSave} /> Save Changes
-              </button>
-              <button 
-                className="cancel-btn" 
-                onClick={() => setEditingHotel(null)}
-              >
-                <FontAwesomeIcon icon={FaTimes} /> Cancel
-              </button>
-            </div>
-          </div>
+          <EditHotelForm 
+            hotel={editingHotel} 
+            onSave={saveHotel} 
+            onCancel={() => setEditingHotel(null)} 
+            facilitiesOptions={facilitiesOptions}
+          />
         )}
       </Modal>
+    </div>
+  );
+};
+
+// Edit Hotel Form Component (extracted for better organization)
+const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
+  const [formData, setFormData] = useState(hotel);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    await onSave(formData);
+    setIsSaving(false);
+  };
+
+  const updateField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updatePerson = (role, index, field, value) => {
+    const key = `${role}s`;
+    setFormData(prev => {
+      const updated = [...prev[key]];
+      updated[index][field] = value;
+      return { ...prev, [key]: updated };
+    });
+  };
+
+  const addPerson = (role) => {
+    const key = `${role}s`;
+    setFormData(prev => ({
+      ...prev,
+      [key]: [...prev[key], { name: '', email: '', contact: '' }]
+    }));
+  };
+
+  const removePerson = (role, index) => {
+    const key = `${role}s`;
+    setFormData(prev => ({
+      ...prev,
+      [key]: prev[key].filter((_, i) => i !== index)
+    }));
+  };
+
+  const toggleFacility = (facility) => {
+    setFormData(prev => ({
+      ...prev,
+      facilitiesAvailable: prev.facilitiesAvailable.includes(facility)
+        ? prev.facilitiesAvailable.filter(f => f !== facility)
+        : [...prev.facilitiesAvailable, facility]
+    }));
+  };
+
+  return (
+    <div className="edit-hotel-form">
+      <div className="form-section">
+        <div className="section-header">
+          <h3><FaBuilding /> Hotel Information</h3>
+        </div>
+        <div className="form-grid">
+          <div className="form-group">
+            <label><FaBuilding /> Hotel Name <span className="required">*</span></label>
+            <input 
+              value={formData.hotelName || ""} 
+              onChange={(e) => updateField('hotelName', e.target.value)} 
+              required 
+            />
+          </div>
+          <div className="form-group">
+            <label><FaMapMarkerAlt /> Country <span className="required">*</span></label>
+            <input 
+              value={formData.country || ""} 
+              onChange={(e) => updateField('country', e.target.value)} 
+              required 
+            />
+          </div>
+          <div className="form-group">
+            <label><FaMapMarkerAlt /> City <span className="required">*</span></label>
+            <input 
+              value={formData.city || ""} 
+              onChange={(e) => updateField('city', e.target.value)} 
+              required 
+            />
+          </div>
+          <div className="form-group">
+            <label><FaMapMarkerAlt /> Address <span className="required">*</span></label>
+            <input 
+              value={formData.address || ""} 
+              onChange={(e) => updateField('address', e.target.value)} 
+              required 
+            />
+          </div>
+          <div className="form-group">
+            <label><FaPhone /> Contact Number</label>
+            <input 
+              value={formData.hotelContactNumber || ""} 
+              onChange={(e) => updateField('hotelContactNumber', e.target.value)} 
+            />
+          </div>
+          <div className="form-group">
+            <label><FaBuilding /> Hotel Chain</label>
+            <input 
+              value={formData.hotelChain || ""} 
+              onChange={(e) => updateField('hotelChain', e.target.value)} 
+            />
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label><FaStar /> Facilities Available</label>
+          <div className="facilities-grid">
+            {facilitiesOptions.map(facility => (
+              <label key={facility} className="facility-checkbox">
+                <input
+                  type="checkbox"
+                  checked={formData.facilitiesAvailable?.includes(facility) || false}
+                  onChange={() => toggleFacility(facility)}
+                />
+                <span className="checkmark"></span>
+                <span className="facility-label">{facility}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      <div className="form-section">
+        <div className="section-header">
+          <h3><FaUserTie /> Contact Persons</h3>
+        </div>
+        <ContactRoleSection 
+          title="Sales Person" 
+          role="salesPerson" 
+          persons={formData.salesPersons} 
+          onAdd={() => addPerson('salesPerson')} 
+          onRemove={removePerson} 
+          onChange={updatePerson} 
+          phoneCode={'+1'}
+          icon={<FaUserTie />}
+        />
+        <ContactRoleSection 
+          title="Reservation Person" 
+          role="reservationPerson" 
+          persons={formData.reservationPersons} 
+          onAdd={() => addPerson('reservationPerson')} 
+          onRemove={removePerson} 
+          onChange={updatePerson} 
+          phoneCode={'+1'} 
+          icon={<FaClipboardList />}
+        />
+        <ContactRoleSection 
+          title="Accounts Person" 
+          role="accountsPerson" 
+          persons={formData.accountsPersons} 
+          onAdd={() => addPerson('accountsPerson')} 
+          onRemove={removePerson} 
+          onChange={updatePerson} 
+          phoneCode={'+1'} 
+          icon={<FaMoneyCheckAlt />}
+        />
+        <ContactRoleSection 
+          title="Reception Person" 
+          role="receptionPerson" 
+          persons={formData.receptionPersons} 
+          onAdd={() => addPerson('receptionPerson')} 
+          onRemove={removePerson} 
+          onChange={updatePerson} 
+          phoneCode={'+1'} 
+          icon={<FaReceipt />}
+        />
+        <ContactRoleSection 
+          title="Concierge" 
+          role="concierge" 
+          persons={formData.concierges} 
+          onAdd={() => addPerson('concierge')} 
+          onRemove={removePerson} 
+          onChange={updatePerson} 
+          phoneCode={'+1'} 
+          icon={<FaConciergeBell />}
+        />
+      </div>
+      
+      <div className="form-section">
+        <div className="section-header">
+          <h3><FaInfoCircle /> Special Remarks</h3>
+        </div>
+        <div className="form-group full-width">
+          <textarea
+            value={formData.specialRemarks || ""}
+            onChange={(e) => updateField('specialRemarks', e.target.value)}
+            rows="5"
+          />
+        </div>
+      </div>
+      
+      <div className="form-actions">
+        <button className="btn btn-primary" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? <div className="spinner"></div> : <FaSave />}
+          {isSaving ? 'Saving...' : 'Save Changes'}
+        </button>
+        <button className="btn btn-secondary" onClick={onCancel}>
+          <FaTimes /> Cancel
+        </button>
+      </div>
     </div>
   );
 };
