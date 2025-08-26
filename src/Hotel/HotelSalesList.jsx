@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./HotelSalesList.css";
+
 
 const HotelSalesList = () => {
   const [hotels, setHotels] = useState([]);
