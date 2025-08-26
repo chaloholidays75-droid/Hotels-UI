@@ -3,20 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import countriesData from '../data/countries.json';
 import citiesData from '../data/cities.json';
 import hotelsData from '../data/hotels.json';
-
 import {
   FaCheckCircle, FaTimesCircle, FaUserTie, FaEnvelope, FaPhone,
   FaMinus, FaPlus, FaBuilding, FaMapMarkerAlt, FaStar, FaInfoCircle,
   FaSave, FaTimes, FaEye, FaEdit, FaTrash, FaSearch, FaClipboardList,
-  FaMoneyCheckAlt, FaReceipt, FaConciergeBell, FaChevronDown, FaFilter,FaCalendar,
-  FaSort, FaSortUp, FaSortDown, FaEllipsisV, FaExternalLinkAlt,FaHotel,FaUsers,FaGlobe
+  FaMoneyCheckAlt, FaReceipt, FaConciergeBell, FaChevronDown, FaFilter, FaCalendar,
+  FaSort, FaSortUp, FaSortDown, FaEllipsisV, FaExternalLinkAlt, FaHotel, FaUsers, FaGlobe,
+  FaChartBar, FaDollarSign, FaIdBadge, FaCity, FaRegChartBar
 } from 'react-icons/fa';
-import './HotelManagementSystem.css';
+// import './HotelManagementSystem.css';
 
 // Main Component
 const HotelManagementSystem = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
-  const [activeTab, setActiveTab] = useState('add');
+  const [activeTab, setActiveTab] = useState('view');
 
   const showNotification = useCallback((message, type) => {
     setNotification({ show: true, message, type });
@@ -41,12 +41,14 @@ const HotelManagementSystem = () => {
         <h1>Hotel Management System</h1>
         <p>Manage hotel information, contacts, and facilities</p>
       </div>
+      
       <div className="stats-bar">
-  <div className="stat-item"><FaHotel /> Total Hotels <span>156</span></div>
-  <div className="stat-item active-contacts"><FaUsers /> Active Contacts <span>342</span></div>
-  <div className="stat-item"><FaGlobe /> Countries <span>24</span></div>
-  <div className="stat-item new-this-month"><FaCalendar /> New This Month <span>12</span></div>
-</div>
+        <div className="stat-item"><FaHotel /> Total Hotels <span>156</span></div>
+        <div className="stat-item active-contacts"><FaUsers /> Active Contacts <span>342</span></div>
+        <div className="stat-item"><FaGlobe /> Countries <span>24</span></div>
+        <div className="stat-item new-this-month"><FaCalendar /> New This Month <span>12</span></div>
+      </div>
+      
       <div className="tabs-container">
         <div className="tabs">
           <button 
@@ -61,12 +63,19 @@ const HotelManagementSystem = () => {
           >
             <FaBuilding /> View Hotels
           </button>
+          <button 
+            className={activeTab === 'analytics' ? 'active' : ''} 
+            onClick={() => setActiveTab('analytics')}
+          >
+            <FaChartBar /> Analytics
+          </button>
         </div>
       </div>
       
       <div className="tab-content">
         {activeTab === 'add' && <AddHotelTab showNotification={showNotification} />}
         {activeTab === 'view' && <HotelSalesList showNotification={showNotification} />}
+        {activeTab === 'analytics' && <AnalyticsTab />}
       </div>
     </div>
   );
@@ -77,7 +86,7 @@ const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCod
   <div className="contact-person-fields">
     <div className="form-row">
       <div className="form-group">
-        <label><FaUserTie /> Name <span className="required">*</span></label>
+        <label>Name <span className="required">*</span></label>
         <input
           type="text"
           value={person.name}
@@ -87,7 +96,7 @@ const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCod
         />
       </div>
       <div className="form-group">
-        <label><FaEnvelope /> Email <span className="required">*</span></label>
+        <label>Email <span className="required">*</span></label>
         <input
           type="email"
           value={person.email}
@@ -97,7 +106,7 @@ const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCod
         />
       </div>
       <div className="form-group">
-        <label><FaPhone /> Contact <span className="required">*</span></label>
+        <label>Contact <span className="required">*</span></label>
         <div className="phone-input-container">
           <span className="phone-prefix">{phoneCode}</span>
           <input
@@ -185,8 +194,6 @@ const AddHotelTab = ({ showNotification }) => {
   const countries = countriesData;
   const citiesByCountry = citiesData;
   const hotelsInCity = formData.city ? hotelsData[formData.city] || [] : [];
-
-
 
   const getCurrentPhoneCode = () => {
     const country = countries.find(c => c.code === formData.countryCode);
@@ -282,7 +289,7 @@ const AddHotelTab = ({ showNotification }) => {
       city: '',
       hotelName: '',
       hotelContactNumber: '',
-      address: '',
+      address: '',  
       hotelChain: '',
       salesPersons: [{ name: '', email: '', contact: '' }],
       reservationPersons: [{ name: '', email: '', contact: '' }],
@@ -356,9 +363,9 @@ const AddHotelTab = ({ showNotification }) => {
     if (type === 'checkbox') {
       setFormData(prev => ({
         ...prev,
-        // facilitiesAvailable: checked 
-        //   ? [...prev.facilitiesAvailable, name]
-        //   : prev.facilitiesAvailable.filter(item => item !== name)
+        facilitiesAvailable: checked 
+          ? [...prev.facilitiesAvailable, name]
+          : prev.facilitiesAvailable.filter(item => item !== name)
       }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
@@ -432,7 +439,7 @@ const AddHotelTab = ({ showNotification }) => {
           </div>
           <div className="form-grid">
             <div className="form-group searchable-dropdown" ref={countryDropdownRef}>
-              <label><FaMapMarkerAlt /> Country <span className="required">*</span></label>
+              <label>Country <span className="required">*</span></label>
               <div className="dropdown-container">
                 <input
                   type="text"
@@ -463,7 +470,7 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
 
             <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
-              <label><FaMapMarkerAlt /> City <span className="required">*</span></label>
+              <label>City <span className="required">*</span></label>
               <div className="dropdown-container">
                 <input
                   type="text"
@@ -495,7 +502,7 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
 
             <div className="form-group searchable-dropdown" ref={hotelDropdownRef}>
-              <label><FaBuilding /> Hotel <span className="required">*</span></label>
+              <label>Hotel <span className="required">*</span></label>
               <div className="dropdown-container">
                 <input
                   type="text"
@@ -541,7 +548,7 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
 
             <div className="form-group">
-              <label><FaPhone /> Hotel Contact Number</label>
+              <label>Hotel Contact Number</label>
               <div className="phone-input-container">
                 <span className="phone-prefix">{getCurrentPhoneCode()}</span>
                 <input
@@ -559,7 +566,7 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
 
             <div className="form-group">
-              <label><FaMapMarkerAlt /> Address <span className="required">*</span></label>
+              <label>Address <span className="required">*</span></label>
               <input
                 type="text"
                 name="address"
@@ -575,7 +582,7 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
 
             <div className="form-group">
-              <label><FaBuilding /> Hotel Chain</label>
+              <label>Hotel Chain</label>
               <input
                 type="text"
                 name="hotelChain"
@@ -587,8 +594,8 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
           </div>
 
-          {/* <div className="form-group">
-            <label><FaStar /> Facilities Available</label>
+          <div className="form-group">
+            <label>Facilities Available</label>
             <div className="facilities-grid">
               {facilitiesOptions.map(facility => (
                 <label key={facility} className="facility-checkbox">
@@ -603,7 +610,7 @@ const AddHotelTab = ({ showNotification }) => {
                 </label>
               ))}
             </div>
-          </div> */}
+          </div>
         </div>
 
         <div className="form-section">
@@ -708,6 +715,113 @@ const Modal = ({ isOpen, onClose, children, title, size = 'medium' }) => {
         </div>
         <div className="modal-body">
           {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Analytics Tab Component
+const AnalyticsTab = () => {
+  return (
+    <div className="analytics-tab">
+      <div className="analytics-header">
+        <h2>Hotel Analytics Dashboard</h2>
+        <p>Comprehensive insights into your hotel management system</p>
+      </div>
+      
+      <div className="analytics-grid">
+        <div className="analytics-card">
+          <div className="analytics-icon">
+            <FaHotel />
+          </div>
+          <div className="analytics-content">
+            <h3>156</h3>
+            <p>Total Hotels</p>
+          </div>
+        </div>
+        
+        <div className="analytics-card">
+          <div className="analytics-icon">
+            <FaUsers />
+          </div>
+          <div className="analytics-content">
+            <h3>342</h3>
+            <p>Active Contacts</p>
+          </div>
+        </div>
+        
+        <div className="analytics-card">
+          <div className="analytics-icon">
+            <FaGlobe />
+          </div>
+          <div className="analytics-content">
+            <h3>24</h3>
+            <p>Countries</p>
+          </div>
+        </div>
+        
+        <div className="analytics-card">
+          <div className="analytics-icon">
+            <FaCalendar />
+          </div>
+          <div className="analytics-content">
+            <h3>12</h3>
+            <p>New This Month</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="charts-section">
+        <div className="chart-card">
+          <h3>Hotels by Country</h3>
+          <div className="chart-placeholder">
+            <FaRegChartBar size={40} />
+            <p>Country distribution chart</p>
+          </div>
+        </div>
+        
+        <div className="chart-card">
+          <h3>Monthly Growth</h3>
+          <div className="chart-placeholder">
+            <FaChartBar size={40} />
+            <p>Growth trend chart</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="recent-activities">
+        <h3>Recent Activities</h3>
+        <div className="activities-list">
+          <div className="activity-item">
+            <div className="activity-icon">
+              <FaPlus />
+            </div>
+            <div className="activity-content">
+              <p>New hotel <strong>Grand Plaza</strong> added</p>
+              <span className="activity-time">2 hours ago</span>
+            </div>
+          </div>
+          
+          <div className="activity-item">
+            <div className="activity-icon">
+              <FaEdit />
+            </div>
+            <div className="activity-content">
+              <p>Hotel <strong>Seaside Resort</strong> updated</p>
+              <span className="activity-time">5 hours ago</span>
+            </div>
+          </div>
+          
+          <div className="activity-item">
+            <div className="activity-icon">
+              <FaUserTie />
+            </div>
+            <div className="activity-content">
+              <p>New contact added to <strong>Mountain View Hotel</strong></p>
+              <span className="activity-time">Yesterday</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1116,7 +1230,7 @@ const HotelSalesList = ({ showNotification }) => {
               </div>
             </div>
             
-            {/* {viewHotel.facilitiesAvailable?.length > 0 && (
+            {viewHotel.facilitiesAvailable?.length > 0 && (
               <div className="modal-section">
                 <h4><FaStar /> Facilities Available</h4>
                 <div className="facilities-list">
@@ -1125,7 +1239,7 @@ const HotelSalesList = ({ showNotification }) => {
                   ))}
                 </div>
               </div>
-            )} */}
+            )}
             
             <div className="modal-section">
               <h4><FaUserTie /> Contact Persons</h4>
@@ -1208,7 +1322,7 @@ const HotelSalesList = ({ showNotification }) => {
         )}
       </Modal>
       
-      {/* <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel Information" size="large">
+      <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel Information" size="large">
         {editingHotel && (
           <EditHotelForm 
             hotel={editingHotel} 
@@ -1217,12 +1331,12 @@ const HotelSalesList = ({ showNotification }) => {
             facilitiesOptions={facilitiesOptions}
           />
         )}
-      </Modal> */}
+      </Modal>
     </div>
   );
 };
 
-// Edit Hotel Form Component (extracted for better organization)
+// Edit Hotel Form Component
 const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
   const [formData, setFormData] = useState(hotel);
   const [isSaving, setIsSaving] = useState(false);
@@ -1279,7 +1393,7 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
         </div>
         <div className="form-grid">
           <div className="form-group">
-            <label><FaBuilding /> Hotel Name <span className="required">*</span></label>
+            <label>Hotel Name <span className="required">*</span></label>
             <input 
               value={formData.hotelName || ""} 
               onChange={(e) => updateField('hotelName', e.target.value)} 
@@ -1287,7 +1401,7 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
             />
           </div>
           <div className="form-group">
-            <label><FaMapMarkerAlt /> Country <span className="required">*</span></label>
+            <label>Country <span className="required">*</span></label>
             <input 
               value={formData.country || ""} 
               onChange={(e) => updateField('country', e.target.value)} 
@@ -1295,7 +1409,7 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
             />
           </div>
           <div className="form-group">
-            <label><FaMapMarkerAlt /> City <span className="required">*</span></label>
+            <label>City <span className="required">*</span></label>
             <input 
               value={formData.city || ""} 
               onChange={(e) => updateField('city', e.target.value)} 
@@ -1303,7 +1417,7 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
             />
           </div>
           <div className="form-group">
-            <label><FaMapMarkerAlt /> Address <span className="required">*</span></label>
+            <label>Address <span className="required">*</span></label>
             <input 
               value={formData.address || ""} 
               onChange={(e) => updateField('address', e.target.value)} 
@@ -1311,14 +1425,14 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
             />
           </div>
           <div className="form-group">
-            <label><FaPhone /> Contact Number</label>
+            <label>Contact Number</label>
             <input 
               value={formData.hotelContactNumber || ""} 
               onChange={(e) => updateField('hotelContactNumber', e.target.value)} 
             />
           </div>
           <div className="form-group">
-            <label><FaBuilding /> Hotel Chain</label>
+            <label>Hotel Chain</label>
             <input 
               value={formData.hotelChain || ""} 
               onChange={(e) => updateField('hotelChain', e.target.value)} 
@@ -1326,8 +1440,8 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
           </div>
         </div>
 
-        {/* <div className="form-group">
-          <label><FaStar /> Facilities Available</label>
+        <div className="form-group">
+          <label>Facilities Available</label>
           <div className="facilities-grid">
             {facilitiesOptions.map(facility => (
               <label key={facility} className="facility-checkbox">
@@ -1341,7 +1455,7 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
               </label>
             ))}
           </div>
-        </div> */}
+        </div>
       </div>
       
       <div className="form-section">
