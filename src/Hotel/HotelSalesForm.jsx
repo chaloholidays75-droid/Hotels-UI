@@ -8,7 +8,7 @@ import {
   FaCheckCircle, FaTimesCircle, FaUserTie, FaEnvelope, FaPhone,
   FaMinus, FaPlus, FaBuilding, FaMapMarkerAlt, FaStar, FaInfoCircle,
   FaSave, FaTimes, FaEye, FaEdit, FaTrash, FaSearch, FaClipboardList,
-  FaMoneyCheckAlt, FaReceipt, FaConciergeBell, FaChevronDown, FaFilter,
+  FaMoneyCheckAlt, FaReceipt, FaConciergeBell, FaChevronDown, FaFilter,FaCalendar,
   FaSort, FaSortUp, FaSortDown, FaEllipsisV, FaExternalLinkAlt,FaHotel,FaUsers,FaGlobe
 } from 'react-icons/fa';
 import './HotelManagementSystem.css';
