@@ -1044,6 +1044,6 @@ h4 {
 
   .pagination {
     flex-direction: column;
-    gap: 3rem;
+    gap: 1rem;
   }
 }
