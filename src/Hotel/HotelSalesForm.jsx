@@ -1116,7 +1116,7 @@ const HotelSalesList = ({ showNotification }) => {
               </div>
             </div>
             
-            {viewHotel.facilitiesAvailable?.length > 0 && (
+            {/* {viewHotel.facilitiesAvailable?.length > 0 && (
               <div className="modal-section">
                 <h4><FaStar /> Facilities Available</h4>
                 <div className="facilities-list">
@@ -1125,7 +1125,7 @@ const HotelSalesList = ({ showNotification }) => {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
             
             <div className="modal-section">
               <h4><FaUserTie /> Contact Persons</h4>
@@ -1208,7 +1208,7 @@ const HotelSalesList = ({ showNotification }) => {
         )}
       </Modal>
       
-      <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel Information" size="large">
+      {/* <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel Information" size="large">
         {editingHotel && (
           <EditHotelForm 
             hotel={editingHotel} 
@@ -1217,7 +1217,7 @@ const HotelSalesList = ({ showNotification }) => {
             facilitiesOptions={facilitiesOptions}
           />
         )}
-      </Modal>
+      </Modal> */}
     </div>
   );
 };
@@ -1326,7 +1326,7 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
           </div>
         </div>
 
-        <div className="form-group">
+        {/* <div className="form-group">
           <label><FaStar /> Facilities Available</label>
           <div className="facilities-grid">
             {facilitiesOptions.map(facility => (
@@ -1341,7 +1341,7 @@ const EditHotelForm = ({ hotel, onSave, onCancel, facilitiesOptions }) => {
               </label>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
       
       <div className="form-section">
