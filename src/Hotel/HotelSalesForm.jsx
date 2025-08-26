@@ -9,7 +9,7 @@ import {
   FaMinus, FaPlus, FaBuilding, FaMapMarkerAlt, FaStar, FaInfoCircle,
   FaSave, FaTimes, FaEye, FaEdit, FaTrash, FaSearch, FaClipboardList,
   FaMoneyCheckAlt, FaReceipt, FaConciergeBell, FaChevronDown, FaFilter,
-  FaSort, FaSortUp, FaSortDown, FaEllipsisV, FaExternalLinkAlt
+  FaSort, FaSortUp, FaSortDown, FaEllipsisV, FaExternalLinkAlt,FaHotel
 } from 'react-icons/fa';
 import './HotelManagementSystem.css';
 
