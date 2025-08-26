@@ -7,14 +7,15 @@ import countriesData from '../data/countries.json';
 import citiesData from '../data/cities.json';
 import hotelsData from '../data/hotels.json';
 
-// Import icons
+// Import icons (Font Awesome 6)
 import { 
   FaEye, FaEdit, FaTrash, FaSearch, FaTimes, 
   FaSave, FaTimesCircle, FaCheckCircle, FaInfoCircle,
   FaPhone, FaEnvelope, FaMapMarkerAlt, FaBuilding,
   FaUserTie, FaClipboardList, FaConciergeBell,
   FaReceipt, FaMoneyCheckAlt, FaStar, FaPlus, FaMinus
-} from 'react-icons/fa';
+} from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const HotelManagementSystem = () => {
   const [activeTab, setActiveTab] = useState('add');
@@ -29,7 +30,7 @@ const HotelManagementSystem = () => {
     <div className="hotel-management-system">
       {notification.show && (
         <div className={`notification ${notification.type}`}>
-          {notification.type === 'success' ? <FaCheckCircle /> : <FaTimesCircle />}
+          <FontAwesomeIcon icon={notification.type === 'success' ? FaCheckCircle : FaTimesCircle} />
           <span>{notification.message}</span>
         </div>
       )}
@@ -39,13 +40,13 @@ const HotelManagementSystem = () => {
           className={activeTab === 'add' ? 'active' : ''} 
           onClick={() => setActiveTab('add')}
         >
-          Add Hotel
+          <FontAwesomeIcon icon={FaPlus} /> Add Hotel
         </button>
         <button 
           className={activeTab === 'view' ? 'active' : ''} 
           onClick={() => setActiveTab('view')}
         >
-          View Hotels
+          <FontAwesomeIcon icon={FaEye} /> View Hotels
         </button>
       </div>
       
@@ -61,25 +62,26 @@ const HotelManagementSystem = () => {
 const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCode }) => (
   <div className="contact-person-fields">
     <div className="form-group">
-      <label><FaUserTie /> Name <span className="required">*</span></label>
       <input
         type="text"
         value={person.name}
         onChange={(e) => onChange(index, 'name', e.target.value)}
         required
+        placeholder=" "
       />
+      <label><FontAwesomeIcon icon={FaUserTie} /> Name <span className="required">*</span></label>
     </div>
     <div className="form-group">
-      <label><FaEnvelope /> Email <span className="required">*</span></label>
       <input
         type="email"
         value={person.email}
         onChange={(e) => onChange(index, 'email', e.target.value)}
         required
+        placeholder=" "
       />
+      <label><FontAwesomeIcon icon={FaEnvelope} /> Email <span className="required">*</span></label>
     </div>
     <div className="form-group">
-      <label><FaPhone /> Contact <span className="required">*</span></label>
       <input
         type="tel"
         value={person.contact}
@@ -87,10 +89,11 @@ const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCod
         placeholder={`${phoneCode} XXX XXX XXXX`}
         required
       />
+      <label><FontAwesomeIcon icon={FaPhone} /> Contact <span className="required">*</span></label>
     </div>
     {index > 0 && (
       <button type="button" className="remove-person-btn" onClick={() => onRemove(index)}>
-        <FaMinus /> Remove
+        <FontAwesomeIcon icon={FaMinus} /> Remove
       </button>
     )}
   </div>
@@ -99,7 +102,7 @@ const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCod
 // Contact Role Section
 const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, phoneCode, icon }) => (
   <div className="contact-section">
-    <h4>{icon} {title}</h4>
+    <h4><FontAwesomeIcon icon={icon} /> {title}</h4>
     {persons.map((person, index) => (
       <ContactPersonFields 
         key={index} 
@@ -112,7 +115,7 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
       />
     ))}
     <button type="button" className="add-person-btn" onClick={() => onAdd(role)}>
-      <FaPlus /> Add {title}
+      <FontAwesomeIcon icon={FaPlus} /> Add {title}
     </button>
   </div>
 );
@@ -379,13 +382,12 @@ const AddHotelTab = ({ showNotification }) => {
 
   return (
     <div className="hotel-form-container">
-      <h2>Add Hotel Information</h2>
+      <h2><FontAwesomeIcon icon={FaBuilding} /> Add Hotel Information</h2>
       <form onSubmit={handleSubmit}>
         <div className="form-section">
-          <h3><FaBuilding /> Hotel Information</h3>
+          <h3><FontAwesomeIcon icon={FaBuilding} /> Hotel Information</h3>
           <div className="form-grid">
             <div className="form-group searchable-dropdown" ref={countryDropdownRef}>
-              <label><FaMapMarkerAlt /> Country <span className="required">*</span></label>
               <input
                 type="text"
                 value={countrySearch}
@@ -394,9 +396,10 @@ const AddHotelTab = ({ showNotification }) => {
                   setShowCountryDropdown(true);
                 }}
                 onFocus={() => setShowCountryDropdown(true)}
-                placeholder="Search for a country..."
+                placeholder=" "
                 required
               />
+              <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Country <span className="required">*</span></label>
               {validationErrors.country && <p className="error-message">{validationErrors.country}</p>}
               {showCountryDropdown && (
                 <div className="dropdown-options">
@@ -410,7 +413,6 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
 
             <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
-              <label><FaMapMarkerAlt /> City <span className="required">*</span></label>
               <input
                 type="text"
                 value={citySearch}
@@ -419,10 +421,11 @@ const AddHotelTab = ({ showNotification }) => {
                   setShowCityDropdown(true);
                 }}
                 onFocus={() => setShowCityDropdown(true)}
-                placeholder="Search for a city..."
+                placeholder=" "
                 required
                 disabled={!formData.country}
               />
+              <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> City <span className="required">*</span></label>
               {validationErrors.city && <p className="error-message">{validationErrors.city}</p>}
               {showCityDropdown && formData.country && (
                 <div className="dropdown-options">
@@ -438,7 +441,6 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
 
             <div className="form-group searchable-dropdown" ref={hotelDropdownRef}>
-              <label><FaBuilding /> Hotel <span className="required">*</span></label>
               <input
                 type="text"
                 value={hotelSearch}
@@ -447,10 +449,11 @@ const AddHotelTab = ({ showNotification }) => {
                   setShowHotelDropdown(true);
                 }}
                 onFocus={() => setShowHotelDropdown(true)}
-                placeholder="Search for a hotel..."
+                placeholder=" "
                 required
                 disabled={!formData.city}
               />
+              <label><FontAwesomeIcon icon={FaBuilding} /> Hotel <span className="required">*</span></label>
               {validationErrors.hotelName && <p className="error-message">{validationErrors.hotelName}</p>}
               {showHotelDropdown && formData.city && (
                 <div className="dropdown-options">
@@ -479,47 +482,47 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
 
             <div className="form-group">
-              <label><FaPhone /> Hotel Contact Number</label>
               <input
                 type="tel"
                 name="hotelContactNumber"
                 value={formData.hotelContactNumber}
                 onChange={(e) => handlePhoneChange(e, 'hotelContactNumber')}
-                placeholder={`${getCurrentPhoneCode()} XXX XXX XXXX`}
+                placeholder=" "
               />
+              <label><FontAwesomeIcon icon={FaPhone} /> Hotel Contact Number</label>
               <div className="form-note">Country code: {getCurrentPhoneCode()}</div>
             </div>
 
             <div className="form-group">
-              <label><FaMapMarkerAlt /> Address <span className="required">*</span></label>
               <input
                 type="text"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                placeholder="Hotel address"
+                placeholder=" "
                 readOnly={isHotelFromDatabase}
                 required
               />
+              <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Address <span className="required">*</span></label>
               {validationErrors.address && <p className="error-message">{validationErrors.address}</p>}
               {isHotelFromDatabase && <div className="form-note">Address from our database</div>}
             </div>
 
             <div className="form-group">
-              <label><FaBuilding /> Hotel Chain</label>
               <input
                 type="text"
                 name="hotelChain"
                 value={formData.hotelChain}
                 onChange={handleChange}
-                placeholder="Hotel chain (optional)"
+                placeholder=" "
                 readOnly={isHotelFromDatabase}
               />
+              <label><FontAwesomeIcon icon={FaBuilding} /> Hotel Chain</label>
             </div>
           </div>
 
           <div className="form-group">
-            <label><FaStar /> Facilities Available</label>
+            <label><FontAwesomeIcon icon={FaStar} /> Facilities Available</label>
             <div className="facilities-grid">
               {facilitiesOptions.map(facility => (
                 <label key={facility} className="facility-checkbox">
@@ -537,7 +540,7 @@ const AddHotelTab = ({ showNotification }) => {
         </div>
 
         <div className="form-section">
-          <h3><FaUserTie /> Contact Persons</h3>
+          <h3><FontAwesomeIcon icon={FaUserTie} /> Contact Persons</h3>
           {validationErrors.salesPersons && <p className="error-message">{validationErrors.salesPersons}</p>}
           <ContactRoleSection 
             title="Sales Person" 
@@ -547,7 +550,7 @@ const AddHotelTab = ({ showNotification }) => {
             onRemove={removePerson} 
             onChange={changePerson} 
             phoneCode={getCurrentPhoneCode()} 
-            icon={<FaUserTie />}
+            icon={FaUserTie}
           />
           <ContactRoleSection 
             title="Reservation Person" 
@@ -557,7 +560,7 @@ const AddHotelTab = ({ showNotification }) => {
             onRemove={removePerson} 
             onChange={changePerson} 
             phoneCode={getCurrentPhoneCode()} 
-            icon={<FaClipboardList />}
+            icon={FaClipboardList}
           />
           <ContactRoleSection 
             title="Accounts Person" 
@@ -567,7 +570,7 @@ const AddHotelTab = ({ showNotification }) => {
             onRemove={removePerson} 
             onChange={changePerson} 
             phoneCode={getCurrentPhoneCode()} 
-            icon={<FaMoneyCheckAlt />}
+            icon={FaMoneyCheckAlt}
           />
           <ContactRoleSection 
             title="Reception Person" 
@@ -577,7 +580,7 @@ const AddHotelTab = ({ showNotification }) => {
             onRemove={removePerson} 
             onChange={changePerson} 
             phoneCode={getCurrentPhoneCode()} 
-            icon={<FaReceipt />}
+            icon={FaReceipt}
           />
           <ContactRoleSection 
             title="Concierge" 
@@ -587,26 +590,26 @@ const AddHotelTab = ({ showNotification }) => {
             onRemove={removePerson} 
             onChange={changePerson} 
             phoneCode={getCurrentPhoneCode()} 
-            icon={<FaConciergeBell />}
+            icon={FaConciergeBell}
           />
         </div>
 
         <div className="form-section">
-          <h3><FaInfoCircle /> Special Remarks</h3>
+          <h3><FontAwesomeIcon icon={FaInfoCircle} /> Special Remarks</h3>
           <div className="form-group full-width">
-            <label>Remarks</label>
             <textarea
               name="specialRemarks"
               value={formData.specialRemarks}
               onChange={handleChange}
-              placeholder="Enter any special remarks or notes about this hotel"
-              rows="5"
+              placeholder=" "
+              rows="6"
             />
+            <label>Remarks</label>
           </div>
         </div>
 
         <div className="button-container">
-          <button type="submit" className="submit-btn"><FaSave /> Submit Form</button>
+          <button type="submit" className="submit-btn"><FontAwesomeIcon icon={FaSave} /> Submit Form</button>
           <button type="button" className="cancel-btn" onClick={() => setFormData({
             country: '',
             countryCode: '',
@@ -623,7 +626,7 @@ const AddHotelTab = ({ showNotification }) => {
             creditCategory: '',
             specialRemarks: '',
             facilitiesAvailable: []
-          })}>Reset</button>
+          })}><FontAwesomeIcon icon={FaTimes} /> Reset</button>
         </div>
       </form>
     </div>
@@ -638,9 +641,9 @@ const Modal = ({ isOpen, onClose, children, title }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content modal-animate" onClick={e => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>{title}</h3>
+          <h3><FontAwesomeIcon icon={FaInfoCircle} /> {title}</h3>
           <button className="modal-close" onClick={onClose}>
-            <FaTimes />
+            <FontAwesomeIcon icon={FaTimes} />
           </button>
         </div>
         <div className="modal-body">
@@ -750,33 +753,40 @@ const HotelSalesList = ({ showNotification }) => {
   return (
     <div className="hotel-sales-list">
       <div className="header-section">
-        <h2>Hotel Sales List</h2>
+        <h2><FontAwesomeIcon icon={FaBuilding} /> Hotel Sales List</h2>
       </div>
 
       <div className="filters-section">
         <div className="search-box">
-          <FaSearch className="search-icon" />
+          <FontAwesomeIcon icon={FaSearch} className="search-icon" />
           <input
             type="text"
-            placeholder="Search by hotel, city, or country..."
+            placeholder=" "
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          <label>Search by hotel, city, or country</label>
         </div>
         
         <div className="filter-controls">
-          <select value={filterCountry} onChange={(e) => setFilterCountry(e.target.value)}>
-            <option value="">All Countries</option>
-            {countries.map(country => <option key={country} value={country}>{country}</option>)}
-          </select>
+          <div className="form-group">
+            <select value={filterCountry} onChange={(e) => setFilterCountry(e.target.value)}>
+              <option value="">All Countries</option>
+              {countries.map(country => <option key={country} value={country}>{country}</option>)}
+            </select>
+            <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Filter by Country</label>
+          </div>
           
-          <select value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
-            <option value="">All Cities</option>
-            {cities.map(city => <option key={city} value={city}>{city}</option>)}
-          </select>
+          <div className="form-group">
+            <select value={filterCity} onChange={(e) => setFilterCity(e.target.value)}>
+              <option value="">All Cities</option>
+              {cities.map(city => <option key={city} value={city}>{city}</option>)}
+            </select>
+            <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Filter by City</label>
+          </div>
           
           <button className="clear-filters" onClick={() => { setFilterCountry(""); setFilterCity(""); setSearchTerm(""); }}>
-            Clear Filters
+            <FontAwesomeIcon icon={FaTimes} /> Clear Filters
           </button>
         </div>
       </div>
@@ -813,9 +823,9 @@ const HotelSalesList = ({ showNotification }) => {
                     <td>{hotel.salesPersons.length} {hotel.salesPersons.length === 1 ? 'person' : 'persons'}</td>
                     <td>{hotel.reservationPersons.length} {hotel.reservationPersons.length === 1 ? 'person' : 'persons'}</td>
                     <td>
-                      <button className="view-btn" onClick={() => setViewHotel(hotel)}><FaEye /></button>
-                      <button className="edit-btn" onClick={() => setEditingHotel(hotel)}><FaEdit /></button>
-                      <button className="delete-btn" onClick={() => deleteHotel(hotel.id)}><FaTrash /></button>
+                      <button className="view-btn" onClick={() => setViewHotel(hotel)}><FontAwesomeIcon icon={FaEye} /></button>
+                      <button className="edit-btn" onClick={() => setEditingHotel(hotel)}><FontAwesomeIcon icon={FaEdit} /></button>
+                      <button className="delete-btn" onClick={() => deleteHotel(hotel.id)}><FontAwesomeIcon icon={FaTrash} /></button>
                     </td>
                   </tr>
                 ))}
@@ -846,23 +856,23 @@ const HotelSalesList = ({ showNotification }) => {
           <div className="hotel-details-modal">
             <div className="hotel-basic-info">
               <h3>{viewHotel.hotelName}</h3>
-              <div className="hotel-location"><FaMapMarkerAlt /> {viewHotel.city}, {viewHotel.country}</div>
-              {viewHotel.address && <div className="detail-item"><FaBuilding /> <strong>Address:</strong> {viewHotel.address}</div>}
-              {viewHotel.hotelContactNumber && <div className="detail-item"><FaPhone /> <strong>Contact:</strong> {viewHotel.hotelContactNumber}</div>}
-              {viewHotel.hotelChain && <div className="detail-item"><FaBuilding /> <strong>Chain:</strong> {viewHotel.hotelChain}</div>}
+              <div className="hotel-location"><FontAwesomeIcon icon={FaMapMarkerAlt} /> {viewHotel.city}, {viewHotel.country}</div>
+              {viewHotel.address && <div className="detail-item"><FontAwesomeIcon icon={FaBuilding} /> <strong>Address:</strong> {viewHotel.address}</div>}
+              {viewHotel.hotelContactNumber && <div className="detail-item"><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {viewHotel.hotelContactNumber}</div>}
+              {viewHotel.hotelChain && <div className="detail-item"><FontAwesomeIcon icon={FaBuilding} /> <strong>Chain:</strong> {viewHotel.hotelChain}</div>}
             </div>
             
             <div className="contact-persons-section">
-              <h4><FaUserTie /> Contact Persons</h4>
+              <h4><FontAwesomeIcon icon={FaUserTie} /> Contact Persons</h4>
               
               {viewHotel.salesPersons.length > 0 && (
                 <div className="contact-person">
-                  <h5><FaUserTie /> Sales Persons</h5>
+                  <h5><FontAwesomeIcon icon={FaUserTie} /> Sales Persons</h5>
                   {viewHotel.salesPersons.map((p, idx) => (
                     <div key={idx} className="contact-person-details">
-                      <p><FaUserTie /> <strong>Name:</strong> {p.name}</p>
-                      {p.email && <p><FaEnvelope /> <strong>Email:</strong> {p.email}</p>}
-                      {p.contact && <p><FaPhone /> <strong>Contact:</strong> {p.contact}</p>}
+                      <p><FontAwesomeIcon icon={FaUserTie} /> <strong>Name:</strong> {p.name}</p>
+                      {p.email && <p><FontAwesomeIcon icon={FaEnvelope} /> <strong>Email:</strong> {p.email}</p>}
+                      {p.contact && <p><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {p.contact}</p>}
                     </div>
                   ))}
                 </div>
@@ -870,12 +880,12 @@ const HotelSalesList = ({ showNotification }) => {
               
               {viewHotel.reservationPersons.length > 0 && (
                 <div className="contact-person">
-                  <h5><FaClipboardList /> Reservation Persons</h5>
+                  <h5><FontAwesomeIcon icon={FaClipboardList} /> Reservation Persons</h5>
                   {viewHotel.reservationPersons.map((p, idx) => (
                     <div key={idx} className="contact-person-details">
-                      <p><FaUserTie /> <strong>Name:</strong> {p.name}</p>
-                      {p.email && <p><FaEnvelope /> <strong>Email:</strong> {p.email}</p>}
-                      {p.contact && <p><FaPhone /> <strong>Contact:</strong> {p.contact}</p>}
+                      <p><FontAwesomeIcon icon={FaUserTie} /> <strong>Name:</strong> {p.name}</p>
+                      {p.email && <p><FontAwesomeIcon icon={FaEnvelope} /> <strong>Email:</strong> {p.email}</p>}
+                      {p.contact && <p><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {p.contact}</p>}
                     </div>
                   ))}
                 </div>
@@ -883,12 +893,12 @@ const HotelSalesList = ({ showNotification }) => {
               
               {viewHotel.accountsPersons.length > 0 && (
                 <div className="contact-person">
-                  <h5><FaMoneyCheckAlt /> Accounts Persons</h5>
+                  <h5><FontAwesomeIcon icon={FaMoneyCheckAlt} /> Accounts Persons</h5>
                   {viewHotel.accountsPersons.map((p, idx) => (
                     <div key={idx} className="contact-person-details">
-                      <p><FaUserTie /> <strong>Name:</strong> {p.name}</p>
-                      {p.email && <p><FaEnvelope /> <strong>Email:</strong> {p.email}</p>}
-                      {p.contact && <p><FaPhone /> <strong>Contact:</strong> {p.contact}</p>}
+                      <p><FontAwesomeIcon icon={FaUserTie} /> <strong>Name:</strong> {p.name}</p>
+                      {p.email && <p><FontAwesomeIcon icon={FaEnvelope} /> <strong>Email:</strong> {p.email}</p>}
+                      {p.contact && <p><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {p.contact}</p>}
                     </div>
                   ))}
                 </div>
@@ -896,12 +906,12 @@ const HotelSalesList = ({ showNotification }) => {
               
               {viewHotel.receptionPersons.length > 0 && (
                 <div className="contact-person">
-                  <h5><FaReceipt /> Reception Persons</h5>
+                  <h5><FontAwesomeIcon icon={FaReceipt} /> Reception Persons</h5>
                   {viewHotel.receptionPersons.map((p, idx) => (
                     <div key={idx} className="contact-person-details">
-                      <p><FaUserTie /> <strong>Name:</strong> {p.name}</p>
-                      {p.email && <p><FaEnvelope /> <strong>Email:</strong> {p.email}</p>}
-                      {p.contact && <p><FaPhone /> <strong>Contact:</strong> {p.contact}</p>}
+                      <p><FontAwesomeIcon icon={FaUserTie} /> <strong>Name:</strong> {p.name}</p>
+                      {p.email && <p><FontAwesomeIcon icon={FaEnvelope} /> <strong>Email:</strong> {p.email}</p>}
+                      {p.contact && <p><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {p.contact}</p>}
                     </div>
                   ))}
                 </div>
@@ -909,12 +919,12 @@ const HotelSalesList = ({ showNotification }) => {
               
               {viewHotel.concierges.length > 0 && (
                 <div className="contact-person">
-                  <h5><FaConciergeBell /> Concierges</h5>
+                  <h5><FontAwesomeIcon icon={FaConciergeBell} /> Concierges</h5>
                   {viewHotel.concierges.map((p, idx) => (
                     <div key={idx} className="contact-person-details">
-                      <p><FaUserTie /> <strong>Name:</strong> {p.name}</p>
-                      {p.email && <p><FaEnvelope /> <strong>Email:</strong> {p.email}</p>}
-                      {p.contact && <p><FaPhone /> <strong>Contact:</strong> {p.contact}</p>}
+                      <p><FontAwesomeIcon icon={FaUserTie} /> <strong>Name:</strong> {p.name}</p>
+                      {p.email && <p><FontAwesomeIcon icon={FaEnvelope} /> <strong>Email:</strong> {p.email}</p>}
+                      {p.contact && <p><FontAwesomeIcon icon={FaPhone} /> <strong>Contact:</strong> {p.contact}</p>}
                     </div>
                   ))}
                 </div>
@@ -923,14 +933,14 @@ const HotelSalesList = ({ showNotification }) => {
             
             {viewHotel.specialRemarks && (
               <div className="special-remarks-section">
-                <h4><FaInfoCircle /> Special Remarks</h4>
+                <h4><FontAwesomeIcon icon={FaInfoCircle} /> Special Remarks</h4>
                 <p>{viewHotel.specialRemarks}</p>
               </div>
             )}
             
             {viewHotel.facilitiesAvailable?.length > 0 && (
               <div className="facilities-section">
-                <h4><FaStar /> Facilities Available</h4>
+                <h4><FontAwesomeIcon icon={FaStar} /> Facilities Available</h4>
                 <div className="facilities-list">
                   {viewHotel.facilitiesAvailable.map((facility, index) => (
                     <span key={index} className="facility-tag">{facility}</span>
@@ -946,58 +956,64 @@ const HotelSalesList = ({ showNotification }) => {
         {editingHotel && (
           <div className="edit-hotel-form">
             <div className="form-section">
-              <h3><FaBuilding /> Hotel Information</h3>
+              <h3><FontAwesomeIcon icon={FaBuilding} /> Hotel Information</h3>
               <div className="form-grid">
                 <div className="form-group">
-                  <label><FaBuilding /> Hotel Name <span className="required">*</span></label>
                   <input 
                     value={editingHotel.hotelName || ""} 
                     onChange={(e) => setEditingHotel({...editingHotel, hotelName: e.target.value})} 
                     required 
+                    placeholder=" "
                   />
+                  <label><FontAwesomeIcon icon={FaBuilding} /> Hotel Name <span className="required">*</span></label>
                 </div>
                 <div className="form-group">
-                  <label><FaMapMarkerAlt /> Country <span className="required">*</span></label>
                   <input 
                     value={editingHotel.country || ""} 
                     onChange={(e) => setEditingHotel({...editingHotel, country: e.target.value})} 
                     required 
+                    placeholder=" "
                   />
+                  <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Country <span className="required">*</span></label>
                 </div>
                 <div className="form-group">
-                  <label><FaMapMarkerAlt /> City <span className="required">*</span></label>
                   <input 
                     value={editingHotel.city || ""} 
                     onChange={(e) => setEditingHotel({...editingHotel, city: e.target.value})} 
                     required 
+                    placeholder=" "
                   />
+                  <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> City <span className="required">*</span></label>
                 </div>
                 <div className="form-group">
-                  <label><FaMapMarkerAlt /> Address <span className="required">*</span></label>
                   <input 
                     value={editingHotel.address || ""} 
                     onChange={(e) => setEditingHotel({...editingHotel, address: e.target.value})} 
                     required 
+                    placeholder=" "
                   />
+                  <label><FontAwesomeIcon icon={FaMapMarkerAlt} /> Address <span className="required">*</span></label>
                 </div>
                 <div className="form-group">
-                  <label><FaPhone /> Contact Number</label>
                   <input 
                     value={editingHotel.hotelContactNumber || ""} 
                     onChange={(e) => setEditingHotel({...editingHotel, hotelContactNumber: e.target.value})} 
+                    placeholder=" "
                   />
+                  <label><FontAwesomeIcon icon={FaPhone} /> Contact Number</label>
                 </div>
                 <div className="form-group">
-                  <label><FaBuilding /> Hotel Chain</label>
                   <input 
                     value={editingHotel.hotelChain || ""} 
                     onChange={(e) => setEditingHotel({...editingHotel, hotelChain: e.target.value})} 
+                    placeholder=" "
                   />
+                  <label><FontAwesomeIcon icon={FaBuilding} /> Hotel Chain</label>
                 </div>
               </div>
 
               <div className="form-group">
-                <label><FaStar /> Facilities Available</label>
+                <label><FontAwesomeIcon icon={FaStar} /> Facilities Available</label>
                 <div className="facilities-grid">
                   {facilitiesOptions.map(facility => (
                     <label key={facility} className="facility-checkbox">
@@ -1006,13 +1022,10 @@ const HotelSalesList = ({ showNotification }) => {
                         name={facility}
                         checked={editingHotel.facilitiesAvailable?.includes(facility) || false}
                         onChange={(e) => {
-                          const checked = e.target.checked;
-                          setEditingHotel(prev => ({
-                            ...prev,
-                            facilitiesAvailable: checked 
-                              ? [...prev.facilitiesAvailable, facility]
-                              : prev.facilitiesAvailable.filter(item => item !== facility)
-                          }));
+                          const updatedFacilities = e.target.checked
+                            ? [...(editingHotel.facilitiesAvailable || []), facility]
+                            : (editingHotel.facilitiesAvailable || []).filter(item => item !== facility);
+                          setEditingHotel({...editingHotel, facilitiesAvailable: updatedFacilities});
                         }}
                       />
                       <span>{facility}</span>
@@ -1021,126 +1034,137 @@ const HotelSalesList = ({ showNotification }) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="form-section">
-              <h3><FaUserTie /> Contact Persons</h3>
+              <h3><FontAwesomeIcon icon={FaUserTie} /> Contact Persons</h3>
               <ContactRoleSection 
                 title="Sales Person" 
                 role="salesPerson" 
                 persons={editingHotel.salesPersons} 
-                onAdd={() => setEditingHotel(prev => ({
-                  ...prev,
-                  salesPersons: [...prev.salesPersons, { name: '', email: '', contact: '' }]
-                }))} 
-                onRemove={(role, index) => setEditingHotel(prev => ({
-                  ...prev,
-                  salesPersons: prev.salesPersons.filter((_, i) => i !== index)
-                }))} 
+                onAdd={() => setEditingHotel({
+                  ...editingHotel,
+                  salesPersons: [...editingHotel.salesPersons, { name: '', email: '', contact: '' }]
+                })}
+                onRemove={(role, index) => setEditingHotel({
+                  ...editingHotel,
+                  salesPersons: editingHotel.salesPersons.filter((_, i) => i !== index)
+                })}
                 onChange={(role, index, field, value) => {
-                  const updated = [...editingHotel.salesPersons];
-                  updated[index][field] = value;
-                  setEditingHotel(prev => ({ ...prev, salesPersons: updated }));
-                }} 
-                phoneCode={'+1'} // Simplified for edit form
-                icon={<FaUserTie />}
+                  const updatedPersons = [...editingHotel.salesPersons];
+                  updatedPersons[index][field] = value;
+                  setEditingHotel({...editingHotel, salesPersons: updatedPersons});
+                }}
+                phoneCode={'+1'} // Default phone code, adjust as needed
+                icon={FaUserTie}
               />
               <ContactRoleSection 
                 title="Reservation Person" 
                 role="reservationPerson" 
                 persons={editingHotel.reservationPersons} 
-                onAdd={() => setEditingHotel(prev => ({
-                  ...prev,
-                  reservationPersons: [...prev.reservationPersons, { name: '', email: '', contact: '' }]
-                }))} 
-                onRemove={(role, index) => setEditingHotel(prev => ({
-                  ...prev,
-                  reservationPersons: prev.reservationPersons.filter((_, i) => i !== index)
-                }))} 
+                onAdd={() => setEditingHotel({
+                  ...editingHotel,
+                  reservationPersons: [...editingHotel.reservationPersons, { name: '', email: '', contact: '' }]
+                })}
+                onRemove={(role, index) => setEditingHotel({
+                  ...editingHotel,
+                  reservationPersons: editingHotel.reservationPersons.filter((_, i) => i !== index)
+                })}
                 onChange={(role, index, field, value) => {
-                  const updated = [...editingHotel.reservationPersons];
-                  updated[index][field] = value;
-                  setEditingHotel(prev => ({ ...prev, reservationPersons: updated }));
-                }} 
-                phoneCode={'+1'} 
-                icon={<FaClipboardList />}
+                  const updatedPersons = [...editingHotel.reservationPersons];
+                  updatedPersons[index][field] = value;
+                  setEditingHotel({...editingHotel, reservationPersons: updatedPersons});
+                }}
+                phoneCode={'+1'}
+                icon={FaClipboardList}
               />
               <ContactRoleSection 
                 title="Accounts Person" 
                 role="accountsPerson" 
                 persons={editingHotel.accountsPersons} 
-                onAdd={() => setEditingHotel(prev => ({
-                  ...prev,
-                  accountsPersons: [...prev.accountsPersons, { name: '', email: '', contact: '' }]
-                }))} 
-                onRemove={(role, index) => setEditingHotel(prev => ({
-                  ...prev,
-                  accountsPersons: prev.accountsPersons.filter((_, i) => i !== index)
-                }))} 
+                onAdd={() => setEditingHotel({
+                  ...editingHotel,
+                  accountsPersons: [...editingHotel.accountsPersons, { name: '', email: '', contact: '' }]
+                })}
+                onRemove={(role, index) => setEditingHotel({
+                  ...editingHotel,
+                  accountsPersons: editingHotel.accountsPersons.filter((_, i) => i !== index)
+                })}
                 onChange={(role, index, field, value) => {
-                  const updated = [...editingHotel.accountsPersons];
-                  updated[index][field] = value;
-                  setEditingHotel(prev => ({ ...prev, accountsPersons: updated }));
-                }} 
-                phoneCode={'+1'} 
-                icon={<FaMoneyCheckAlt />}
+                  const updatedPersons = [...editingHotel.accountsPersons];
+                  updatedPersons[index][field] = value;
+                  setEditingHotel({...editingHotel, accountsPersons: updatedPersons});
+                }}
+                phoneCode={'+1'}
+                icon={FaMoneyCheckAlt}
               />
               <ContactRoleSection 
                 title="Reception Person" 
                 role="receptionPerson" 
                 persons={editingHotel.receptionPersons} 
-                onAdd={() => setEditingHotel(prev => ({
-                  ...prev,
-                  receptionPersons: [...prev.receptionPersons, { name: '', email: '', contact: '' }]
-                }))} 
-                onRemove={(role, index) => setEditingHotel(prev => ({
-                  ...prev,
-                  receptionPersons: prev.receptionPersons.filter((_, i) => i !== index)
-                }))} 
+                onAdd={() => setEditingHotel({
+                  ...editingHotel,
+                  receptionPersons: [...editingHotel.receptionPersons, { name: '', email: '', contact: '' }]
+                })}
+                onRemove={(role, index) => setEditingHotel({
+                  ...editingHotel,
+                  receptionPersons: editingHotel.receptionPersons.filter((_, i) => i !== index)
+                })}
                 onChange={(role, index, field, value) => {
-                  const updated = [...editingHotel.receptionPersons];
-                  updated[index][field] = value;
-                  setEditingHotel(prev => ({ ...prev, receptionPersons: updated }));
-                }} 
-                phoneCode={'+1'} 
-                icon={<FaReceipt />}
+                  const updatedPersons = [...editingHotel.receptionPersons];
+                  updatedPersons[index][field] = value;
+                  setEditingHotel({...editingHotel, receptionPersons: updatedPersons});
+                }}
+                phoneCode={'+1'}
+                icon={FaReceipt}
               />
               <ContactRoleSection 
                 title="Concierge" 
                 role="concierge" 
                 persons={editingHotel.concierges} 
-                onAdd={() => setEditingHotel(prev => ({
-                  ...prev,
-                  concierges: [...prev.concierges, { name: '', email: '', contact: '' }]
-                }))} 
-                onRemove={(role, index) => setEditingHotel(prev => ({
-                  ...prev,
-                  concierges: prev.concierges.filter((_, i) => i !== index)
-                }))} 
+                onAdd={() => setEditingHotel({
+                  ...editingHotel,
+                  concierges: [...editingHotel.concierges, { name: '', email: '', contact: '' }]
+                })}
+                onRemove={(role, index) => setEditingHotel({
+                  ...editingHotel,
+                  concierges: editingHotel.concierges.filter((_, i) => i !== index)
+                })}
                 onChange={(role, index, field, value) => {
-                  const updated = [...editingHotel.concierges];
-                  updated[index][field] = value;
-                  setEditingHotel(prev => ({ ...prev, concierges: updated }));
-                }} 
-                phoneCode={'+1'} 
-                icon={<FaConciergeBell />}
+                  const updatedPersons = [...editingHotel.concierges];
+                  updatedPersons[index][field] = value;
+                  setEditingHotel({...editingHotel, concierges: updatedPersons});
+                }}
+                phoneCode={'+1'}
+                icon={FaConciergeBell}
               />
             </div>
-            
+
             <div className="form-section">
-              <h3><FaInfoCircle /> Special Remarks</h3>
+              <h3><FontAwesomeIcon icon={FaInfoCircle} /> Special Remarks</h3>
               <div className="form-group full-width">
-                <label>Remarks</label>
                 <textarea
                   value={editingHotel.specialRemarks || ""}
                   onChange={(e) => setEditingHotel({...editingHotel, specialRemarks: e.target.value})}
-                  rows="5"
+                  placeholder=" "
+                  rows="6"
                 />
+                <label>Remarks</label>
               </div>
             </div>
-            
+
             <div className="form-actions">
-              <button className="save-btn" onClick={() => saveHotel(editingHotel)}><FaSave /> Save Changes</button>
-              <button className="cancel-btn" onClick={() => setEditingHotel(null)}><FaTimes /> Cancel</button>
+              <button 
+                className="save-btn" 
+                onClick={() => saveHotel(editingHotel)}
+              >
+                <FontAwesomeIcon icon={FaSave} /> Save Changes
+              </button>
+              <button 
+                className="cancel-btn" 
+                onClick={() => setEditingHotel(null)}
+              >
+                <FontAwesomeIcon icon={FaTimes} /> Cancel
+              </button>
             </div>
           </div>
         )}
