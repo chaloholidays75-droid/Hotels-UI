@@ -619,3 +619,289 @@
     font-size: 24px;
   }
 }
+/* List view styles */
+.hotels-list {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.list-header {
+  display: flex;
+  background-color: #f5f5f5;
+  padding: 15px;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
+}
+
+.header-cell {
+  flex: 1;
+  padding: 0 10px;
+}
+
+.header-cell.actions {
+  flex: 0.5;
+  text-align: center;
+}
+
+.hotel-list-item {
+  border-bottom: 1px solid #eee;
+  padding: 15px;
+}
+
+.hotel-list-item:last-child {
+  border-bottom: none;
+}
+
+.list-cell {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.hotel-info .hotel-name {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.hotel-info .hotel-address {
+  font-size: 14px;
+  color: #666;
+}
+
+.location .city {
+  font-weight: bold;
+}
+
+.location .country {
+  color: #666;
+}
+
+.sales-persons-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sales-person, .reservation-person {
+  display: flex;
+  flex-direction: column;
+}
+
+.person-name {
+  font-weight: 500;
+}
+
+.person-contact {
+  font-size: 14px;
+  color: #666;
+}
+
+.more-persons {
+  font-size: 14px;
+  color: #007bff;
+  cursor: pointer;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.view-details-btn, .edit-btn, .delete-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.view-details-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.edit-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Expanded details */
+.hotel-details-expanded, .edit-form-expanded {
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-item label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.sales-persons-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Edit form styles */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+}
+
+.list-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.list-form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.list-form-group label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.add-person-btn {
+  margin-left: 10px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sales-persons-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.sales-person-edit {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.remove-person-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.save-btn {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background-color: #6c757d;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.pagination button {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background-color: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.pagination button.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .list-header {
+    display: none;
+  }
+  
+  .hotel-list-item {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .action-buttons {
+    justify-content: flex-start;
+  }
+  
+  .sales-person-edit {
+    grid-template-columns: 1fr;
+  }
+  
+  .details-grid, .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
