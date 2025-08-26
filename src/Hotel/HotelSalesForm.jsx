@@ -41,7 +41,12 @@ const HotelManagementSystem = () => {
         <h1>Hotel Management System</h1>
         <p>Manage hotel information, contacts, and facilities</p>
       </div>
-      
+      <div className="stats-bar">
+  <div className="stat-item"><FaHotel /> Total Hotels <span>156</span></div>
+  <div className="stat-item active-contacts"><FaUsers /> Active Contacts <span>342</span></div>
+  <div className="stat-item"><FaGlobe /> Countries <span>24</span></div>
+  <div className="stat-item new-this-month"><FaCalendar /> New This Month <span>12</span></div>
+</div>
       <div className="tabs-container">
         <div className="tabs">
           <button 
