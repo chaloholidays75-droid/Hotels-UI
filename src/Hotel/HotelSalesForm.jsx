@@ -358,19 +358,14 @@ const AddHotelTab = ({ showNotification }) => {
     setError('');
   };
 
-  // const handleChange = (e) => {
-  //   const { name, value, type, checked } = e.target;
-  //   if (type === 'checkbox') {
-  //     setFormData(prev => ({
-  //       ...prev,
-  //       facilitiesAvailable: checked 
-  //         ? [...prev.facilitiesAvailable, name]
-  //         : prev.facilitiesAvailable.filter(item => item !== name)
-  //     }));
-  //   } else {
-  //     setFormData(prev => ({ ...prev, [name]: value }));
-  //   }
-  // };
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    if (type === 'checkbox') {
+     
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
 
   const handlePhoneChange = (e, field) => {
     const value = e.target.value.replace(/\D/g, '');
