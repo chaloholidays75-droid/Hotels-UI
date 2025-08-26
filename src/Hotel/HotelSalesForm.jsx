@@ -22,7 +22,6 @@ const HotelManagementSystem = () => {
     setNotification({ show: true, message, type });
     setTimeout(() => setNotification({ show: false, message: '', type: '' }), 5000);
   }, []);
-  const facilitiesOptions = [];
 
   return (
     <div className="hotel-management-system">
@@ -159,6 +158,10 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
 
 // Add Hotel Tab Component
 const AddHotelTab = ({ showNotification }) => {
+  const facilitiesOptions = [
+    'Wi-Fi', 'Pool', 'Gym', 'Spa', 'Restaurant', 'Bar', 'Parking', 
+    'Conference Rooms', 'Room Service', 'Pet Friendly', 'Airport Shuttle'
+  ];
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     country: '',
