@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import countriesData from '../data/countries.json';
+import citiesData from '../data/cities.json';
+import hotelsData from '../data/hotels.json';
+
 import {
   FaCheckCircle, FaTimesCircle, FaUserTie, FaEnvelope, FaPhone,
   FaMinus, FaPlus, FaBuilding, FaMapMarkerAlt, FaStar, FaInfoCircle,
