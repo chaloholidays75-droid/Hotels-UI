@@ -1,4 +1,4 @@
-const API_BASE = "https://hotels-8v0p.onrender.com/api/hotelsales";
+const API_BASE = "https://hotels-8v0p.onrender.com/api/hotels";
 
 // ✅ Get all hotel sales
 export async function getHotelSales() {
