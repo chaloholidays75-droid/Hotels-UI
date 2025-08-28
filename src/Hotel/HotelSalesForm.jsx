@@ -565,7 +565,7 @@ const AddHotelTab = ({ showNotification }) => {
               <div className="form-note">Country code: {getCurrentPhoneCode()}</div>
             </div>
             <div className="form-group">
-              <label>Hotel Email</label>
+              <label>Email</label>
               <input
                 type="email"
                 name="hotelEmail"
