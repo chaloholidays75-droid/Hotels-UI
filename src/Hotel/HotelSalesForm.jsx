@@ -823,7 +823,7 @@ const HotelSalesList = ({ showNotification }) => {
   const [bulkAction, setBulkAction] = useState('');
   const itemsPerPage = 10;
 
-  const API_URL = "https://hotels-8v0p.onrender.com/api/hotelsales";
+  const API_URL = "https://hotels-8v0p.onrender.com/api/hotels";
 
   const fetchHotels = async () => {
     setLoading(true);
