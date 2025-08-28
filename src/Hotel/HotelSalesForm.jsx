@@ -253,7 +253,7 @@ const AddHotelTab = ({ showNotification }) => {
     setIsSubmitting(true);
     try {
       const response = await fetch(
-        "https://hotels-8v0p.onrender.com/api/hotelsales",
+        "https://hotels-8v0p.onrender.com/api/hotels",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -589,23 +589,7 @@ const AddHotelTab = ({ showNotification }) => {
             </div>
           </div>
 
-          {/* <div className="form-group">
-            <label>Facilities Available</label>
-            <div className="facilities-grid">
-              {facilitiesOptions.map(facility => (
-                <label key={facility} className="facility-checkbox">
-                  <input
-                    type="checkbox"
-                    name={facility}
-                    checked={formData.facilitiesAvailable.includes(facility)}
-                    onChange={handleChange}
-                  />
-                  <span className="checkmark"></span>
-                  <span className="facility-label">{facility}</span>
-                </label>
-              ))}
-            </div>
-          </div> */}
+
         </div>
 
         <div className="form-section">
@@ -840,11 +824,6 @@ const HotelSalesList = ({ showNotification }) => {
   const itemsPerPage = 10;
 
   const API_URL = "https://hotels-8v0p.onrender.com/api/hotelsales";
-
-  // const facilitiesOptions = [
-  //   'Wi-Fi', 'Pool', 'Gym', 'Spa', 'Restaurant', 'Bar', 'Parking', 
-  //   'Conference Rooms', 'Room Service', 'Pet Friendly', 'Airport Shuttle'
-  // ];
 
   const fetchHotels = async () => {
     setLoading(true);
@@ -1224,18 +1203,7 @@ const HotelSalesList = ({ showNotification }) => {
                 </div>
               </div>
             </div>
-            
-            {/* {viewHotel.facilitiesAvailable?.length > 0 && (
-              <div className="modal-section">
-                <h4><FaStar /> Facilities Available</h4>
-                <div className="facilities-list">
-                  {viewHotel.facilitiesAvailable.map((facility, index) => (
-                    <span key={index} className="facility-tag">{facility}</span>
-                  ))}
-                </div>
-              </div>
-            )} */}
-            
+
             <div className="modal-section">
               <h4><FaUserTie /> Contact Persons</h4>
               
@@ -1316,17 +1284,7 @@ const HotelSalesList = ({ showNotification }) => {
           </div>
         )}
       </Modal>
-      
-      {/* <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel Information" size="large">
-        {editingHotel && (
-          <EditHotelForm 
-            hotel={editingHotel} 
-            onSave={saveHotel} 
-            onCancel={() => setEditingHotel(null)} 
-            facilitiesOptions={facilitiesOptions}
-          />
-        )}
-      </Modal> */}
+
     </div>
   );
 };
@@ -1371,14 +1329,6 @@ const EditHotelForm = ({ hotel, onSave, onCancel}) => {
     }));
   };
 
-  // const toggleFacility = (facility) => {
-  //   setFormData(prev => ({
-  //     ...prev,
-  //     facilitiesAvailable: prev.facilitiesAvailable.includes(facility)
-  //       ? prev.facilitiesAvailable.filter(f => f !== facility)
-  //       : [...prev.facilitiesAvailable, facility]
-  //   }));
-  // };
 
   return (
     <div className="edit-hotel-form">
@@ -1435,22 +1385,6 @@ const EditHotelForm = ({ hotel, onSave, onCancel}) => {
           </div>
         </div>
 
-        {/* <div className="form-group">
-          <label>Facilities Available</label>
-          <div className="facilities-grid">
-            {facilitiesOptions.map(facility => (
-              <label key={facility} className="facility-checkbox">
-                <input
-                  type="checkbox"
-                  checked={formData.facilitiesAvailable?.includes(facility) || false}
-                  onChange={() => toggleFacility(facility)}
-                />
-                <span className="checkmark"></span>
-                <span className="facility-label">{facility}</span>
-              </label>
-            ))}
-          </div>
-        </div> */}
       </div>
       
       <div className="form-section">
