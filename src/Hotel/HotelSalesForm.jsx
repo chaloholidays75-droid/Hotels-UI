@@ -1099,7 +1099,7 @@ const HotelSalesList = ({ showNotification }) => {
                     </td>
                     <td>
                       <div className="contact-count">
-                        {hotel.reservationPersons.length} {hotel.reservationPersons.length === 1 ? 'person' : 'persons'}
+                        {hotel.ReservationPersons?.length || 0} {hotel.ReservationPersons?.length === 1 ? 'person' : 'persons'}
                       </div>
                     </td>
                     <td>
