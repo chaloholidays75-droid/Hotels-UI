@@ -164,6 +164,7 @@ const AddHotelTab = ({ showNotification }) => {
     countryCode: '',
     city: '',
     hotelName: '',
+     hotelEmail: '',
     hotelContactNumber: '',
     address: '',
     hotelChain: '',
@@ -288,6 +289,7 @@ const AddHotelTab = ({ showNotification }) => {
       countryCode: '',
       city: '',
       hotelName: '',
+      hotelEmail:'',
       hotelContactNumber: '',
       address: '',  
       hotelChain: '',
@@ -313,6 +315,7 @@ const AddHotelTab = ({ showNotification }) => {
       countryCode: code,
       city: '',
       hotelName: '',
+      hotelEmail:'',
       hotelContactNumber: '',
       address: '',
       hotelChain: ''
@@ -333,6 +336,7 @@ const AddHotelTab = ({ showNotification }) => {
     setFormData(prev => ({
       ...prev,
       hotelName: hotel.name,
+      hotelEmail: hotel.email || '',
       hotelContactNumber: hotel.contactNumber || '',
       address: hotel.address,
       hotelChain: hotel.chain || ''
@@ -350,6 +354,7 @@ const AddHotelTab = ({ showNotification }) => {
     setFormData(prev => ({
       ...prev,
       hotelName: hotelSearch,
+      hotelEmail: '',
       hotelContactNumber: '',
       address: '',
       hotelChain: ''
@@ -559,7 +564,16 @@ const AddHotelTab = ({ showNotification }) => {
               </div>
               <div className="form-note">Country code: {getCurrentPhoneCode()}</div>
             </div>
-
+            <div className="form-group">
+              <label>Hotel Email</label>
+              <input
+                type="email"
+                name="hotelEmail"
+                value={formData.hotelEmail}
+                onChange={handleChange}
+                placeholder="hotel@example.com"
+              />
+            </div>
             <div className="form-group">
               <label>Address <span className="required">*</span></label>
               <input
@@ -1191,15 +1205,15 @@ const HotelSalesList = ({ showNotification }) => {
                       </div>
                     </div>
                   )}
-                  {viewHotel.creditCategory && (
-                    <div className="detail-item">
-                      <FaMoneyCheckAlt /> 
-                      <div>
-                        <div className="detail-label">Credit Category</div>
-                        <div className="detail-value">{viewHotel.creditCategory}</div>
-                      </div>
+                  {viewHotel.hotelEmail && (
+                  <div className="detail-item">
+                    <FaEnvelope /> 
+                    <div>
+                      <div className="detail-label">Hotel Email</div>
+                      <div className="detail-value">{viewHotel.hotelEmail}</div>
                     </div>
-                  )}
+                  </div>
+                )}
                 </div>
               </div>
             </div>
@@ -1375,6 +1389,14 @@ const EditHotelForm = ({ hotel, onSave, onCancel}) => {
               value={formData.hotelContactNumber || ""} 
               onChange={(e) => updateField('hotelContactNumber', e.target.value)} 
             />
+            <div className="form-group">
+            <label>Hotel Email</label>
+            <input 
+              type="email"
+              value={formData.hotelEmail || ""} 
+              onChange={(e) => updateField('hotelEmail', e.target.value)} 
+            />
+          </div>
           </div>
           <div className="form-group">
             <label>Hotel Chain</label>
