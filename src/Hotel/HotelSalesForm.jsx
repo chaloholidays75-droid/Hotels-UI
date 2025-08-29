@@ -157,7 +157,7 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
 );
 
 // Add Hotel Tab Component
-const AddHotelTab = ({ showNotification }) => {
+const AddHotelTab = ({ showNotification , setActiveTab }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     country: '',
@@ -1113,7 +1113,7 @@ const HotelSalesList = ({ showNotification }) => {
                     </td>
                     <td>
                       <div className="contact-count">
-                        {hotel.ReservationPersons?.length || 0} {hotel.ReservationPersons?.length === 1 ? 'person' : 'persons'}
+                        {hotel.reservationPersons?.length || 0} {hotel.reservationPersons?.length === 1 ? 'person' : 'persons'}
                       </div>
                     </td>
                     <td>
