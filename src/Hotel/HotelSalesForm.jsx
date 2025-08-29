@@ -294,14 +294,10 @@ const handleManualCountry = async () => {
 
 const handleManualCity = async () => {
   const name = citySearch.trim();
-  if (!name || !formData.countryCode) return;
+  const countryId = countries.find(c => c.code === formData.countryCode)?.id;
 
-  const countryCities = citiesByCountry[formData.countryCode] || [];
-  const exists = countryCities.find(c => c.name.toLowerCase() === name.toLowerCase());
-
-  if (exists) {
-    handleCitySelect(exists.name, exists.id);
-    showNotification("City already exists", "info");
+  if (!name || !countryId) {
+    showNotification("Please select a valid country first", "error");
     return;
   }
 
@@ -309,7 +305,7 @@ const handleManualCity = async () => {
     const res = await fetch(`${API_BASE}/cities`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, countryCode: formData.countryCode })
+      body: JSON.stringify({ name, countryId })  // <--- Correct!
     });
 
     if (!res.ok) throw new Error("Failed to create city");
@@ -327,6 +323,7 @@ const handleManualCity = async () => {
     showNotification("Error adding city", "error");
   }
 };
+;
 
 const handleManualHotel = async () => {
   const name = hotelSearch.trim();
