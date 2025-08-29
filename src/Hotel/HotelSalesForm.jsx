@@ -345,46 +345,48 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     }
   };
 
-  const handleManualHotel = async () => {
-    if (!validateForm()) return showNotification('Please fill required fields first', 'error');
-    const selectedCountry = countries.find(c => c.code === formData.countryCode);
-    if (!selectedCountry) return showNotification("Invalid country", "error");
+const handleManualHotel = async () => {
+  // Ensure hotelName is filled from typed input
+  if (!formData.hotelName.trim()) return showNotification('Enter hotel name first', 'error');
+  if (!formData.cityId || !formData.countryCode || !formData.address.trim()) {
+    return showNotification('Please fill required fields first', 'error');
+  }
 
-    const payload = {
-      HotelName: formData.hotelName,
-      HotelEmail: formData.hotelEmail || '',
-      HotelContactNumber: formData.hotelContactNumber || '',
-      Address: formData.address,
-      HotelChain: formData.hotelChain || '',
-      SpecialRemarks: formData.specialRemarks || '',
-      CountryId: selectedCountry.id,
-      CityId: formData.cityId,
-      SalesPersons: formData.salesPersons,
-      ReservationPersons: formData.reservationPersons,
-      AccountsPersons: formData.accountsPersons,
-      ReceptionPersons: formData.receptionPersons,
-      Concierges: formData.concierges
-    };
-
-    try {
-      const res = await fetch(API_BASE_HOTEL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      let data;
-      try { data = await res.json(); } catch { data = { message: await res.text() }; }
-
-      if (!res.ok) throw new Error(data?.message || "Failed to create hotel");
-
-      setHotelsInCity(prev => [...prev, data]);
-      handleHotelSelect(data);
-      showNotification("Hotel added successfully!", "success");
-    } catch (err) {
-      console.error(err);
-      showNotification(err.message || "Error adding hotel", "error");
-    }
+  const payload = {
+    hotelName: formData.hotelName,
+    hotelEmail: formData.hotelEmail,
+    hotelContactNumber: formData.hotelContactNumber,
+    address: formData.address,
+    hotelChain: formData.hotelChain,
+    cityId: formData.cityId,
+    countryId: countries.find(c => c.code === formData.countryCode).id,
+    specialRemarks: formData.specialRemarks,
+    salesPersons: formData.salesPersons,
+    reservationPersons: formData.reservationPersons,
+    accountsPersons: formData.accountsPersons,
+    receptionPersons: formData.receptionPersons,
+    concierges: formData.concierges
   };
+
+  try {
+    const res = await fetch(`${API_BASE_HOTEL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error('Failed to create hotel');
+
+    const data = await res.json();
+    setHotelsInCity(prev => [...prev, data]);
+    handleHotelSelect(data);
+    showNotification('Hotel added successfully!', 'success');
+  } catch (err) {
+    console.error(err);
+    showNotification(`Error adding hotel: ${err.message}`, 'error');
+  }
+};
+
 
   // --------------------- Fetch Data ---------------------
   useEffect(() => {
@@ -630,27 +632,38 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     <input
       type="text"
       value={hotelSearch}
-      onChange={e => { setHotelSearch(e.target.value); setShowHotelDropdown(true); }}
+      onChange={e => {
+        setHotelSearch(e.target.value);
+        setFormData(prev => ({ ...prev, hotelName: e.target.value })); // sync typed hotel name
+        setShowHotelDropdown(true);
+      }}
       onFocus={() => setShowHotelDropdown(true)}
       placeholder="Search hotel..."
       required
       disabled={!formData.city}
       className={validationErrors.hotelName ? 'error' : ''}
+      onKeyDown={handleHotelDropdownKeys} // <-- keyboard nav
     />
     <FaChevronDown className="dropdown-chevron" />
   </div>
+
   {showHotelDropdown && formData.city && (
     <div className="dropdown-options">
       {filteredHotels.length > 0 ? (
-        filteredHotels.map(h => (
-          <div key={h.id} className="dropdown-option hotel-option" onClick={() => handleHotelSelect(h)}>
+        filteredHotels.map((h, idx) => (
+          <div
+            key={h.id}
+            className={`dropdown-option hotel-option ${idx === highlightedIndex ? 'highlighted' : ''}`}
+            onClick={() => handleHotelSelect(h)}
+          >
             {highlightText(h.hotelName, hotelSearch)}
           </div>
-      ))) : (
-        <div className="dropdown-option manual-option"  onClick={() => {
-  setFormData(prev => ({ ...prev, hotelName: hotelSearch }));
-  handleManualHotel();
-}}>
+        ))
+      ) : (
+        <div
+          className="dropdown-option manual-option"
+          onClick={handleManualHotel} // create new hotel
+        >
           Add "{hotelSearch}" as new hotel
         </div>
       )}
@@ -658,6 +671,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   )}
   {error && <p className="error-message">{error}</p>}
 </div>
+
 
           {/* Address */}
           <div className="form-group">
