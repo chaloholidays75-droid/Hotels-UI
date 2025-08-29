@@ -56,22 +56,44 @@ export async function deleteHotelSale(id) {
   return true;
 }
 const API_BASE_COUNTRIES = "https://hotels-8v0p.onrender.com/api";
-export async function getStats() {
-  const res = await fetch(`${API_BASE_COUNTRIES}/stats`);
-  if (!res.ok) throw new Error("Failed to fetch stats");
-  return res.json();
+
+// Utility function for fetch with error handling
+async function safeFetch(url) {
+  try {
+    const res = await fetch(url, { method: "GET", credentials: "include" });
+    
+    // Check if response is okay
+    if (!res.ok) {
+      console.error(`Error fetching ${url}:`, res.status, res.statusText);
+      return null; // Return null instead of throwing
+    }
+
+    // Try parsing JSON
+    const data = await res.json().catch(() => null); // Return null if empty or invalid JSON
+    if (!data) {
+      console.warn(`No data returned from ${url}`);
+      return null;
+    }
+
+    return data;
+  } catch (error) {
+    console.error(`Fetch failed for ${url}:`, error);
+    return null;
+  }
 }
 
-// Countries + Cities
+// Stats
+export async function getStats() {
+  return await safeFetch(`${API_BASE_COUNTRIES}/stats`);
+}
+
+// Countries
 export async function getCountries() {
-  const res = await fetch(`${API_BASE_COUNTRIES}/countries`);
-  if (!res.ok) throw new Error("Failed to fetch countries");
-  return res.json();
+  return await safeFetch(`${API_BASE_COUNTRIES}/countries`);
 }
 
 // Hotels by City
 export async function getHotelsByCity(cityId) {
-  const res = await fetch(`${API_BASE_COUNTRIES}/hotels/by-city/${cityId}`);
-  if (!res.ok) throw new Error("Failed to fetch hotels");
-  return res.json();
+  if (!cityId) return null; // Safety check
+  return await safeFetch(`${API_BASE_COUNTRIES}/hotels/by-city/${cityId}`);
 }

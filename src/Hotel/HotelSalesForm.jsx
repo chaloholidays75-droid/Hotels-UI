@@ -157,32 +157,23 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
 );
 
 // Add Hotel Tab Component
-const AddHotelTab = ({ showNotification , setActiveTab }) => {
-  const navigate = useNavigate();
+
+// Add Hotel Tab
+const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const [formData, setFormData] = useState({
-    country: '',
-    countryCode: '',
-    city: '',
-    hotelName: '',
-     hotelEmail: '',
-    hotelContactNumber: '',
-    address: '',
-    hotelChain: '',
+    country: '', countryCode: '', city: '', cityId: '', hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '',
     salesPersons: [{ name: '', email: '', contact: '' }],
     reservationPersons: [{ name: '', email: '', contact: '' }],
     accountsPersons: [{ name: '', email: '', contact: '' }],
     receptionPersons: [{ name: '', email: '', contact: '' }],
     concierges: [{ name: '', email: '', contact: '' }],
-    creditCategory: '',
-    specialRemarks: '',
-    facilitiesAvailable: []
+    specialRemarks: '', facilitiesAvailable: [], creditCategory: ''
   });
 
-  const [countrySearch, setCountrySearch] = useState('');
   const [countries, setCountries] = useState([]);
   const [citiesByCountry, setCitiesByCountry] = useState({});
   const [hotelsInCity, setHotelsInCity] = useState([]);
-
+  const [countrySearch, setCountrySearch] = useState('');
   const [citySearch, setCitySearch] = useState('');
   const [hotelSearch, setHotelSearch] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
@@ -196,33 +187,19 @@ const AddHotelTab = ({ showNotification , setActiveTab }) => {
   const cityDropdownRef = useRef(null);
   const hotelDropdownRef = useRef(null);
 
-  // const countries = countriesData;
-  // const citiesByCountry = citiesData;
-  // const hotelsInCity = formData.city ? hotelsData[formData.city] || [] : [];
-
   const getCurrentPhoneCode = () => {
     const country = countries.find(c => c.code === formData.countryCode);
     return country ? country.phoneCode : '+1';
   };
 
-const filteredCountries = countries.filter(c => c.name.toLowerCase().includes(countrySearch.toLowerCase()));
-
-const filteredCities = formData.countryCode
-  ? citiesByCountry[formData.countryCode]?.filter(c => c.toLowerCase().includes(citySearch.toLowerCase())) || []
-  : [];
-
-const filteredHotels = hotelsInCity.filter(h =>
-  h.hotelName.toLowerCase().includes(hotelSearch.toLowerCase()) ||
-  h.address.toLowerCase().includes(hotelSearch.toLowerCase())
-);
+  const filteredCountries = countries.filter(c => c.name.toLowerCase().includes(countrySearch.toLowerCase()));
+  const filteredCities = formData.countryCode ? citiesByCountry[formData.countryCode]?.filter(c => c.toLowerCase().includes(citySearch.toLowerCase())) || [] : [];
+  const filteredHotels = hotelsInCity.filter(h => h.HotelName.toLowerCase().includes(hotelSearch.toLowerCase()));
 
   const highlightText = (text, search) => {
     if (!search) return text;
     const regex = new RegExp(`(${search})`, 'gi');
-    const parts = text.split(regex);
-    return parts.map((part, index) => 
-      regex.test(part) ? <span key={index} className="highlight">{part}</span> : part
-    );
+    return text.split(regex).map((part, idx) => regex.test(part) ? <span key={idx} className="highlight">{part}</span> : part);
   };
 
   const validateForm = () => {
@@ -231,522 +208,215 @@ const filteredHotels = hotelsInCity.filter(h =>
     if (!formData.city) errors.city = 'City is required';
     if (!formData.hotelName) errors.hotelName = 'Hotel name is required';
     if (!formData.address) errors.address = 'Address is required';
-    
-    // Validate contact persons
+
     const contactRoles = ['salesPersons', 'reservationPersons', 'accountsPersons', 'receptionPersons', 'concierges'];
     contactRoles.forEach(role => {
-      if (formData[role].some(p => !p.name || !p.email || !p.contact)) {
-        errors[role] = `All ${role.replace('Persons', ' persons')} must have complete information`;
-      }
+      if (formData[role].some(p => !p.name || !p.email || !p.contact)) errors[role] = `All ${role.replace('Persons', ' persons')} must have complete information`;
     });
-    
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) {
-      showNotification('Please fix validation errors', 'error');
-      return;
-    }
+    if (!validateForm()) { showNotification('Please fix validation errors', 'error'); return; }
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(
-        "https://hotels-8v0p.onrender.com/api/hotels",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        }
-      );
-
+      const response = await fetch("https://hotels-8v0p.onrender.com/api/hotels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
       if (response.ok) {
         showNotification("Hotel created successfully!", "success");
-        const goToList = window.confirm(
-          "Hotel Sale saved successfully! Do you want to see the hotel list?"
-        );
-        if (goToList) {
-          setActiveTab('view');
-        } else {
-          resetForm();
-        }
-      } else {
-        showNotification("Failed to save hotel sale.", "error");
-      }
-    } catch (error) {
-      console.error("Error saving hotel sale:", error);
-      showNotification("Error saving hotel sale.", "error");
-    } finally {
-      setIsSubmitting(false);
-    }
+        if (window.confirm("Hotel saved! Go to hotel list?")) setActiveTab('view');
+        else resetForm();
+      } else showNotification("Failed to save hotel.", "error");
+    } catch (err) { console.error(err); showNotification("Error saving hotel.", "error"); }
+    finally { setIsSubmitting(false); }
   };
 
   const resetForm = () => {
     setFormData({
-      country: '',
-      countryCode: '',
-      city: '',
-      hotelName: '',
-      hotelEmail:'',
-      hotelContactNumber: '',
-      address: '',  
-      hotelChain: '',
+      country: '', countryCode: '', city: '', cityId: '', hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '',
       salesPersons: [{ name: '', email: '', contact: '' }],
       reservationPersons: [{ name: '', email: '', contact: '' }],
       accountsPersons: [{ name: '', email: '', contact: '' }],
       receptionPersons: [{ name: '', email: '', contact: '' }],
       concierges: [{ name: '', email: '', contact: '' }],
-      creditCategory: '',
-      specialRemarks: '',
-      facilitiesAvailable: []
+      specialRemarks: '', facilitiesAvailable: [], creditCategory: ''
     });
-    setCountrySearch('');
-    setCitySearch('');
-    setHotelSearch('');
-    setValidationErrors({});
+    setCountrySearch(''); setCitySearch(''); setHotelSearch(''); setValidationErrors({});
   };
 
   const handleCountrySelect = (code, name) => {
-    setFormData(prev => ({
-      ...prev,
-      country: name,
-      countryCode: code,
-      city: '',
-      hotelName: '',
-      hotelEmail:'',
-      hotelContactNumber: '',
-      address: '',
-      hotelChain: ''
-    }));
-    setCountrySearch(name);
-    setShowCountryDropdown(false);
-    setCitySearch('');
-    setHotelSearch('');
+    setFormData(prev => ({ ...prev, country: name, countryCode: code, city: '', hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' }));
+    setCountrySearch(name); setShowCountryDropdown(false); setCitySearch(''); setHotelSearch('');
   };
 
-  // const handleCitySelect = (city) => {
-  //   setFormData(prev => ({ ...prev, city }));
-  //   setCitySearch(city);
-  //   setShowCityDropdown(false);
-  // };
+  const handleCitySelect = (cityName, cityId) => {
+    setFormData(prev => ({ ...prev, city: cityName, cityId, hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' }));
+    setCitySearch(cityName); setShowCityDropdown(false); setHotelSearch('');
+  };
 
   const handleHotelSelect = (hotel) => {
-    setFormData(prev => ({
-      ...prev,
-      hotelName: hotel.HotelName,
-      hotelEmail: hotel.HotelEmail || '',
-      hotelContactNumber: hotel.HotelContactNumber || '',
-      address: hotel.Address,
-      hotelChain: hotel.HotelChain || ''
-    }));
-    setHotelSearch(hotel.HotelName);
-    setShowHotelDropdown(false);
-    setError('');
+    setFormData(prev => ({ ...prev, hotelName: hotel.HotelName, hotelEmail: hotel.HotelEmail || '', hotelContactNumber: hotel.HotelContactNumber || '', address: hotel.Address, hotelChain: hotel.HotelChain || '' }));
+    setHotelSearch(hotel.HotelName); setShowHotelDropdown(false); setError('');
   };
 
   const handleManualHotel = () => {
-    if (hotelSearch.trim() === '') {
-      setError('Please enter a hotel name');
-      return;
-    }
-    setFormData(prev => ({
-      ...prev,
-      hotelName: hotelSearch,
-      hotelEmail: '',
-      hotelContactNumber: '',
-      address: '',
-      hotelChain: ''
-    }));
-    setShowHotelDropdown(false);
-    setError('');
+    if (!hotelSearch.trim()) { setError('Please enter hotel name'); return; }
+    setFormData(prev => ({ ...prev, hotelName: hotelSearch, hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' }));
+    setShowHotelDropdown(false); setError('');
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (type === 'checkbox') {
-     
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-  };
+  const handleChange = (e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
+  const handlePhoneChange = (e, field) => { const value = e.target.value.replace(/\D/g, ''); const phoneCode = getCurrentPhoneCode().replace('+',''); setFormData(prev => ({ ...prev, [field]: `+${phoneCode} ${value}` })); };
 
-  const handlePhoneChange = (e, field) => {
-    const value = e.target.value.replace(/\D/g, '');
-    const phoneCode = getCurrentPhoneCode().replace('+', '');
-    const formatted = value.startsWith(phoneCode) 
-      ? `+${phoneCode} ${value.substring(phoneCode.length)}`
-      : `+${phoneCode} ${value}`;
-    setFormData(prev => ({ ...prev, [field]: formatted }));
-  };
-
-  const addPerson = (role) => {
-    const key = `${role}s`;
-    setFormData(prev => ({
-      ...prev,
-      [key]: [...prev[key], { name: '', email: '', contact: '' }]
-    }));
-  };
-  useEffect(() => {
-  const fetchCountries = async () => {
-    try {
-      const res = await fetch("https://hotels-8v0p.onrender.com/api/countries");
-      const data = await res.json();
-      setCountries(data);
-
-      // Build citiesByCountry mapping for dropdowns
-      const mapping = {};
-      data.forEach(country => {
-        mapping[country.code] = country.cities.map(c => c.name);
-      });
-      setCitiesByCountry(mapping);
-    } catch (err) {
-      console.error("Error fetching countries:", err);
-    }
-  };
-
-  fetchCountries();
-}, []);
-
-useEffect(() => {
-  if (!formData.city) {
-    setHotelsInCity([]);
-    return;
-  }
-
-  const fetchHotels = async () => {
-    try {
-      const res = await fetch(`https://hotels-8v0p.onrender.com/api/hotels/by-city/${formData.cityId}`);
-      const data = await res.json();
-      setHotelsInCity(data); // this replaces hotelsData[formData.city]
-    } catch (err) {
-      console.error("Error fetching hotels:", err);
-    }
-  };
-
-  fetchHotels();
-}, [formData.city, formData.cityId]);
-
-
-  const removePerson = (role, index) => {
-    const key = `${role}s`;
-    setFormData(prev => ({
-      ...prev,
-      [key]: prev[key].filter((_, i) => i !== index)
-    }));
-  };
-  const handleCitySelect = (cityName, cityId) => {
-  setFormData(prev => ({
-    ...prev,
-    city: cityName,
-    cityId: cityId,
-    hotelName: '',
-    hotelEmail: '',
-    hotelContactNumber: '',
-    address: '',
-    hotelChain: ''
-  }));
-  setCitySearch(cityName);
-  setShowCityDropdown(false);
-  setHotelSearch('');
-};
-
+  const addPerson = (role) => setFormData(prev => ({ ...prev, [role]: [...prev[role], { name: '', email: '', contact: '' }] }));
+  const removePerson = (role, index) => setFormData(prev => ({ ...prev, [role]: prev[role].filter((_, i) => i !== index) }));
   const changePerson = (role, index, field, value) => {
-    const key = `${role}s`;
-    if (field === 'contact') {
-      const digits = value.replace(/\D/g, '');
-      const phoneCode = getCurrentPhoneCode().replace('+', '');
-      value = digits.startsWith(phoneCode) 
-        ? `+${phoneCode} ${digits.substring(phoneCode.length)}`
-        : `+${phoneCode} ${digits}`;
-    }
-    setFormData(prev => {
-      const updated = [...prev[key]];
-      updated[index][field] = value;
-      return { ...prev, [key]: updated };
-    });
+    const updated = [...formData[role]]; updated[index][field] = value; setFormData(prev => ({ ...prev, [role]: updated }));
   };
 
+  const isHotelFromDatabase = hotelsInCity.some(h => h.HotelName === formData.hotelName);
+
+  // Fetch countries
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) setShowCountryDropdown(false);
-      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) setShowCityDropdown(false);
-      if (hotelDropdownRef.current && !hotelDropdownRef.current.contains(event.target)) setShowHotelDropdown(false);
+    const fetchCountries = async () => {
+      try {
+        const res = await fetch("https://hotels-8v0p.onrender.com/api/countries");
+        const data = await res.json();
+        setCountries(data);
+        const mapping = {}; data.forEach(c => mapping[c.code] = c.cities.map(city => city.name)); setCitiesByCountry(mapping);
+      } catch (err) { console.error(err); }
+    }; fetchCountries();
+  }, []);
+
+  // Fetch hotels by city
+  useEffect(() => {
+    if (!formData.city) { setHotelsInCity([]); return; }
+    const fetchHotels = async () => {
+      try {
+        const res = await fetch(`https://hotels-8v0p.onrender.com/api/hotels/by-city/${formData.cityId}`);
+        const data = await res.json();
+        setHotelsInCity(data);
+      } catch (err) { console.error(err); }
+    }; fetchHotels();
+  }, [formData.city, formData.cityId]);
+
+  // Close dropdowns when clicked outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target)) setShowCountryDropdown(false);
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(e.target)) setShowCityDropdown(false);
+      if (hotelDropdownRef.current && !hotelDropdownRef.current.contains(e.target)) setShowHotelDropdown(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const isHotelFromDatabase = hotelsInCity.some(h => h.HotelName === formData.hotelName);
-
   return (
     <div className="hotel-form-container">
-      <div className="form-header">
-        <h2>Add Hotel Information</h2>
-        <p>Fill in the details below to add a new hotel to the system</p>
-      </div>
-      
+      <div className="form-header"><h2>Add Hotel Information</h2><p>Fill in the details to add a new hotel</p></div>
       <form onSubmit={handleSubmit} className="hotel-form">
+
+        {/* Hotel Info Section */}
         <div className="form-section">
-          <div className="section-header">
-            <h3><FaBuilding /> Hotel Information</h3>
-          </div>
+          <div className="section-header"><h3><FaBuilding /> Hotel Information</h3></div>
           <div className="form-grid">
+            {/* Country */}
             <div className="form-group searchable-dropdown" ref={countryDropdownRef}>
               <label>Country <span className="required">*</span></label>
               <div className="dropdown-container">
-                <input
-                  type="text"
-                  value={countrySearch}
-                  onChange={(e) => {
-                    setCountrySearch(e.target.value);
-                    setShowCountryDropdown(true);
-                  }}
-                  onFocus={() => setShowCountryDropdown(true)}
-                  placeholder="Search for a country..."
-                  required
-                  className={validationErrors.country ? 'error' : ''}
-                />
-                <FaChevronDown className="dropdown-chevron" />
+                <input type="text" value={countrySearch} onChange={(e)=>{setCountrySearch(e.target.value); setShowCountryDropdown(true);}} onFocus={()=>setShowCountryDropdown(true)} placeholder="Search country..." required className={validationErrors.country ? 'error' : ''} />
+                <FaChevronDown className="dropdown-chevron"/>
               </div>
-              {validationErrors.country && <p className="error-message">{validationErrors.country}</p>}
-              {showCountryDropdown && (
-                <div className="dropdown-options">
-                  {filteredCountries.length > 0 ? filteredCountries.map(country => (
-                    <div key={country.code} className="dropdown-option" onClick={() => handleCountrySelect(country.code, country.name)}>
-                      <span className="country-flag">{country.flag}</span>
-                      <span className="country-name">{highlightText(country.name, countrySearch)}</span>
-                      <span className="country-code">{country.code}</span>
-                    </div>
-                  )) : <div className="dropdown-option no-results">No countries found</div>}
-                </div>
-              )}
+              {showCountryDropdown && <div className="dropdown-options">{filteredCountries.map(c => <div key={c.code} className="dropdown-option" onClick={()=>handleCountrySelect(c.code,c.name)}>{highlightText(c.name,countrySearch)}</div>)}</div>}
             </div>
 
+            {/* City */}
             <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
               <label>City <span className="required">*</span></label>
               <div className="dropdown-container">
-                <input
-                  type="text"
-                  value={citySearch}
-                  onChange={(e) => {
-                    setCitySearch(e.target.value);
-                    setShowCityDropdown(true);
-                  }}
-                  onFocus={() => setShowCityDropdown(true)}
-                  placeholder="Search for a city..."
-                  required
-                  disabled={!formData.country}
-                  className={validationErrors.city ? 'error' : ''}
-                />
-                <FaChevronDown className="dropdown-chevron" />
+                <input type="text" value={citySearch} onChange={(e)=>{setCitySearch(e.target.value); setShowCityDropdown(true);}} onFocus={()=>setShowCityDropdown(true)} placeholder="Search city..." required disabled={!formData.country} className={validationErrors.city ? 'error' : ''}/>
+                <FaChevronDown className="dropdown-chevron"/>
               </div>
-              {validationErrors.city && <p className="error-message">{validationErrors.city}</p>}
-              {showCityDropdown && formData.country && (
-                <div className="dropdown-options">
-                  {filteredCities.length > 0 ? filteredCities.map((city, index) => (
-                    <div key={city.id} className="dropdown-option" onClick={() => handleCitySelect(city.name ,city.id)}>
-                      {highlightText(city.name, citySearch)}
-                    </div>
-                  )) : <div className="dropdown-option no-results">
-                    {citiesByCountry[formData.countryCode]?.length === 0 ? "No cities available for this country" : "No cities found"}
-                  </div>}
-                </div>
-              )}
+              {showCityDropdown && formData.country && <div className="dropdown-options">{filteredCities.map((c,i)=><div key={i} className="dropdown-option" onClick={()=>handleCitySelect(c,i)}>{highlightText(c,citySearch)}</div>)}</div>}
             </div>
 
+            {/* Hotel */}
             <div className="form-group searchable-dropdown" ref={hotelDropdownRef}>
               <label>Hotel <span className="required">*</span></label>
               <div className="dropdown-container">
-                <input
-                  type="text"
-                  value={hotelSearch}
-                  onChange={(e) => {
-                    setHotelSearch(e.target.value);
-                    setShowHotelDropdown(true);
-                  }}
-                  onFocus={() => setShowHotelDropdown(true)}
-                  placeholder="Search for a hotel..."
-                  required
-                  disabled={!formData.city}
-                  className={validationErrors.hotelName ? 'error' : ''}
-                />
-                <FaChevronDown className="dropdown-chevron" />
+                <input type="text" value={hotelSearch} onChange={(e)=>{setHotelSearch(e.target.value); setShowHotelDropdown(true);}} onFocus={()=>setShowHotelDropdown(true)} placeholder="Search hotel..." required disabled={!formData.city} className={validationErrors.hotelName ? 'error' : ''}/>
+                <FaChevronDown className="dropdown-chevron"/>
               </div>
-              {validationErrors.hotelName && <p className="error-message">{validationErrors.hotelName}</p>}
-              {showHotelDropdown && formData.city && (
-                <div className="dropdown-options">
-                  {filteredHotels.length > 0 ? (
-                    <>
-                      {filteredHotels.map(hotel => (
-                        <div key={hotel.id} className="dropdown-option hotel-option" onClick={() => handleHotelSelect(hotel)}>
-                          <div className="hotel-name">{highlightText(hotel.name, hotelSearch)}</div>
-                          {hotel.address && <div className="hotel-address">{highlightText(hotel.address, hotelSearch)}</div>}
-                          {hotel.chain && <div className="hotel-chain">{hotel.chain}</div>}
-                        </div>
-                      ))}
-                      <div className="dropdown-option manual-option" onClick={handleManualHotel}>
-                        <div className="hotel-name">Use "{hotelSearch}" as hotel name</div>
-                        <div className="hotel-address">Enter address manually</div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="dropdown-option manual-option" onClick={handleManualHotel}>
-                      <div className="hotel-name">Use "{hotelSearch}" as hotel name</div>
-                      <div className="hotel-address">Enter address manually</div>
-                    </div>
-                  )}
-                </div>
-              )}
+              {showHotelDropdown && formData.city && <div className="dropdown-options">
+                {filteredHotels.length>0 ? filteredHotels.map(h=> <div key={h.id} className="dropdown-option hotel-option" onClick={()=>handleHotelSelect(h)}>{highlightText(h.HotelName,hotelSearch)}</div>) : <div className="dropdown-option manual-option" onClick={handleManualHotel}>Use "{hotelSearch}" as hotel name</div>}
+              </div>}
               {error && <p className="error-message">{error}</p>}
             </div>
 
+            {/* Address */}
+            <div className="form-group">
+              <label>Address <span className="required">*</span></label>
+              <input type="text" name="address" value={formData.address} onChange={(e)=>setFormData({...formData,address:e.target.value})} placeholder="Hotel address" required readOnly={isHotelFromDatabase}/>
+            </div>
+
+            {/* Hotel Contact */}
             <div className="form-group">
               <label>Hotel Contact Number</label>
               <div className="phone-input-container">
                 <span className="phone-prefix">{getCurrentPhoneCode()}</span>
-                <input
-                  type="tel"
-                  name="hotelContactNumber"
-                  value={formData.hotelContactNumber.replace(getCurrentPhoneCode(), '').trim()}
-                  onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, '');
-                    handlePhoneChange({target: {value: digits}}, 'hotelContactNumber');
-                  }}
-                  placeholder="XXX XXX XXXX"
-                />
+                <input type="tel" value={formData.hotelContactNumber.replace(getCurrentPhoneCode(),'').trim()} onChange={(e)=>handlePhoneChange(e,'hotelContactNumber')} placeholder="XXX XXX XXXX"/>
               </div>
-              <div className="form-note">Country code: {getCurrentPhoneCode()}</div>
             </div>
+
+            {/* Hotel Email */}
             <div className="form-group">
               <label>Email</label>
-              <input
-                type="email"
-                name="hotelEmail"
-                value={formData.hotelEmail}
-                onChange={handleChange}
-                placeholder="hotel@example.com"
-              />
-            </div>
-            <div className="form-group">
-              <label>Address <span className="required">*</span></label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                placeholder="Hotel address"
-                readOnly={isHotelFromDatabase}
-                required
-                className={validationErrors.address ? 'error' : ''}
-              />
-              {validationErrors.address && <p className="error-message">{validationErrors.address}</p>}
-              {isHotelFromDatabase && <div className="form-note">Address from our database</div>}
+              <input type="email" name="hotelEmail" value={formData.hotelEmail} onChange={(e)=>setFormData({...formData,hotelEmail:e.target.value})} placeholder="hotel@example.com"/>
             </div>
 
+            {/* Hotel Chain */}
             <div className="form-group">
               <label>Hotel Chain</label>
-              <input
-                type="text"
-                name="hotelChain"
-                value={formData.hotelChain}
-                onChange={handleChange}
-                placeholder="Hotel chain (optional)"
-                readOnly={isHotelFromDatabase}
-              />
+              <input type="text" name="hotelChain" value={formData.hotelChain} onChange={(e)=>setFormData({...formData,hotelChain:e.target.value})} placeholder="Hotel chain (optional)" readOnly={isHotelFromDatabase}/>
             </div>
           </div>
-
-
         </div>
 
+        {/* Contact Persons Section */}
         <div className="form-section">
-          <div className="section-header">
-            <h3><FaUserTie /> Contact Persons</h3>
-            <p>Add contact information for different hotel departments</p>
-          </div>
-          {validationErrors.salesPersons && <p className="error-message">{validationErrors.salesPersons}</p>}
-          <ContactRoleSection 
-            title="Sales Person" 
-            role="salesPerson" 
-            persons={formData.salesPersons} 
-            onAdd={addPerson} 
-            onRemove={removePerson} 
-            onChange={changePerson} 
-            phoneCode={getCurrentPhoneCode()} 
-            icon={<FaUserTie />}
-          />
-          <ContactRoleSection 
-            title="Reservation Person" 
-            role="reservationPerson" 
-            persons={formData.reservationPersons} 
-            onAdd={addPerson} 
-            onRemove={removePerson} 
-            onChange={changePerson} 
-            phoneCode={getCurrentPhoneCode()} 
-            icon={<FaClipboardList />}
-          />
-          <ContactRoleSection 
-            title="Accounts Person" 
-            role="accountsPerson" 
-            persons={formData.accountsPersons} 
-            onAdd={addPerson} 
-            onRemove={removePerson} 
-            onChange={changePerson} 
-            phoneCode={getCurrentPhoneCode()} 
-            icon={<FaMoneyCheckAlt />}
-          />
-          <ContactRoleSection 
-            title="Reception Person" 
-            role="receptionPerson" 
-            persons={formData.receptionPersons} 
-            onAdd={addPerson} 
-            onRemove={removePerson} 
-            onChange={changePerson} 
-            phoneCode={getCurrentPhoneCode()} 
-            icon={<FaReceipt />}
-          />
-          <ContactRoleSection 
-            title="Concierge" 
-            role="concierge" 
-            persons={formData.concierges} 
-            onAdd={addPerson} 
-            onRemove={removePerson} 
-            onChange={changePerson} 
-            phoneCode={getCurrentPhoneCode()} 
-            icon={<FaConciergeBell />}
-          />
+          <div className="section-header"><h3><FaUserTie /> Contact Persons</h3><p>Add contact information for hotel departments</p></div>
+          <ContactRoleSection title="Sales Person" persons={formData.salesPersons} onAdd={()=>addPerson('salesPersons')} onRemove={(i)=>removePerson('salesPersons',i)} onChange={(i,f,v)=>changePerson('salesPersons',i,f,v)} phoneCode={getCurrentPhoneCode()} icon={<FaUserTie />}/>
+          <ContactRoleSection title="Reservation Person" persons={formData.reservationPersons} onAdd={()=>addPerson('reservationPersons')} onRemove={(i)=>removePerson('reservationPersons',i)} onChange={(i,f,v)=>changePerson('reservationPersons',i,f,v)} phoneCode={getCurrentPhoneCode()} icon={<FaClipboardList />}/>
+          <ContactRoleSection title="Accounts Person" persons={formData.accountsPersons} onAdd={()=>addPerson('accountsPersons')} onRemove={(i)=>removePerson('accountsPersons',i)} onChange={(i,f,v)=>changePerson('accountsPersons',i,f,v)} phoneCode={getCurrentPhoneCode()} icon={<FaMoneyCheckAlt />}/>
+          <ContactRoleSection title="Reception Person" persons={formData.receptionPersons} onAdd={()=>addPerson('receptionPersons')} onRemove={(i)=>removePerson('receptionPersons',i)} onChange={(i,f,v)=>changePerson('receptionPersons',i,f,v)} phoneCode={getCurrentPhoneCode()} icon={<FaReceipt />}/>
+          <ContactRoleSection title="Concierge" persons={formData.concierges} onAdd={()=>addPerson('concierges')} onRemove={(i)=>removePerson('concierges',i)} onChange={(i,f,v)=>changePerson('concierges',i,f,v)} phoneCode={getCurrentPhoneCode()} icon={<FaConciergeBell />}/>
         </div>
 
+        {/* Special Remarks */}
         <div className="form-section">
-          <div className="section-header">
-            <h3><FaInfoCircle /> Special Remarks</h3>
-          </div>
+          <div className="section-header"><h3><FaInfoCircle /> Special Remarks</h3></div>
           <div className="form-group full-width">
-            <textarea
-              name="specialRemarks"
-              value={formData.specialRemarks}
-              onChange={handleChange}
-              placeholder="Enter any special remarks or notes about this hotel"
-              rows="5"
-            />
+            <textarea name="specialRemarks" value={formData.specialRemarks} onChange={(e)=>setFormData({...formData,specialRemarks:e.target.value})} placeholder="Enter remarks" rows="5"/>
           </div>
         </div>
 
+        {/* Form Actions */}
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? <div className="spinner"></div> : <FaSave />}
-            {isSubmitting ? 'Submitting...' : 'Submit Form'}
-          </button>
-          <button type="button" className="btn btn-secondary" onClick={resetForm}>
-            Reset Form
-          </button>
+          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : <><FaSave /> Submit Form</>}</button>
+          <button type="button" className="btn btn-secondary" onClick={resetForm}>Reset Form</button>
         </div>
       </form>
     </div>
   );
 };
+
 
 // Modal Component
 const Modal = ({ isOpen, onClose, children, title, size = 'medium' }) => {
