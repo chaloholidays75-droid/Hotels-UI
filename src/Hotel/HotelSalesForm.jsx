@@ -109,7 +109,7 @@ const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCod
           <span className="phone-prefix">{phoneCode}</span>
           <input
             type="tel"
-            value={person.contact.replace(phoneCode, '').trim()}
+            value={(person.contact || '').replace(phoneCode, '').trim()}
             onChange={(e) => {
               const digits = e.target.value.replace(/\D/g, '');
               onChange(index, 'contact', `${phoneCode} ${digits}`);
@@ -179,6 +179,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
 
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
@@ -273,7 +274,8 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     setError('');
   };
 
-  const isHotelFromDatabase = hotelsInCity.some(h => h.HotelName === formData.hotelName);
+  const isHotelFromDatabase = hotelsInCity.some(h => h.HotelName === formData.hotelName || h.hotelName === formData.hotelName);
+
 
   // ======= MANUAL ENTRY API CALLS =======
   const handleManualCountry = async () => {
@@ -387,16 +389,6 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close dropdowns when clicked outside
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target)) setShowCountryDropdown(false);
-      if (cityDropdownRef.current && !cityDropdownRef.current.contains(e.target)) setShowCityDropdown(false);
-      if (hotelDropdownRef.current && !hotelDropdownRef.current.contains(e.target)) setShowHotelDropdown(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   return (
     <div className="hotel-form-container">
@@ -424,7 +416,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
                 <input type="text" value={citySearch} onChange={(e)=>{setCitySearch(e.target.value); setShowCityDropdown(true);}} onFocus={()=>setShowCityDropdown(true)} placeholder="Search city..." required disabled={!formData.country} className={validationErrors.city ? 'error' : ''}/>
                 <FaChevronDown className="dropdown-chevron"/>
               </div>
-              {showCityDropdown && formData.country && <div className="dropdown-options">{filteredCities.map((c,i)=><div key={i} className="dropdown-option" onClick={()=>handleCitySelect(c,i)}>{highlightText(c,citySearch)}</div>)}</div>}
+              {showCityDropdown && formData.country && <div className="dropdown-options">{filteredCities.map(c => <div key={c.id} className="dropdown-option" onClick={()=>handleCitySelect(c.name,c.id)}>{highlightText(c.name, citySearch)}</div>)}</div>}
             </div>
 
             {/* Hotel */}
