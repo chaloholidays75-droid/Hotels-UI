@@ -647,7 +647,10 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
             {highlightText(h.hotelName, hotelSearch)}
           </div>
       ))) : (
-        <div className="dropdown-option manual-option" onClick={handleManualHotel}>
+        <div className="dropdown-option manual-option"  onClick={() => {
+  setFormData(prev => ({ ...prev, hotelName: hotelSearch }));
+  handleManualHotel();
+}}>
           Add "{hotelSearch}" as new hotel
         </div>
       )}
