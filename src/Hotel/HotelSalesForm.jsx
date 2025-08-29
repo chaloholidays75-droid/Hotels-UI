@@ -292,76 +292,69 @@ const handleManualCountry = async () => {
   }
 };
 
+// Example: manual city
 const handleManualCity = async () => {
-  const name = citySearch.trim();
-  const countryId = countries.find(c => c.code === formData.countryCode)?.id;
+  if (!citySearch.trim() || !formData.countryCode) return;
 
-  if (!name || !countryId) {
-    showNotification("Please select a valid country first", "error");
-    return;
-  }
+  const selectedCountry = countries.find(c => c.code === formData.countryCode);
+  if (!selectedCountry) return showNotification("Select a valid country first", "error");
 
   try {
     const res = await fetch(`${API_BASE}/cities`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, countryId })  // <--- Correct!
+      body: JSON.stringify({ 
+        name: citySearch.trim(), 
+        countryId: selectedCountry.id // MUST send id
+      })
     });
 
     if (!res.ok) throw new Error("Failed to create city");
+
     const data = await res.json();
 
+    // Update citiesByCountry
     setCitiesByCountry(prev => ({
       ...prev,
-      [formData.countryCode]: [...(prev[formData.countryCode] || []), { id: data.id, name: data.name }]
+      [selectedCountry.code]: [...(prev[selectedCountry.code] || []), { id: data.id, name: data.name }]
     }));
 
-    handleCitySelect(data.name, data.id);
+    handleCitySelect(data.name, data.id); // select new city immediately
     showNotification("City added successfully!", "success");
+
   } catch (err) {
     console.error(err);
     showNotification("Error adding city", "error");
   }
 };
-;
 
 const handleManualHotel = async () => {
-  const name = hotelSearch.trim();
-  if (!name || !formData.cityId) {
-    setError("Please enter hotel name");
-    return;
-  }
-
-  const exists = hotelsInCity.find(h => h.hotelName.toLowerCase() === name.toLowerCase());
-  if (exists) {
-    handleHotelSelect(exists);
-    showNotification("Hotel already exists", "info");
+  if (!hotelSearch.trim() || !formData.cityId || !formData.countryCode) {
+    setError("Please fill all required fields");
     return;
   }
 
   try {
-    const newHotel = {
-      hotelName: name,
-      cityId: formData.cityId,
-      countryCode: formData.countryCode,
-      address: formData.address || "",
-      hotelEmail: formData.hotelEmail || "",
-      hotelContactNumber: formData.hotelContactNumber || ""
-    };
-
-    const res = await fetch(API_BASE_HOTEL, {
+    const res = await fetch(`${API_BASE_HOTEL}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newHotel)
+      body: JSON.stringify({
+        hotelName: hotelSearch.trim(),
+        cityId: formData.cityId,
+        countryCode: formData.countryCode,
+        address: formData.address || "",
+        hotelEmail: formData.hotelEmail || "",
+        hotelContactNumber: formData.hotelContactNumber || ""
+      })
     });
 
     if (!res.ok) throw new Error("Failed to create hotel");
     const data = await res.json();
 
     setHotelsInCity(prev => [...prev, data]);
-    handleHotelSelect(data);
+    handleHotelSelect(data); // select new hotel
+    setError("");
     showNotification("Hotel added successfully!", "success");
-    setError('');
   } catch (err) {
     console.error(err);
     showNotification("Error adding hotel", "error");
@@ -542,20 +535,22 @@ const handlePhoneChange = (e, field) => {
     />
     <FaChevronDown className="dropdown-chevron" />
   </div>
-  {showCityDropdown && formData.country && (
-    <div className="dropdown-options">
-      {filteredCities.length > 0 ? (
-        filteredCities.map(c => (
-          <div key={c.id} className="dropdown-option" onClick={() => handleCitySelect(c.name, c.id)}>
-            {highlightText(c.name, citySearch)}
-          </div>
-      ))) : (
-        <div className="dropdown-option manual-option" onClick={handleManualCity}>
-          Add "{citySearch}" as new city
+{showCityDropdown && formData.country && (
+  <div className="dropdown-options">
+    {filteredCities.length > 0 ? (
+      filteredCities.map(c => (
+        <div key={c.id} className="dropdown-option" onClick={() => handleCitySelect(c.name, c.id)}>
+          {highlightText(c.name, citySearch)}
         </div>
-      )}
-    </div>
-  )}
+      ))
+    ) : (
+      <div className="dropdown-option manual-option" onClick={handleManualCity}>
+        Use "{citySearch}" as new city
+      </div>
+    )}
+  </div>
+)}
+
 </div>
 
 {/* ================= Hotel Dropdown ================= */}
