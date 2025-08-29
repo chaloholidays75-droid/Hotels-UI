@@ -460,98 +460,101 @@ const handlePhoneChange = (e, field) => {
         <div className="section-header"><h3><FaBuilding /> Hotel Information</h3></div>
         <div className="form-grid">
 
-          {/* Country */}
-          <div className="form-group searchable-dropdown" ref={countryDropdownRef}>
-            <label>Country <span className="required">*</span></label>
-            <div className="dropdown-container">
-              <input
-                type="text"
-                value={countrySearch}
-                onChange={e => { setCountrySearch(e.target.value); setShowCountryDropdown(true); }}
-                onFocus={() => setShowCountryDropdown(true)}
-                placeholder="Search country..."
-                required
-                className={validationErrors.country ? 'error' : ''}
-              />
-              <FaChevronDown className="dropdown-chevron" />
-            </div>
-            {showCountryDropdown && (
-              <div className="dropdown-options">
-                {filteredCountries.length > 0 ? (
-                  filteredCountries.map(c => (
-                    <div key={c.code} className="dropdown-option" onClick={() => handleCountrySelect(c.code, c.name)}>
-                      {highlightText(c.name, countrySearch)}
-                    </div>
-                ))) : (
-                  <div className="dropdown-option manual-option" onClick={handleManualCountry}>
-                    Use "{countrySearch}" as new country
-                  </div>
-                )}
+      {/* ================= Country Dropdown ================= */}
+      <div className="form-group searchable-dropdown" ref={countryDropdownRef}>
+        <label>Country <span className="required">*</span></label>
+        <div className="dropdown-container">
+          <input
+            type="text"
+            value={countrySearch}
+            onChange={e => { setCountrySearch(e.target.value); setShowCountryDropdown(true); }}
+            onFocus={() => setShowCountryDropdown(true)}
+            placeholder="Search country..."
+            required
+            className={validationErrors.country ? 'error' : ''}
+          />
+          <FaChevronDown className="dropdown-chevron" />
+        </div>
+        {showCountryDropdown && (
+          <div className="dropdown-options">
+            {filteredCountries.length > 0 ? (
+              filteredCountries.map(c => (
+                <div key={c.code} className="dropdown-option" onClick={() => handleCountrySelect(c.code, c.name)}>
+                  {highlightText(c.name, countrySearch)}
+                </div>
+            ))) : (
+              <div className="dropdown-option manual-option" onClick={handleManualCountry}>
+                Use "{countrySearch}" as new country
               </div>
             )}
           </div>
+        )}
+      </div>
 
-
-          {/* City */}
-          <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
-            <label>City <span className="required">*</span></label>
-            <div className="dropdown-container">
-              <input
-                type="text"
-                value={citySearch}
-                onChange={e => { setCitySearch(e.target.value); setShowCityDropdown(true); }}
-                onFocus={() => setShowCityDropdown(true)}
-                placeholder="Search city..."
-                required
-                disabled={!formData.country}
-                className={validationErrors.city ? 'error' : ''}
-              />
-              <FaChevronDown className="dropdown-chevron" />
-            </div>
-            {showCityDropdown && formData.country && (
-              <div className="dropdown-options">
-                {filteredCities.map(c => (
-                  <div key={c.id} className="dropdown-option" onClick={() => handleCitySelect(c.name, c.id)}>
-                    {highlightText(c.name, citySearch)}
-                  </div>
-                ))}
+      {/* ================= City Dropdown ================= */}
+      <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
+        <label>City <span className="required">*</span></label>
+        <div className="dropdown-container">
+          <input
+            type="text"
+            value={citySearch}
+            onChange={e => { setCitySearch(e.target.value); setShowCityDropdown(true); }}
+            onFocus={() => setShowCityDropdown(true)}
+            placeholder="Search city..."
+            required
+            disabled={!formData.country}
+            className={validationErrors.city ? 'error' : ''}
+          />
+          <FaChevronDown className="dropdown-chevron" />
+        </div>
+        {showCityDropdown && formData.country && (
+          <div className="dropdown-options">
+            {filteredCities.length > 0 ? (
+              filteredCities.map(c => (
+                <div key={c.id} className="dropdown-option" onClick={() => handleCitySelect(c.name, c.id)}>
+                  {highlightText(c.name, citySearch)}
+                </div>
+            ))) : (
+              <div className="dropdown-option manual-option" onClick={handleManualCity}>
+                Use "{citySearch}" as new city
               </div>
             )}
           </div>
+        )}
+      </div>
 
-          {/* Hotel */}
-          <div className="form-group searchable-dropdown" ref={hotelDropdownRef}>
-            <label>Hotel <span className="required">*</span></label>
-            <div className="dropdown-container">
-              <input
-                type="text"
-                value={hotelSearch}
-                onChange={e => { setHotelSearch(e.target.value); setShowHotelDropdown(true); }}
-                onFocus={() => setShowHotelDropdown(true)}
-                placeholder="Search hotel..."
-                required
-                disabled={!formData.city}
-                className={validationErrors.hotelName ? 'error' : ''}
-              />
-              <FaChevronDown className="dropdown-chevron" />
-            </div>
-            {showHotelDropdown && formData.city && (
-              <div className="dropdown-options">
-                {filteredHotels.length > 0 ? (
-                  filteredHotels.map(h => (
-                    <div key={h.id} className="dropdown-option hotel-option" onClick={() => handleHotelSelect(h)}>
-                      {highlightText(h.hotelName, hotelSearch)}
-                    </div>
-                  ))
-                ) : (
-                  <div className="dropdown-option manual-option" onClick={handleManualHotel}>
-                    Use "{hotelSearch}" as hotel name
-                  </div>
-                )}
+      {/* ================= Hotel Dropdown ================= */}
+      <div className="form-group searchable-dropdown" ref={hotelDropdownRef}>
+        <label>Hotel <span className="required">*</span></label>
+        <div className="dropdown-container">
+          <input
+            type="text"
+            value={hotelSearch}
+            onChange={e => { setHotelSearch(e.target.value); setShowHotelDropdown(true); }}
+            onFocus={() => setShowHotelDropdown(true)}
+            placeholder="Search hotel..."
+            required
+            disabled={!formData.city}
+            className={validationErrors.hotelName ? 'error' : ''}
+          />
+          <FaChevronDown className="dropdown-chevron" />
+        </div>
+        {showHotelDropdown && formData.city && (
+          <div className="dropdown-options">
+            {filteredHotels.length > 0 ? (
+              filteredHotels.map(h => (
+                <div key={h.id} className="dropdown-option hotel-option" onClick={() => handleHotelSelect(h)}>
+                  {highlightText(h.hotelName, hotelSearch)}
+                </div>
+            ))) : (
+              <div className="dropdown-option manual-option" onClick={handleManualHotel}>
+                Use "{hotelSearch}" as hotel name
               </div>
             )}
-            {error && <p className="error-message">{error}</p>}
           </div>
+        )}
+        {error && <p className="error-message">{error}</p>}
+      </div>
 
           {/* Address */}
           <div className="form-group">
