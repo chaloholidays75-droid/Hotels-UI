@@ -160,6 +160,8 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
 // Add Hotel Tab Component
 
 const API_BASE_HOTEL = "https://hotels-8v0p.onrender.com/api/hotels";
+const API_BASE = "https://hotels-8v0p.onrender.com/api/";
+
 
 const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const [formData, setFormData] = useState({
@@ -259,7 +261,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const handleManualCountry = async () => {
     if (!countrySearch.trim()) return;
     try {
-      const res = await fetch(`${API_BASE_HOTEL.replace("/hotels","")}/countries`, {
+      const res = await fetch(`${API_BASE}/countries`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -282,7 +284,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const handleManualCity = async () => {
     if (!citySearch.trim() || !formData.countryCode) return;
     try {
-      const res = await fetch(`${API_BASE_HOTEL.replace("/hotels","")}/cities`, {
+      const res = await fetch(`${API_BASE}/cities`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: citySearch.trim(), countryCode: formData.countryCode })
