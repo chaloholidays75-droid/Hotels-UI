@@ -258,81 +258,119 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   };
 
   // ================= Manual Entry Handlers =================
-  const handleManualCountry = async () => {
-    if (!countrySearch.trim()) return;
-    try {
-      const res = await fetch(`${API_BASE}/countries`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: countrySearch.trim(),
-          code: countrySearch.trim().slice(0, 2).toUpperCase(),
-          phoneCode: "+1"
-        })
-      });
-      if (!res.ok) throw new Error("Failed to create country");
-      const data = await res.json();
-      setCountries(prev => [...prev, data]);
-      handleCountrySelect(data.code, data.name);
-      showNotification("Country added successfully!", "success");
-    } catch (err) {
-      console.error(err);
-      showNotification("Error adding country", "error");
-    }
-  };
+const handleManualCountry = async () => {
+  const name = countrySearch.trim();
+  if (!name) return;
 
-  const handleManualCity = async () => {
-    if (!citySearch.trim() || !formData.countryCode) return;
-    try {
-      const res = await fetch(`${API_BASE}/cities`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: citySearch.trim(), countryCode: formData.countryCode })
-      });
-      if (!res.ok) throw new Error("Failed to create city");
-      const data = await res.json();
-      setCitiesByCountry(prev => ({
-        ...prev,
-        [formData.countryCode]: [...(prev[formData.countryCode] || []), { id: data.id, name: data.name }]
-      }));
-      handleCitySelect(data.name, data.id);
-      showNotification("City added successfully!", "success");
-    } catch (err) {
-      console.error(err);
-      showNotification("Error adding city", "error");
-    }
-  };
+  // Check if country exists in frontend cache
+  const exists = countries.find(c => c.name.toLowerCase() === name.toLowerCase());
+  if (exists) {
+    handleCountrySelect(exists.code, exists.name);
+    showNotification("Country already exists", "info");
+    return;
+  }
 
-  const handleManualHotel = async () => {
-    if (!hotelSearch.trim() || !formData.cityId) {
-      setError("Please enter hotel name");
-      return;
-    }
-    try {
-      const newHotel = {
-        hotelName: hotelSearch.trim(),
-        cityId: formData.cityId,
-        countryCode: formData.countryCode,
-        address: formData.address || "",
-        hotelEmail: formData.hotelEmail || "",
-        hotelContactNumber: formData.hotelContactNumber || ""
-      };
-      const res = await fetch(API_BASE_HOTEL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newHotel)
-      });
-      if (!res.ok) throw new Error("Failed to create hotel");
-      const data = await res.json();
-      setHotelsInCity(prev => [...prev, data]);
-      handleHotelSelect(data);
-      showNotification("Hotel added successfully!", "success");
-      setError('');
-    } catch (err) {
-      console.error(err);
-      showNotification("Error adding hotel", "error");
-    }
-  };
+  try {
+    const res = await fetch(`${API_BASE}/countries`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: name,
+        code: name.slice(0, 2).toUpperCase(),
+        phoneCode: "+1"
+      })
+    });
+    if (!res.ok) throw new Error("Failed to create country");
+    const data = await res.json();
+
+    setCountries(prev => [...prev, data]);
+    handleCountrySelect(data.code, data.name);
+    showNotification("Country added successfully!", "success");
+  } catch (err) {
+    console.error(err);
+    showNotification("Error adding country", "error");
+  }
+};
+
+const handleManualCity = async () => {
+  const name = citySearch.trim();
+  if (!name || !formData.countryCode) return;
+
+  const countryCities = citiesByCountry[formData.countryCode] || [];
+  const exists = countryCities.find(c => c.name.toLowerCase() === name.toLowerCase());
+
+  if (exists) {
+    handleCitySelect(exists.name, exists.id);
+    showNotification("City already exists", "info");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/cities`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, countryCode: formData.countryCode })
+    });
+
+    if (!res.ok) throw new Error("Failed to create city");
+    const data = await res.json();
+
+    setCitiesByCountry(prev => ({
+      ...prev,
+      [formData.countryCode]: [...(prev[formData.countryCode] || []), { id: data.id, name: data.name }]
+    }));
+
+    handleCitySelect(data.name, data.id);
+    showNotification("City added successfully!", "success");
+  } catch (err) {
+    console.error(err);
+    showNotification("Error adding city", "error");
+  }
+};
+
+const handleManualHotel = async () => {
+  const name = hotelSearch.trim();
+  if (!name || !formData.cityId) {
+    setError("Please enter hotel name");
+    return;
+  }
+
+  const exists = hotelsInCity.find(h => h.hotelName.toLowerCase() === name.toLowerCase());
+  if (exists) {
+    handleHotelSelect(exists);
+    showNotification("Hotel already exists", "info");
+    return;
+  }
+
+  try {
+    const newHotel = {
+      hotelName: name,
+      cityId: formData.cityId,
+      countryCode: formData.countryCode,
+      address: formData.address || "",
+      hotelEmail: formData.hotelEmail || "",
+      hotelContactNumber: formData.hotelContactNumber || ""
+    };
+
+    const res = await fetch(API_BASE_HOTEL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newHotel)
+    });
+
+    if (!res.ok) throw new Error("Failed to create hotel");
+    const data = await res.json();
+
+    setHotelsInCity(prev => [...prev, data]);
+    handleHotelSelect(data);
+    showNotification("Hotel added successfully!", "success");
+    setError('');
+  } catch (err) {
+    console.error(err);
+    showNotification("Error adding hotel", "error");
+  }
+};
+
 
   // ================= Fetch Data =================
   useEffect(() => {
