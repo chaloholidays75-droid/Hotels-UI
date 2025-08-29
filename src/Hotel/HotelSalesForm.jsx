@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import countriesData from '../data/countries.json';
-import citiesData from '../data/cities.json';
-import hotelsData from '../data/hotels.json';
+// import citiesData from '../data/cities.json';
+// import hotelsData from '../data/hotels.json';
 import {
   FaCheckCircle, FaTimesCircle, FaUserTie, FaEnvelope, FaPhone,
   FaMinus, FaPlus, FaBuilding, FaMapMarkerAlt, FaStar, FaInfoCircle,
@@ -179,6 +179,10 @@ const AddHotelTab = ({ showNotification , setActiveTab }) => {
   });
 
   const [countrySearch, setCountrySearch] = useState('');
+  const [countries, setCountries] = useState([]);
+  const [citiesByCountry, setCitiesByCountry] = useState({});
+  const [hotelsInCity, setHotelsInCity] = useState([]);
+
   const [citySearch, setCitySearch] = useState('');
   const [hotelSearch, setHotelSearch] = useState('');
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
@@ -192,29 +196,25 @@ const AddHotelTab = ({ showNotification , setActiveTab }) => {
   const cityDropdownRef = useRef(null);
   const hotelDropdownRef = useRef(null);
 
-  const countries = countriesData;
-  const citiesByCountry = citiesData;
-  const hotelsInCity = formData.city ? hotelsData[formData.city] || [] : [];
+  // const countries = countriesData;
+  // const citiesByCountry = citiesData;
+  // const hotelsInCity = formData.city ? hotelsData[formData.city] || [] : [];
 
   const getCurrentPhoneCode = () => {
     const country = countries.find(c => c.code === formData.countryCode);
     return country ? country.phoneCode : '+1';
   };
 
-  const filteredCountries = countries.filter(country => 
-    country.name.toLowerCase().includes(countrySearch.toLowerCase())
-  );
+const filteredCountries = countries.filter(c => c.name.toLowerCase().includes(countrySearch.toLowerCase()));
 
-  const filteredCities = formData.countryCode 
-    ? citiesByCountry[formData.countryCode]?.filter(city => 
-        city.toLowerCase().includes(citySearch.toLowerCase())
-      ) || []
-    : [];
+const filteredCities = formData.countryCode
+  ? citiesByCountry[formData.countryCode]?.filter(c => c.toLowerCase().includes(citySearch.toLowerCase())) || []
+  : [];
 
-  const filteredHotels = hotelsInCity.filter(hotel =>
-    hotel.name.toLowerCase().includes(hotelSearch.toLowerCase()) ||
-    hotel.address.toLowerCase().includes(hotelSearch.toLowerCase())
-  );
+const filteredHotels = hotelsInCity.filter(h =>
+  h.hotelName.toLowerCase().includes(hotelSearch.toLowerCase()) ||
+  h.address.toLowerCase().includes(hotelSearch.toLowerCase())
+);
 
   const highlightText = (text, search) => {
     if (!search) return text;
@@ -326,22 +326,22 @@ const AddHotelTab = ({ showNotification , setActiveTab }) => {
     setHotelSearch('');
   };
 
-  const handleCitySelect = (city) => {
-    setFormData(prev => ({ ...prev, city }));
-    setCitySearch(city);
-    setShowCityDropdown(false);
-  };
+  // const handleCitySelect = (city) => {
+  //   setFormData(prev => ({ ...prev, city }));
+  //   setCitySearch(city);
+  //   setShowCityDropdown(false);
+  // };
 
   const handleHotelSelect = (hotel) => {
     setFormData(prev => ({
       ...prev,
-      hotelName: hotel.name,
-      hotelEmail: hotel.email || '',
-      hotelContactNumber: hotel.contactNumber || '',
-      address: hotel.address,
-      hotelChain: hotel.chain || ''
+      hotelName: hotel.HotelName,
+      hotelEmail: hotel.HotelEmail || '',
+      hotelContactNumber: hotel.HotelContactNumber || '',
+      address: hotel.Address,
+      hotelChain: hotel.HotelChain || ''
     }));
-    setHotelSearch(hotel.name);
+    setHotelSearch(hotel.HotelName);
     setShowHotelDropdown(false);
     setError('');
   };
@@ -388,6 +388,46 @@ const AddHotelTab = ({ showNotification , setActiveTab }) => {
       [key]: [...prev[key], { name: '', email: '', contact: '' }]
     }));
   };
+  useEffect(() => {
+  const fetchCountries = async () => {
+    try {
+      const res = await fetch("https://hotels-8v0p.onrender.com/api/countries");
+      const data = await res.json();
+      setCountries(data);
+
+      // Build citiesByCountry mapping for dropdowns
+      const mapping = {};
+      data.forEach(country => {
+        mapping[country.code] = country.cities.map(c => c.name);
+      });
+      setCitiesByCountry(mapping);
+    } catch (err) {
+      console.error("Error fetching countries:", err);
+    }
+  };
+
+  fetchCountries();
+}, []);
+
+useEffect(() => {
+  if (!formData.city) {
+    setHotelsInCity([]);
+    return;
+  }
+
+  const fetchHotels = async () => {
+    try {
+      const res = await fetch(`https://hotels-8v0p.onrender.com/api/hotels/by-city/${formData.cityId}`);
+      const data = await res.json();
+      setHotelsInCity(data); // this replaces hotelsData[formData.city]
+    } catch (err) {
+      console.error("Error fetching hotels:", err);
+    }
+  };
+
+  fetchHotels();
+}, [formData.city, formData.cityId]);
+
 
   const removePerson = (role, index) => {
     const key = `${role}s`;
@@ -396,6 +436,21 @@ const AddHotelTab = ({ showNotification , setActiveTab }) => {
       [key]: prev[key].filter((_, i) => i !== index)
     }));
   };
+  const handleCitySelect = (cityName, cityId) => {
+  setFormData(prev => ({
+    ...prev,
+    city: cityName,
+    cityId: cityId,
+    hotelName: '',
+    hotelEmail: '',
+    hotelContactNumber: '',
+    address: '',
+    hotelChain: ''
+  }));
+  setCitySearch(cityName);
+  setShowCityDropdown(false);
+  setHotelSearch('');
+};
 
   const changePerson = (role, index, field, value) => {
     const key = `${role}s`;
@@ -423,7 +478,7 @@ const AddHotelTab = ({ showNotification , setActiveTab }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const isHotelFromDatabase = hotelsInCity.some(h => h.name === formData.hotelName);
+  const isHotelFromDatabase = hotelsInCity.some(h => h.HotelName === formData.hotelName);
 
   return (
     <div className="hotel-form-container">
@@ -491,8 +546,8 @@ const AddHotelTab = ({ showNotification , setActiveTab }) => {
               {showCityDropdown && formData.country && (
                 <div className="dropdown-options">
                   {filteredCities.length > 0 ? filteredCities.map((city, index) => (
-                    <div key={index} className="dropdown-option" onClick={() => handleCitySelect(city)}>
-                      {highlightText(city, citySearch)}
+                    <div key={city.id} className="dropdown-option" onClick={() => handleCitySelect(city.name ,city.id)}>
+                      {highlightText(city.name, citySearch)}
                     </div>
                   )) : <div className="dropdown-option no-results">
                     {citiesByCountry[formData.countryCode]?.length === 0 ? "No cities available for this country" : "No cities found"}
@@ -837,7 +892,7 @@ const HotelSalesList = ({ showNotification }) => {
   const [bulkAction, setBulkAction] = useState('');
   const itemsPerPage = 10;
 
-  const API_URL = "https://hotels-8v0p.onrender.com/api/hotels";
+  const API_URL = "https://hotels-8v0p.onrender.com/api/";
 
   const fetchHotels = async () => {
     setLoading(true);
@@ -927,7 +982,7 @@ const HotelSalesList = ({ showNotification }) => {
   });
 
   const filteredHotels = sortedHotels.filter(hotel => {
-    const matchesSearch = hotel.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = hotel.HotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           hotel.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           hotel.country?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCountry = filterCountry ? hotel.country === filterCountry : true;
