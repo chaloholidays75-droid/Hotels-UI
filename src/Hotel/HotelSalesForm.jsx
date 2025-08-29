@@ -189,10 +189,10 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const cityDropdownRef = useRef(null);
   const hotelDropdownRef = useRef(null);
 
-const getCurrentPhoneCode = () => {
-  if (!Array.isArray(countries)) return '+1'; // fallback if countries not loaded
-  const country = countries.find(c => c?.code === formData?.countryCode);
-  return country?.phoneCode || '+1';
+// const getCurrentPhoneCode = () => {
+//   if (!Array.isArray(countries)) return '+1'; // fallback if countries not loaded
+//   const country = countries.find(c => c?.code === formData?.countryCode);
+//   return country?.phoneCode || '+1';
 };
     console.log('countries', countries);
     console.log('citiesByCountry', citiesByCountry[formData.countryCode]);
