@@ -21,6 +21,10 @@ const HotelManagementSystem = () => {
     setNotification({ show: true, message, type });
     setTimeout(() => setNotification({ show: false, message: '', type: '' }), 5000);
   }, []);
+  console.log('countries', countries);
+console.log('citiesByCountry', citiesByCountry[formData.countryCode]);
+console.log('hotelsInCity', hotelsInCity);
+
 
   return (
     <div className="hotel-management-system">
