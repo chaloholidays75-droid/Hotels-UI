@@ -329,35 +329,61 @@ const handleManualCity = async () => {
 };
 
 const handleManualHotel = async () => {
-  if (!hotelSearch.trim() || !formData.cityId || !formData.countryCode) {
-    setError("Please fill all required fields");
+  // Trim hotel name
+  const hotelName = hotelSearch.trim();
+  
+  if (!hotelName) {
+    setError("Please enter hotel name");
     return;
   }
+
+  if (!formData.cityId) {
+    setError("City must be selected or created first");
+    return;
+  }
+
+  if (!formData.countryCode) {
+    setError("Country must be selected first");
+    return;
+  }
+
+  // Prepare payload
+  const payload = {
+    hotelName,
+    cityId: formData.cityId,
+    countryCode: formData.countryCode,
+    address: formData.address || "",
+    hotelEmail: formData.hotelEmail || "",
+    hotelContactNumber: formData.hotelContactNumber || "",
+    hotelChain: formData.hotelChain || ""
+  };
+
+  console.log("Creating Hotel Payload:", payload); // Debug
 
   try {
     const res = await fetch(`${API_BASE_HOTEL}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        hotelName: hotelSearch.trim(),
-        cityId: formData.cityId,
-        countryCode: formData.countryCode,
-        address: formData.address || "",
-        hotelEmail: formData.hotelEmail || "",
-        hotelContactNumber: formData.hotelContactNumber || ""
-      })
+      body: JSON.stringify(payload)
     });
 
-    if (!res.ok) throw new Error("Failed to create hotel");
+    if (!res.ok) {
+      const errorData = await res.json();
+      console.error("Hotel creation error:", errorData);
+      throw new Error(errorData?.message || "Failed to create hotel");
+    }
+
     const data = await res.json();
 
+    // Add hotel to local state
     setHotelsInCity(prev => [...prev, data]);
-    handleHotelSelect(data); // select new hotel
-    setError("");
+    handleHotelSelect(data);
     showNotification("Hotel added successfully!", "success");
+    setError('');
+
   } catch (err) {
     console.error(err);
-    showNotification("Error adding hotel", "error");
+    showNotification(`Error adding hotel: ${err.message}`, "error");
   }
 };
 
