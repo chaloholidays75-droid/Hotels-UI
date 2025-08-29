@@ -11,6 +11,7 @@ import {
 } from 'react-icons/fa';
 import './HotelManagementSystem.css';
 
+
 // Main Component
 const HotelManagementSystem = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
@@ -155,6 +156,7 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
 );
 
 // Add Hotel Tab Component
+const API_BASE_HOTEL = "https://hotels-8v0p.onrender.com/api/hotels";
 
 const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const [formData, setFormData] = useState({
@@ -634,12 +636,11 @@ const HotelSalesList = ({ showNotification }) => {
   const [bulkAction, setBulkAction] = useState('');
   const itemsPerPage = 10;
 
-  const API_URL = "https://hotels-8v0p.onrender.com/api/";
 
   const fetchHotels = async () => {
     setLoading(true);
     try {
-      const res = await fetch(API_URL);
+      const res = await fetch(API_BASE_HOTEL);
       const data = await res.json();
       const adjustedData = data.map(hotel => ({
         ...hotel,
@@ -664,7 +665,7 @@ const HotelSalesList = ({ showNotification }) => {
   const deleteHotel = async (id) => {
     if (!window.confirm("Are you sure you want to delete this hotel?")) return;
     try {
-      await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      await fetch(`${API_BASE_HOTEL}/${id}`, { method: "DELETE" });
       setHotels(prev => prev.filter(h => h.id !== id));
       showNotification("Hotel deleted successfully!", "success");
     } catch (err) {
@@ -677,7 +678,7 @@ const HotelSalesList = ({ showNotification }) => {
     if (!selectedHotels.length || !window.confirm(`Are you sure you want to delete ${selectedHotels.length} hotels?`)) return;
     try {
       await Promise.all(selectedHotels.map(id => 
-        fetch(`${API_URL}/${id}`, { method: "DELETE" })
+        fetch(`${API_BASE_HOTEL}/${id}`, { method: "DELETE" })
       ));
       setHotels(prev => prev.filter(h => !selectedHotels.includes(h.id)));
       setSelectedHotels([]);
@@ -691,7 +692,7 @@ const HotelSalesList = ({ showNotification }) => {
 
   const saveHotel = async (hotel) => {
     try {
-      await fetch(`${API_URL}/${hotel.id}`, {
+      await fetch(`${API_BASE_HOTEL}/${hotel.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(hotel),
