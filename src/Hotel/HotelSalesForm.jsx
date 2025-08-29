@@ -192,9 +192,14 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     return country ? country.phoneCode : '+1';
   };
 
-  const filteredCountries = countries.filter(c => c.name.toLowerCase().includes(countrySearch.toLowerCase()));
-  const filteredCities = formData.countryCode ? citiesByCountry[formData.countryCode]?.filter(c => c.toLowerCase().includes(citySearch.toLowerCase())) || [] : [];
-  const filteredHotels = hotelsInCity.filter(h => h.hotelName.toLowerCase().includes(hotelSearch.toLowerCase()));
+const filteredCountries = countries.filter(c => (c.name || '').toLowerCase().includes((countrySearch || '').toLowerCase()));
+
+const filteredCities = formData.countryCode 
+  ? (citiesByCountry[formData.countryCode]?.filter(c => (c || '').toLowerCase().includes((citySearch || '').toLowerCase())) || []) 
+  : [];
+
+const filteredHotels = hotelsInCity.filter(h => (h.hotelName || '').toLowerCase().includes((hotelSearch || '').toLowerCase()));
+
 
   const highlightText = (text, search) => {
     if (!search) return text;
