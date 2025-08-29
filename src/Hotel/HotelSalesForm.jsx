@@ -160,7 +160,7 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
 // Add Hotel Tab Component
 
 const API_BASE_HOTEL = "https://hotels-8v0p.onrender.com/api/hotels";
-const API_BASE = "https://hotels-8v0p.onrender.com/api/";
+const API_BASE = "https://hotels-8v0p.onrender.com/api";
 
 
 const AddHotelTab = ({ showNotification, setActiveTab }) => {
@@ -348,7 +348,8 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       } catch (err) { console.error(err); }
     };
     fetchCountries();
-  }, []);
+  }, []);  
+
 
   const fetchHotels = async cityId => {
     if (!cityId) return;
