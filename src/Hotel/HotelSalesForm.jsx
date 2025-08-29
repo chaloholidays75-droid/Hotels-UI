@@ -183,7 +183,9 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+      alert('countries', countries);
+    alert('citiesByCountry', citiesByCountry[formData.countryCode]);
+    alert('hotelsInCity', hotelsInCity);
 
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
@@ -193,9 +195,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     const country = countries.find(c => c.code === formData.countryCode);
     return country ? country.phoneCode : '+1';
   };
-    console.log('countries', countries);
-console.log('citiesByCountry', citiesByCountry[formData.countryCode]);
-console.log('hotelsInCity', hotelsInCity);
+
 
 const filteredCountries = countries.filter(c => (c.name || '').toLowerCase().includes((countrySearch || '').toLowerCase()));
 
