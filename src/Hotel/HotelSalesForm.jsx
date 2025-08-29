@@ -184,6 +184,12 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+
+  const countryDropdownRef = useRef(null);
+  const cityDropdownRef = useRef(null);
+  const hotelDropdownRef = useRef(null);
+
+
   const getCurrentPhoneCode = () => {
     if (!Array.isArray(countries)) return "+1";
     const country = countries.find(c => c?.code === formData?.countryCode);
