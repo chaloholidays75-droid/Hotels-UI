@@ -193,7 +193,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
 //   if (!Array.isArray(countries)) return '+1'; // fallback if countries not loaded
 //   const country = countries.find(c => c?.code === formData?.countryCode);
 //   return country?.phoneCode || '+1';
-};
+// };
     console.log('countries', countries);
     console.log('citiesByCountry', citiesByCountry[formData.countryCode]);
     console.log('hotelsInCity', hotelsInCity);
