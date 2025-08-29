@@ -550,6 +550,29 @@ const handleManualHotel = async () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [showCountryDropdown, showCityDropdown, showHotelDropdown, filteredCountries, filteredCities, filteredHotels, countryFocusIndex, cityFocusIndex, hotelFocusIndex]);
+  const handleHotelDropdownKeys = (e) => {
+  if (!showHotelDropdown) return;
+
+  const options = filteredHotels;
+  if (!options.length) return;
+
+  let currentIndex = options.findIndex(h => h.hotelName === hotelSearch);
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const nextIndex = (currentIndex + 1) % options.length;
+    setHotelSearch(options[nextIndex].hotelName);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    const prevIndex = (currentIndex - 1 + options.length) % options.length;
+    setHotelSearch(options[prevIndex].hotelName);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (currentIndex >= 0) handleHotelSelect(options[currentIndex]);
+    else handleManualHotel(); // if no selection, create manually
+    setShowHotelDropdown(false);
+  }
+};
 
 
 
