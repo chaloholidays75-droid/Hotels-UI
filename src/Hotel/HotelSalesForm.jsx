@@ -190,11 +190,13 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
   const hotelDropdownRef = useRef(null);
+  
+const getCurrentPhoneCode = () => {
+  if (!Array.isArray(countries)) return '+1'; // fallback if countries not loaded
+  const country = countries.find(c => c?.code === formData?.countryCode);
+  return country?.phoneCode || '+1';
+};
 
-  const getCurrentPhoneCode = () => {
-    const country = countries.find(c => c.code === formData.countryCode);
-    return country ? country.phoneCode : '+1';
-  };
 
 
 const filteredCountries = countries.filter(c => (c.name || '').toLowerCase().includes((countrySearch || '').toLowerCase()));
