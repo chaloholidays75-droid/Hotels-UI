@@ -156,7 +156,6 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
 
 // Add Hotel Tab Component
 
-// Add Hotel Tab
 const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const [formData, setFormData] = useState({
     country: '', countryCode: '', city: '', cityId: '', hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '',
@@ -249,6 +248,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     setCountrySearch(''); setCitySearch(''); setHotelSearch(''); setValidationErrors({});
   };
 
+  // ======= MANUAL + AUTOMATIC SELECTION HANDLERS =======
   const handleCountrySelect = (code, name) => {
     setFormData(prev => ({ ...prev, country: name, countryCode: code, city: '', hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' }));
     setCountrySearch(name); setShowCountryDropdown(false); setCitySearch(''); setHotelSearch('');
@@ -260,50 +260,132 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   };
 
   const handleHotelSelect = (hotel) => {
-    setFormData(prev => ({ ...prev, hotelName: hotel.HotelName, hotelEmail: hotel.HotelEmail || '', hotelContactNumber: hotel.HotelContactNumber || '', address: hotel.Address, hotelChain: hotel.HotelChain || '' }));
-    setHotelSearch(hotel.HotelName); setShowHotelDropdown(false); setError('');
+    setFormData(prev => ({ 
+      ...prev, 
+      hotelName: hotel.HotelName, 
+      hotelEmail: hotel.HotelEmail || '', 
+      hotelContactNumber: hotel.HotelContactNumber || '', 
+      address: hotel.Address, 
+      hotelChain: hotel.HotelChain || '' 
+    }));
+    setHotelSearch(hotel.HotelName); 
+    setShowHotelDropdown(false); 
+    setError('');
   };
 
-  const handleManualHotel = () => {
-    if (!hotelSearch.trim()) { setError('Please enter hotel name'); return; }
-    setFormData(prev => ({ ...prev, hotelName: hotelSearch, hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' }));
-    setShowHotelDropdown(false); setError('');
+  const isHotelFromDatabase = hotelsInCity.some(h => h.HotelName === formData.hotelName);
+
+  // ======= MANUAL ENTRY API CALLS =======
+  const handleManualCountry = async () => {
+    if (!countrySearch.trim()) return;
+    try {
+      const res = await fetch("https://hotels-8v0p.onrender.com/api/countries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: countrySearch.trim(), code: countrySearch.trim().slice(0,2).toUpperCase() })
+      });
+      if (!res.ok) throw new Error("Failed to create country");
+      const data = await res.json();
+      setCountries(prev => [...prev, data]);
+      handleCountrySelect(data.code, data.name);
+      showNotification("Country added successfully!", "success");
+    } catch(err) { console.error(err); showNotification("Error adding country", "error"); }
   };
 
-  const handleChange = (e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
-  const handlePhoneChange = (e, field) => { const value = e.target.value.replace(/\D/g, ''); const phoneCode = getCurrentPhoneCode().replace('+',''); setFormData(prev => ({ ...prev, [field]: `+${phoneCode} ${value}` })); };
+  const handleManualCity = async () => {
+    if (!citySearch.trim() || !formData.countryCode) return;
+    try {
+      const res = await fetch(`https://hotels-8v0p.onrender.com/api/cities`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: citySearch.trim(), countryCode: formData.countryCode })
+      });
+      if (!res.ok) throw new Error("Failed to create city");
+      const data = await res.json();
+      setCitiesByCountry(prev => ({
+        ...prev,
+        [formData.countryCode]: [...(prev[formData.countryCode] || []), data.name]
+      }));
+      handleCitySelect(data.name, data.id);
+      showNotification("City added successfully!", "success");
+    } catch(err) { console.error(err); showNotification("Error adding city", "error"); }
+  };
 
+  const handleManualHotel = async () => {
+    if (!hotelSearch.trim() || !formData.cityId) { setError('Please enter hotel name'); return; }
+    try {
+      const newHotel = {
+        hotelName: hotelSearch,
+        cityId: formData.cityId,
+        countryId: formData.countryCode,
+        address: formData.address,
+        hotelEmail: formData.hotelEmail,
+        hotelContactNumber: formData.hotelContactNumber
+      };
+      const res = await fetch("https://hotels-8v0p.onrender.com/api/hotels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newHotel)
+      });
+      if (!res.ok) throw new Error("Failed to create hotel");
+      const data = await res.json();
+      setHotelsInCity(prev => [...prev, data]);
+      handleHotelSelect(data);
+      showNotification("Hotel added successfully!", "success");
+      setError('');
+    } catch(err) { console.error(err); showNotification("Error adding hotel", "error"); }
+  };
+
+  // ======= CONTACT PERSONS HELPERS =======
   const addPerson = (role) => setFormData(prev => ({ ...prev, [role]: [...prev[role], { name: '', email: '', contact: '' }] }));
   const removePerson = (role, index) => setFormData(prev => ({ ...prev, [role]: prev[role].filter((_, i) => i !== index) }));
   const changePerson = (role, index, field, value) => {
     const updated = [...formData[role]]; updated[index][field] = value; setFormData(prev => ({ ...prev, [role]: updated }));
   };
 
-  const isHotelFromDatabase = hotelsInCity.some(h => h.HotelName === formData.hotelName);
+  const handleChange = (e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
+  const handlePhoneChange = (e, field) => { const value = e.target.value.replace(/\D/g, ''); const phoneCode = getCurrentPhoneCode().replace('+',''); setFormData(prev => ({ ...prev, [field]: `+${phoneCode} ${value}` })); };
 
-  // Fetch countries
+  // ======= FETCH COUNTRIES =======
   useEffect(() => {
     const fetchCountries = async () => {
       try {
         const res = await fetch("https://hotels-8v0p.onrender.com/api/countries");
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
         setCountries(data);
-        const mapping = {}; data.forEach(c => mapping[c.code] = c.cities.map(city => city.name)); setCitiesByCountry(mapping);
-      } catch (err) { console.error(err); }
-    }; fetchCountries();
+        const mapping = {};
+        data.forEach(c => mapping[c.code] = c.cities.map(city => city.name));
+        setCitiesByCountry(mapping);
+      } catch (err) { console.error("Error fetching countries:", err); }
+    };
+    fetchCountries();
   }, []);
 
-  // Fetch hotels by city
+  // ======= FETCH HOTELS BY CITY =======
   useEffect(() => {
     if (!formData.city) { setHotelsInCity([]); return; }
     const fetchHotels = async () => {
       try {
         const res = await fetch(`https://hotels-8v0p.onrender.com/api/hotels/by-city/${formData.cityId}`);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
         setHotelsInCity(data);
-      } catch (err) { console.error(err); }
-    }; fetchHotels();
+      } catch (err) { console.error("Error fetching hotels:", err); setHotelsInCity([]); }
+    };
+    fetchHotels();
   }, [formData.city, formData.cityId]);
+
+  // ======= CLOSE DROPDOWNS =======
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target)) setShowCountryDropdown(false);
+      if (cityDropdownRef.current && !cityDropdownRef.current.contains(e.target)) setShowCityDropdown(false);
+      if (hotelDropdownRef.current && !hotelDropdownRef.current.contains(e.target)) setShowHotelDropdown(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Close dropdowns when clicked outside
   useEffect(() => {
