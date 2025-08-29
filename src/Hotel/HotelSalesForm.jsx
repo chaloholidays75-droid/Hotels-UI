@@ -158,6 +158,7 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
 );
 
 // Add Hotel Tab Component
+
 const API_BASE_HOTEL = "https://hotels-8v0p.onrender.com/api/hotels";
 
 const AddHotelTab = ({ showNotification, setActiveTab }) => {
@@ -174,29 +175,40 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const [countries, setCountries] = useState([]);
   const [citiesByCountry, setCitiesByCountry] = useState({});
   const [hotelsInCity, setHotelsInCity] = useState([]);
+
   const [countrySearch, setCountrySearch] = useState('');
   const [citySearch, setCitySearch] = useState('');
   const [hotelSearch, setHotelSearch] = useState('');
+
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
   const [showHotelDropdown, setShowHotelDropdown] = useState(false);
+
   const [error, setError] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
 
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
   const hotelDropdownRef = useRef(null);
 
-
+  // ================= Utility =================
   const getCurrentPhoneCode = () => {
-    if (!Array.isArray(countries)) return "+1";
     const country = countries.find(c => c?.code === formData?.countryCode);
     return country?.phoneCode || "+1";
   };
 
-  // ✅ Filters
+  const highlightText = (text, search) => {
+    if (!search) return text;
+    const regex = new RegExp(`(${search})`, "gi");
+    return text.split(regex).map((part, i) =>
+      part.toLowerCase() === search.toLowerCase() ? <b key={i}>{part}</b> : part
+    );
+  };
+
+  const isHotelFromDatabase = hotelsInCity.some(h => h.hotelName === formData.hotelName);
+
+  // ================= Filters =================
   const filteredCountries = countries.filter(c =>
     (c.name || "").toLowerCase().includes((countrySearch || "").toLowerCase())
   );
@@ -211,36 +223,39 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     (h.hotelName || "").toLowerCase().includes((hotelSearch || "").toLowerCase())
   );
 
-  // ✅ Country select
+  // ================= Selection Handlers =================
   const handleCountrySelect = (code, name) => {
-    setFormData({ ...formData, countryCode: code, country: name, city: "", cityId: null });
+    setFormData({ ...formData, countryCode: code, country: name, city: "", cityId: null, hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' });
     setCountrySearch(name);
     setShowCountryDropdown(false);
     setHotelsInCity([]);
+    setCitySearch('');
+    setHotelSearch('');
   };
 
-  // ✅ City select
   const handleCitySelect = (name, id) => {
-    setFormData({ ...formData, city: name, cityId: id });
+    setFormData({ ...formData, city: name, cityId: id, hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' });
     setCitySearch(name);
     setShowCityDropdown(false);
+    setHotelSearch('');
     fetchHotels(id);
   };
 
-  // ✅ Hotel select
   const handleHotelSelect = hotel => {
     setFormData({
       ...formData,
       hotelName: hotel.hotelName,
       hotelEmail: hotel.hotelEmail || "",
       hotelContactNumber: hotel.hotelContactNumber || "",
-      address: hotel.address || ""
+      address: hotel.address || "",
+      hotelChain: hotel.hotelChain || ''
     });
     setHotelSearch(hotel.hotelName);
     setShowHotelDropdown(false);
+    setError('');
   };
 
-  // ✅ Manual country
+  // ================= Manual Entry Handlers =================
   const handleManualCountry = async () => {
     if (!countrySearch.trim()) return;
     try {
@@ -264,17 +279,13 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     }
   };
 
-  // ✅ Manual city
   const handleManualCity = async () => {
     if (!citySearch.trim() || !formData.countryCode) return;
     try {
       const res = await fetch(`${API_BASE_HOTEL.replace("/hotels","")}/cities`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: citySearch.trim(),
-          countryCode: formData.countryCode
-        })
+        body: JSON.stringify({ name: citySearch.trim(), countryCode: formData.countryCode })
       });
       if (!res.ok) throw new Error("Failed to create city");
       const data = await res.json();
@@ -290,7 +301,6 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     }
   };
 
-  // ✅ Manual hotel
   const handleManualHotel = async () => {
     if (!hotelSearch.trim() || !formData.cityId) {
       setError("Please enter hotel name");
@@ -315,14 +325,14 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       setHotelsInCity(prev => [...prev, data]);
       handleHotelSelect(data);
       showNotification("Hotel added successfully!", "success");
-      setError("");
+      setError('');
     } catch (err) {
       console.error(err);
       showNotification("Error adding hotel", "error");
     }
   };
 
-  // ✅ Fetch countries
+  // ================= Fetch Data =================
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -331,18 +341,13 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
         const data = await res.json();
         setCountries(data);
         const mapping = {};
-        data.forEach(c => {
-          mapping[c.code] = c.cities.map(city => ({ id: city.id, name: city.name }));
-        });
+        data.forEach(c => mapping[c.code] = c.cities.map(city => ({ id: city.id, name: city.name })));
         setCitiesByCountry(mapping);
-      } catch (err) {
-        console.error("Error fetching countries:", err);
-      }
+      } catch (err) { console.error(err); }
     };
     fetchCountries();
   }, []);
 
-  // ✅ Fetch hotels by city
   const fetchHotels = async cityId => {
     if (!cityId) return;
     try {
@@ -350,20 +355,31 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       if (!res.ok) throw new Error("Failed to fetch hotels");
       const data = await res.json();
       setHotelsInCity(data);
-    } catch (err) {
-      console.error("Error fetching hotels:", err);
-    }
+    } catch (err) { console.error(err); }
   };
 
-  // ✅ Highlight search matches
-  const highlightText = (text, search) => {
-    if (!search) return text;
-    const regex = new RegExp(`(${search})`, "gi");
-    return text.split(regex).map((part, i) =>
-      part.toLowerCase() === search.toLowerCase() ? <b key={i}>{part}</b> : part
-    );
+  // ================= Contact Person Handlers =================
+  const addPerson = role => setFormData(prev => ({ ...prev, [role]: [...prev[role], { name: '', email: '', contact: '' }] }));
+  const removePerson = (role, index) => setFormData(prev => ({ ...prev, [role]: prev[role].filter((_, i) => i !== index) }));
+  const changePerson = (role, index, field, value) => {
+    const updated = [...formData[role]];
+    updated[index][field] = value;
+    setFormData(prev => ({ ...prev, [role]: updated }));
   };
 
+// Handle phone input
+const handlePhoneChange = (e, field) => {
+  const phoneCode = getCurrentPhoneCode().replace('+', ''); // e.g. "91"
+  // Remove all non-digit characters
+  let digits = e.target.value.replace(/\D/g, '');
+  // Remove prefix digits if user tries to type them
+  if (digits.startsWith(phoneCode)) digits = digits.slice(phoneCode.length);
+  // Update form data with full number including +countryCode
+  setFormData(prev => ({ ...prev, [field]: `+${phoneCode} ${digits}` }));
+};
+
+
+  // ================= Validation =================
   const validateForm = () => {
     const errors = {};
     if (!formData.country) errors.country = 'Country is required';
@@ -380,13 +396,14 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     return Object.keys(errors).length === 0;
   };
 
+  // ================= Submit =================
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) { showNotification('Please fix validation errors', 'error'); return; }
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("https://hotels-8v0p.onrender.com/api/hotels", {
+      const response = await fetch(API_BASE_HOTEL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
@@ -413,138 +430,9 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     setCountrySearch(''); setCitySearch(''); setHotelSearch(''); setValidationErrors({});
   };
 
-  // ======= MANUAL + AUTOMATIC SELECTION HANDLERS =======
-  // const handleCountrySelect = (code, name) => {
-  //   setFormData(prev => ({ ...prev, country: name, countryCode: code, city: '', hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' }));
-  //   setCountrySearch(name); setShowCountryDropdown(false); setCitySearch(''); setHotelSearch('');
-  // };
-
-  // const handleCitySelect = (cityName, cityId) => {
-  //   setFormData(prev => ({ ...prev, city: cityName, cityId, hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' }));
-  //   setCitySearch(cityName); setShowCityDropdown(false); setHotelSearch('');
-  // };
-
-  // const handleHotelSelect = (hotel) => {
-  //   setFormData(prev => ({ 
-  //     ...prev, 
-  //     hotelName: hotel.HotelName, 
-  //     hotelEmail: hotel.HotelEmail || '', 
-  //     hotelContactNumber: hotel.HotelContactNumber || '', 
-  //     address: hotel.Address, 
-  //     hotelChain: hotel.HotelChain || '' 
-  //   }));
-  //   setHotelSearch(hotel.HotelName); 
-  //   setShowHotelDropdown(false); 
-  //   setError('');
-  // };
-
-  // const isHotelFromDatabase = hotelsInCity.some(h => h.HotelName === formData.hotelName || h.hotelName === formData.hotelName);
-
-
-  // // ======= MANUAL ENTRY API CALLS =======
-  // const handleManualCountry = async () => {
-  //   if (!countrySearch.trim()) return;
-  //   try {
-  //     const res = await fetch("https://hotels-8v0p.onrender.com/api/countries", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ name: countrySearch.trim(), code: countrySearch.trim().slice(0,2).toUpperCase() })
-  //     });
-  //     if (!res.ok) throw new Error("Failed to create country");
-  //     const data = await res.json();
-  //     setCountries(prev => [...prev, data]);
-  //     handleCountrySelect(data.code, data.name);
-  //     showNotification("Country added successfully!", "success");
-  //   } catch(err) { console.error(err); showNotification("Error adding country", "error"); }
-  // };
-
-  // const handleManualCity = async () => {
-  //   if (!citySearch.trim() || !formData.countryCode) return;
-  //   try {
-  //     const res = await fetch(`https://hotels-8v0p.onrender.com/api/cities`, {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ name: citySearch.trim(), countryCode: formData.countryCode })
-  //     });
-  //     if (!res.ok) throw new Error("Failed to create city");
-  //     const data = await res.json();
-  //     setCitiesByCountry(prev => ({
-  //       ...prev,
-  //       [formData.countryCode]: [...(prev[formData.countryCode] || []), data.name]
-  //     }));
-  //     handleCitySelect(data.name, data.id);
-  //     showNotification("City added successfully!", "success");
-  //   } catch(err) { console.error(err); showNotification("Error adding city", "error"); }
-  // };
-
-  // const handleManualHotel = async () => {
-  //   if (!hotelSearch.trim() || !formData.cityId) { setError('Please enter hotel name'); return; }
-  //   try {
-  //     const newHotel = {
-  //       hotelName: hotelSearch,
-  //       cityId: formData.cityId,
-  //       countryId: formData.countryCode,
-  //       address: formData.address,
-  //       hotelEmail: formData.hotelEmail,
-  //       hotelContactNumber: formData.hotelContactNumber
-  //     };
-  //     const res = await fetch("https://hotels-8v0p.onrender.com/api/hotels", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify(newHotel)
-  //     });
-  //     if (!res.ok) throw new Error("Failed to create hotel");
-  //     const data = await res.json();
-  //     setHotelsInCity(prev => [...prev, data]);
-  //     handleHotelSelect(data);
-  //     showNotification("Hotel added successfully!", "success");
-  //     setError('');
-  //   } catch(err) { console.error(err); showNotification("Error adding hotel", "error"); }
-  // };
-
-  // ======= CONTACT PERSONS HELPERS =======
-  const addPerson = (role) => setFormData(prev => ({ ...prev, [role]: [...prev[role], { name: '', email: '', contact: '' }] }));
-  const removePerson = (role, index) => setFormData(prev => ({ ...prev, [role]: prev[role].filter((_, i) => i !== index) }));
-  const changePerson = (role, index, field, value) => {
-    const updated = [...formData[role]]; updated[index][field] = value; setFormData(prev => ({ ...prev, [role]: updated }));
-  };
-
-  const handleChange = (e) => { const { name, value } = e.target; setFormData(prev => ({ ...prev, [name]: value })); };
-  const handlePhoneChange = (e, field) => { const value = e.target.value.replace(/\D/g, ''); const phoneCode = getCurrentPhoneCode().replace('+',''); setFormData(prev => ({ ...prev, [field]: `+${phoneCode} ${value}` })); };
-
-  // ======= FETCH COUNTRIES =======
+  // ================= Close Dropdowns =================
   useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const res = await fetch("https://hotels-8v0p.onrender.com/api/countries");
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        setCountries(data);
-        const mapping = {};
-        data.forEach(c => mapping[c.code] = c.cities.map(city => city.name));
-        setCitiesByCountry(mapping);
-      } catch (err) { console.error("Error fetching countries:", err); }
-    };
-    fetchCountries();
-  }, []);
-
-  // ======= FETCH HOTELS BY CITY =======
-  useEffect(() => {
-    if (!formData.city) { setHotelsInCity([]); return; }
-    const fetchHotels = async () => {
-      try {
-        const res = await fetch(`https://hotels-8v0p.onrender.com/api/hotels/by-city/${formData.cityId}`);
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        const data = await res.json();
-        setHotelsInCity(data);
-      } catch (err) { console.error("Error fetching hotels:", err); setHotelsInCity([]); }
-    };
-    fetchHotels();
-  }, [formData.city, formData.cityId]);
-
-  // ======= CLOSE DROPDOWNS =======
-  useEffect(() => {
-    const handleClickOutside = (e) => {
+    const handleClickOutside = e => {
       if (countryDropdownRef.current && !countryDropdownRef.current.contains(e.target)) setShowCountryDropdown(false);
       if (cityDropdownRef.current && !cityDropdownRef.current.contains(e.target)) setShowCityDropdown(false);
       if (hotelDropdownRef.current && !hotelDropdownRef.current.contains(e.target)) setShowHotelDropdown(false);
@@ -554,124 +442,193 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   }, []);
 
 
-  return (
-    <div className="hotel-form-container">
-      <div className="form-header"><h2>Add Hotel Information</h2><p>Fill in the details to add a new hotel</p></div>
-      <form onSubmit={handleSubmit} className="hotel-form">
 
-        {/* Hotel Info Section */}
-        <div className="form-section">
-          <div className="section-header"><h3><FaBuilding /> Hotel Information</h3></div>
-          <div className="form-grid">
-            {/* Country */}
-            {/* Country Input */}
-      <div className="form-group">
-        <label>Country</label>
-        <input
-          value={countrySearch}
-          onChange={e => {
-            setCountrySearch(e.target.value);
-            setShowCountryDropdown(true);
-          }}
-          onFocus={() => setShowCountryDropdown(true)}
-        />
-        {showCountryDropdown && (
-          <div className="dropdown-options">
-            {filteredCountries.length > 0 ? (
-              filteredCountries.map(c => (
-                <div key={c.code} className="dropdown-option" onClick={() => handleCountrySelect(c.code, c.name)}>
-                  {highlightText(c.name, countrySearch)}
-                </div>
-              ))
-            ) : (
-              <div className="dropdown-option manual-option" onClick={handleManualCountry}>
-                Use "{countrySearch}" as new country
+  return (
+  <div className="hotel-form-container">
+    <div className="form-header">
+      <h2>Add Hotel Information</h2>
+      <p>Fill in the details to add a new hotel</p>
+    </div>
+
+    <form onSubmit={handleSubmit} className="hotel-form">
+
+      {/* Hotel Info Section */}
+      <div className="form-section">
+        <div className="section-header"><h3><FaBuilding /> Hotel Information</h3></div>
+        <div className="form-grid">
+
+          {/* Country */}
+          <div className="form-group">
+            <label>Country</label>
+            <input
+              value={countrySearch}
+              onChange={e => { setCountrySearch(e.target.value); setShowCountryDropdown(true); }}
+              onFocus={() => setShowCountryDropdown(true)}
+            />
+            {showCountryDropdown && (
+              <div className="dropdown-options">
+                {filteredCountries.length > 0 ? (
+                  filteredCountries.map(c => (
+                    <div key={c.code} className="dropdown-option" onClick={() => handleCountrySelect(c.code, c.name)}>
+                      {highlightText(c.name, countrySearch)}
+                    </div>
+                  ))
+                ) : (
+                  <div className="dropdown-option manual-option" onClick={handleManualCountry}>
+                    Use "{countrySearch}" as new country
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
+
+          {/* City */}
+          <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
+            <label>City <span className="required">*</span></label>
+            <div className="dropdown-container">
+              <input
+                type="text"
+                value={citySearch}
+                onChange={e => { setCitySearch(e.target.value); setShowCityDropdown(true); }}
+                onFocus={() => setShowCityDropdown(true)}
+                placeholder="Search city..."
+                required
+                disabled={!formData.country}
+                className={validationErrors.city ? 'error' : ''}
+              />
+              <FaChevronDown className="dropdown-chevron" />
+            </div>
+            {showCityDropdown && formData.country && (
+              <div className="dropdown-options">
+                {filteredCities.map(c => (
+                  <div key={c.id} className="dropdown-option" onClick={() => handleCitySelect(c.name, c.id)}>
+                    {highlightText(c.name, citySearch)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Hotel */}
+          <div className="form-group searchable-dropdown" ref={hotelDropdownRef}>
+            <label>Hotel <span className="required">*</span></label>
+            <div className="dropdown-container">
+              <input
+                type="text"
+                value={hotelSearch}
+                onChange={e => { setHotelSearch(e.target.value); setShowHotelDropdown(true); }}
+                onFocus={() => setShowHotelDropdown(true)}
+                placeholder="Search hotel..."
+                required
+                disabled={!formData.city}
+                className={validationErrors.hotelName ? 'error' : ''}
+              />
+              <FaChevronDown className="dropdown-chevron" />
+            </div>
+            {showHotelDropdown && formData.city && (
+              <div className="dropdown-options">
+                {filteredHotels.length > 0 ? (
+                  filteredHotels.map(h => (
+                    <div key={h.id} className="dropdown-option hotel-option" onClick={() => handleHotelSelect(h)}>
+                      {highlightText(h.hotelName, hotelSearch)}
+                    </div>
+                  ))
+                ) : (
+                  <div className="dropdown-option manual-option" onClick={handleManualHotel}>
+                    Use "{hotelSearch}" as hotel name
+                  </div>
+                )}
+              </div>
+            )}
+            {error && <p className="error-message">{error}</p>}
+          </div>
+
+          {/* Address */}
+          <div className="form-group">
+            <label>Address <span className="required">*</span></label>
+            <input
+              type="text"
+              name="address"
+              value={formData.address}
+              onChange={e => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Hotel address"
+              required
+              readOnly={isHotelFromDatabase}
+            />
+          </div>
+
+          {/* Hotel Contact */}
+          <div className="form-group">
+            <label>Hotel Contact Number</label>
+            <div className="phone-input-container">
+              <span className="phone-prefix">{getCurrentPhoneCode()}</span>
+              <input
+                type="tel"
+                value={formData.hotelContactNumber.replace(getCurrentPhoneCode(), '').trim()}
+                onChange={e => handlePhoneChange(e, 'hotelContactNumber')}
+                placeholder="XXX XXX XXXX"
+                readOnly={isHotelFromDatabase}
+              />
+            </div>
+          </div>
+
+          {/* Hotel Email */}
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              name="hotelEmail"
+              value={formData.hotelEmail}
+              onChange={e => setFormData({ ...formData, hotelEmail: e.target.value })}
+              placeholder="hotel@example.com"
+              readOnly={isHotelFromDatabase}
+            />
+          </div>
+
+          {/* Hotel Chain */}
+          <div className="form-group">
+            <label>Hotel Chain</label>
+            <input
+              type="text"
+              name="hotelChain"
+              value={formData.hotelChain}
+              onChange={e => setFormData({ ...formData, hotelChain: e.target.value })}
+              placeholder="Hotel chain (optional)"
+              readOnly={isHotelFromDatabase}
+            />
+          </div>
+
+        </div>
       </div>
 
-            {/* City */}
-            <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
-              <label>City <span className="required">*</span></label>
-              <div className="dropdown-container">
-                <input type="text" value={citySearch} onChange={(e)=>{setCitySearch(e.target.value); setShowCityDropdown(true);}} onFocus={()=>setShowCityDropdown(true)} placeholder="Search city..." required disabled={!formData.country} className={validationErrors.city ? 'error' : ''}/>
-                <FaChevronDown className="dropdown-chevron"/>
-              </div>
-              {showCityDropdown && formData.country && <div className="dropdown-options">{filteredCities.map(c => <div key={c.id} className="dropdown-option" onClick={()=>handleCitySelect(c.name,c.id)}>{highlightText(c.name, citySearch)}</div>)}</div>}
-            </div>
+      {/* Contact Persons Section */}
+      <div className="form-section">
+        <div className="section-header"><h3><FaUserTie /> Contact Persons</h3><p>Add contact information for hotel departments</p></div>
+        <ContactRoleSection title="Sales Person" persons={formData.salesPersons} onAdd={() => addPerson('salesPersons')} onRemove={i => removePerson('salesPersons', i)} onChange={(i, f, v) => changePerson('salesPersons', i, f, v)} phoneCode={getCurrentPhoneCode()} icon={<FaUserTie />} />
+        <ContactRoleSection title="Reservation Person" persons={formData.reservationPersons} onAdd={() => addPerson('reservationPersons')} onRemove={i => removePerson('reservationPersons', i)} onChange={(i, f, v) => changePerson('reservationPersons', i, f, v)} phoneCode={getCurrentPhoneCode()} icon={<FaClipboardList />} />
+        <ContactRoleSection title="Accounts Person" persons={formData.accountsPersons} onAdd={() => addPerson('accountsPersons')} onRemove={i => removePerson('accountsPersons', i)} onChange={(i, f, v) => changePerson('accountsPersons', i, f, v)} phoneCode={getCurrentPhoneCode()} icon={<FaMoneyCheckAlt />} />
+        <ContactRoleSection title="Reception Person" persons={formData.receptionPersons} onAdd={() => addPerson('receptionPersons')} onRemove={i => removePerson('receptionPersons', i)} onChange={(i, f, v) => changePerson('receptionPersons', i, f, v)} phoneCode={getCurrentPhoneCode()} icon={<FaReceipt />} />
+        <ContactRoleSection title="Concierge" persons={formData.concierges} onAdd={() => addPerson('concierges')} onRemove={i => removePerson('concierges', i)} onChange={(i, f, v) => changePerson('concierges', i, f, v)} phoneCode={getCurrentPhoneCode()} icon={<FaConciergeBell />} />
+      </div>
 
-            {/* Hotel */}
-            <div className="form-group searchable-dropdown" ref={hotelDropdownRef}>
-              <label>Hotel <span className="required">*</span></label>
-              <div className="dropdown-container">
-                <input type="text" value={hotelSearch} onChange={(e)=>{setHotelSearch(e.target.value); setShowHotelDropdown(true);}} onFocus={()=>setShowHotelDropdown(true)} placeholder="Search hotel..." required disabled={!formData.city} className={validationErrors.hotelName ? 'error' : ''}/>
-                <FaChevronDown className="dropdown-chevron"/>
-              </div>
-              {showHotelDropdown && formData.city && <div className="dropdown-options">
-                {filteredHotels.length>0 ? filteredHotels.map(h=> <div key={h.id} className="dropdown-option hotel-option" onClick={()=>handleHotelSelect(h)}>{highlightText(h.HotelName,hotelSearch)}</div>) : <div className="dropdown-option manual-option" onClick={handleManualHotel}>Use "{hotelSearch}" as hotel name</div>}
-              </div>}
-              {error && <p className="error-message">{error}</p>}
-            </div>
-
-            {/* Address */}
-            <div className="form-group">
-              <label>Address <span className="required">*</span></label>
-              <input type="text" name="address" value={formData.address} onChange={(e)=>setFormData({...formData,address:e.target.value})} placeholder="Hotel address" required readOnly={isHotelFromDatabase}/>
-            </div>
-
-            {/* Hotel Contact */}
-            <div className="form-group">
-              <label>Hotel Contact Number</label>
-              <div className="phone-input-container">
-                <span className="phone-prefix">{getCurrentPhoneCode()}</span>
-                <input type="tel" value={formData.hotelContactNumber.replace(getCurrentPhoneCode(),'').trim()} onChange={(e)=>handlePhoneChange(e,'hotelContactNumber')} placeholder="XXX XXX XXXX"/>
-              </div>
-            </div>
-
-            {/* Hotel Email */}
-            <div className="form-group">
-              <label>Email</label>
-              <input type="email" name="hotelEmail" value={formData.hotelEmail} onChange={(e)=>setFormData({...formData,hotelEmail:e.target.value})} placeholder="hotel@example.com"/>
-            </div>
-
-            {/* Hotel Chain */}
-            <div className="form-group">
-              <label>Hotel Chain</label>
-              <input type="text" name="hotelChain" value={formData.hotelChain} onChange={(e)=>setFormData({...formData,hotelChain:e.target.value})} placeholder="Hotel chain (optional)" readOnly={isHotelFromDatabase}/>
-            </div>
-          </div>
+      {/* Special Remarks */}
+      <div className="form-section">
+        <div className="section-header"><h3><FaInfoCircle /> Special Remarks</h3></div>
+        <div className="form-group full-width">
+          <textarea name="specialRemarks" value={formData.specialRemarks} onChange={e => setFormData({ ...formData, specialRemarks: e.target.value })} placeholder="Enter remarks" rows="5" />
         </div>
+      </div>
 
-        {/* Contact Persons Section */}
-        <div className="form-section">
-          <div className="section-header"><h3><FaUserTie /> Contact Persons</h3><p>Add contact information for hotel departments</p></div>
-          <ContactRoleSection title="Sales Person" persons={formData.salesPersons} onAdd={()=>addPerson('salesPersons')} onRemove={(i)=>removePerson('salesPersons',i)} onChange={(i,f,v)=>changePerson('salesPersons',i,f,v)} phoneCode={getCurrentPhoneCode()} icon={<FaUserTie />}/>
-          <ContactRoleSection title="Reservation Person" persons={formData.reservationPersons} onAdd={()=>addPerson('reservationPersons')} onRemove={(i)=>removePerson('reservationPersons',i)} onChange={(i,f,v)=>changePerson('reservationPersons',i,f,v)} phoneCode={getCurrentPhoneCode()} icon={<FaClipboardList />}/>
-          <ContactRoleSection title="Accounts Person" persons={formData.accountsPersons} onAdd={()=>addPerson('accountsPersons')} onRemove={(i)=>removePerson('accountsPersons',i)} onChange={(i,f,v)=>changePerson('accountsPersons',i,f,v)} phoneCode={getCurrentPhoneCode()} icon={<FaMoneyCheckAlt />}/>
-          <ContactRoleSection title="Reception Person" persons={formData.receptionPersons} onAdd={()=>addPerson('receptionPersons')} onRemove={(i)=>removePerson('receptionPersons',i)} onChange={(i,f,v)=>changePerson('receptionPersons',i,f,v)} phoneCode={getCurrentPhoneCode()} icon={<FaReceipt />}/>
-          <ContactRoleSection title="Concierge" persons={formData.concierges} onAdd={()=>addPerson('concierges')} onRemove={(i)=>removePerson('concierges',i)} onChange={(i,f,v)=>changePerson('concierges',i,f,v)} phoneCode={getCurrentPhoneCode()} icon={<FaConciergeBell />}/>
-        </div>
-
-        {/* Special Remarks */}
-        <div className="form-section">
-          <div className="section-header"><h3><FaInfoCircle /> Special Remarks</h3></div>
-          <div className="form-group full-width">
-            <textarea name="specialRemarks" value={formData.specialRemarks} onChange={(e)=>setFormData({...formData,specialRemarks:e.target.value})} placeholder="Enter remarks" rows="5"/>
-          </div>
-        </div>
-
-        {/* Form Actions */}
-        <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : <><FaSave /> Submit Form</>}</button>
-          <button type="button" className="btn btn-secondary" onClick={resetForm}>Reset Form</button>
-        </div>
-      </form>
-    </div>
-  );
-};
-
+      {/* Form Actions */}
+      <div className="form-actions">
+        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+          {isSubmitting ? 'Submitting...' : <><FaSave /> Submit Form</>}
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={resetForm}>Reset Form</button>
+      </div>
+    </form>
+  </div>
+  )}
 
 // Modal Component
 const Modal = ({ isOpen, onClose, children, title, size = 'medium' }) => {
