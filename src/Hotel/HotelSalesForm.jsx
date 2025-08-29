@@ -184,34 +184,178 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const getCurrentPhoneCode = () => {
+    if (!Array.isArray(countries)) return "+1";
+    const country = countries.find(c => c?.code === formData?.countryCode);
+    return country?.phoneCode || "+1";
+  };
 
-  const countryDropdownRef = useRef(null);
-  const cityDropdownRef = useRef(null);
-  const hotelDropdownRef = useRef(null);
+  // ✅ Filters
+  const filteredCountries = countries.filter(c =>
+    (c.name || "").toLowerCase().includes((countrySearch || "").toLowerCase())
+  );
 
-// const getCurrentPhoneCode = () => {
-//   if (!Array.isArray(countries)) return '+1'; // fallback if countries not loaded
-//   const country = countries.find(c => c?.code === formData?.countryCode);
-//   return country?.phoneCode || '+1';
-// };
-    console.log('countries', countries);
-    console.log('citiesByCountry', citiesByCountry[formData.countryCode]);
-    console.log('hotelsInCity', hotelsInCity);
+  const filteredCities = formData.countryCode
+    ? (citiesByCountry[formData.countryCode]?.filter(c =>
+        (c.name || "").toLowerCase().includes((citySearch || "").toLowerCase())
+      ) || [])
+    : [];
 
+  const filteredHotels = hotelsInCity.filter(h =>
+    (h.hotelName || "").toLowerCase().includes((hotelSearch || "").toLowerCase())
+  );
 
-const filteredCountries = countries.filter(c => (c.name || '').toLowerCase().includes((countrySearch || '').toLowerCase()));
+  // ✅ Country select
+  const handleCountrySelect = (code, name) => {
+    setFormData({ ...formData, countryCode: code, country: name, city: "", cityId: null });
+    setCountrySearch(name);
+    setShowCountryDropdown(false);
+    setHotelsInCity([]);
+  };
 
-const filteredCities = formData.countryCode
-  ? (citiesByCountry[formData.countryCode]?.filter(c => (c || '').toLowerCase().includes((citySearch || '').toLowerCase())) || [])
-  : [];
+  // ✅ City select
+  const handleCitySelect = (name, id) => {
+    setFormData({ ...formData, city: name, cityId: id });
+    setCitySearch(name);
+    setShowCityDropdown(false);
+    fetchHotels(id);
+  };
 
-const filteredHotels = hotelsInCity.filter(h => (h.HotelName || '').toLowerCase().includes((hotelSearch || '').toLowerCase()));
+  // ✅ Hotel select
+  const handleHotelSelect = hotel => {
+    setFormData({
+      ...formData,
+      hotelName: hotel.hotelName,
+      hotelEmail: hotel.hotelEmail || "",
+      hotelContactNumber: hotel.hotelContactNumber || "",
+      address: hotel.address || ""
+    });
+    setHotelSearch(hotel.hotelName);
+    setShowHotelDropdown(false);
+  };
 
+  // ✅ Manual country
+  const handleManualCountry = async () => {
+    if (!countrySearch.trim()) return;
+    try {
+      const res = await fetch(`${API_BASE_HOTEL.replace("/hotels","")}/countries`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: countrySearch.trim(),
+          code: countrySearch.trim().slice(0, 2).toUpperCase(),
+          phoneCode: "+1"
+        })
+      });
+      if (!res.ok) throw new Error("Failed to create country");
+      const data = await res.json();
+      setCountries(prev => [...prev, data]);
+      handleCountrySelect(data.code, data.name);
+      showNotification("Country added successfully!", "success");
+    } catch (err) {
+      console.error(err);
+      showNotification("Error adding country", "error");
+    }
+  };
 
+  // ✅ Manual city
+  const handleManualCity = async () => {
+    if (!citySearch.trim() || !formData.countryCode) return;
+    try {
+      const res = await fetch(`${API_BASE_HOTEL.replace("/hotels","")}/cities`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: citySearch.trim(),
+          countryCode: formData.countryCode
+        })
+      });
+      if (!res.ok) throw new Error("Failed to create city");
+      const data = await res.json();
+      setCitiesByCountry(prev => ({
+        ...prev,
+        [formData.countryCode]: [...(prev[formData.countryCode] || []), { id: data.id, name: data.name }]
+      }));
+      handleCitySelect(data.name, data.id);
+      showNotification("City added successfully!", "success");
+    } catch (err) {
+      console.error(err);
+      showNotification("Error adding city", "error");
+    }
+  };
+
+  // ✅ Manual hotel
+  const handleManualHotel = async () => {
+    if (!hotelSearch.trim() || !formData.cityId) {
+      setError("Please enter hotel name");
+      return;
+    }
+    try {
+      const newHotel = {
+        hotelName: hotelSearch.trim(),
+        cityId: formData.cityId,
+        countryCode: formData.countryCode,
+        address: formData.address || "",
+        hotelEmail: formData.hotelEmail || "",
+        hotelContactNumber: formData.hotelContactNumber || ""
+      };
+      const res = await fetch(API_BASE_HOTEL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newHotel)
+      });
+      if (!res.ok) throw new Error("Failed to create hotel");
+      const data = await res.json();
+      setHotelsInCity(prev => [...prev, data]);
+      handleHotelSelect(data);
+      showNotification("Hotel added successfully!", "success");
+      setError("");
+    } catch (err) {
+      console.error(err);
+      showNotification("Error adding hotel", "error");
+    }
+  };
+
+  // ✅ Fetch countries
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const res = await fetch(`${API_BASE_HOTEL.replace("/hotels","")}/countries`);
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        const data = await res.json();
+        setCountries(data);
+        const mapping = {};
+        data.forEach(c => {
+          mapping[c.code] = c.cities.map(city => ({ id: city.id, name: city.name }));
+        });
+        setCitiesByCountry(mapping);
+      } catch (err) {
+        console.error("Error fetching countries:", err);
+      }
+    };
+    fetchCountries();
+  }, []);
+
+  // ✅ Fetch hotels by city
+  const fetchHotels = async cityId => {
+    if (!cityId) return;
+    try {
+      const res = await fetch(`${API_BASE_HOTEL}?cityId=${cityId}`);
+      if (!res.ok) throw new Error("Failed to fetch hotels");
+      const data = await res.json();
+      setHotelsInCity(data);
+    } catch (err) {
+      console.error("Error fetching hotels:", err);
+    }
+  };
+
+  // ✅ Highlight search matches
   const highlightText = (text, search) => {
     if (!search) return text;
-    const regex = new RegExp(`(${search})`, 'gi');
-    return text.split(regex).map((part, idx) => regex.test(part) ? <span key={idx} className="highlight">{part}</span> : part);
+    const regex = new RegExp(`(${search})`, "gi");
+    return text.split(regex).map((part, i) =>
+      part.toLowerCase() === search.toLowerCase() ? <b key={i}>{part}</b> : part
+    );
   };
 
   const validateForm = () => {
@@ -264,93 +408,93 @@ const filteredHotels = hotelsInCity.filter(h => (h.HotelName || '').toLowerCase(
   };
 
   // ======= MANUAL + AUTOMATIC SELECTION HANDLERS =======
-  const handleCountrySelect = (code, name) => {
-    setFormData(prev => ({ ...prev, country: name, countryCode: code, city: '', hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' }));
-    setCountrySearch(name); setShowCountryDropdown(false); setCitySearch(''); setHotelSearch('');
-  };
+  // const handleCountrySelect = (code, name) => {
+  //   setFormData(prev => ({ ...prev, country: name, countryCode: code, city: '', hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' }));
+  //   setCountrySearch(name); setShowCountryDropdown(false); setCitySearch(''); setHotelSearch('');
+  // };
 
-  const handleCitySelect = (cityName, cityId) => {
-    setFormData(prev => ({ ...prev, city: cityName, cityId, hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' }));
-    setCitySearch(cityName); setShowCityDropdown(false); setHotelSearch('');
-  };
+  // const handleCitySelect = (cityName, cityId) => {
+  //   setFormData(prev => ({ ...prev, city: cityName, cityId, hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '' }));
+  //   setCitySearch(cityName); setShowCityDropdown(false); setHotelSearch('');
+  // };
 
-  const handleHotelSelect = (hotel) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      hotelName: hotel.HotelName, 
-      hotelEmail: hotel.HotelEmail || '', 
-      hotelContactNumber: hotel.HotelContactNumber || '', 
-      address: hotel.Address, 
-      hotelChain: hotel.HotelChain || '' 
-    }));
-    setHotelSearch(hotel.HotelName); 
-    setShowHotelDropdown(false); 
-    setError('');
-  };
+  // const handleHotelSelect = (hotel) => {
+  //   setFormData(prev => ({ 
+  //     ...prev, 
+  //     hotelName: hotel.HotelName, 
+  //     hotelEmail: hotel.HotelEmail || '', 
+  //     hotelContactNumber: hotel.HotelContactNumber || '', 
+  //     address: hotel.Address, 
+  //     hotelChain: hotel.HotelChain || '' 
+  //   }));
+  //   setHotelSearch(hotel.HotelName); 
+  //   setShowHotelDropdown(false); 
+  //   setError('');
+  // };
 
-  const isHotelFromDatabase = hotelsInCity.some(h => h.HotelName === formData.hotelName || h.hotelName === formData.hotelName);
+  // const isHotelFromDatabase = hotelsInCity.some(h => h.HotelName === formData.hotelName || h.hotelName === formData.hotelName);
 
 
-  // ======= MANUAL ENTRY API CALLS =======
-  const handleManualCountry = async () => {
-    if (!countrySearch.trim()) return;
-    try {
-      const res = await fetch("https://hotels-8v0p.onrender.com/api/countries", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: countrySearch.trim(), code: countrySearch.trim().slice(0,2).toUpperCase() })
-      });
-      if (!res.ok) throw new Error("Failed to create country");
-      const data = await res.json();
-      setCountries(prev => [...prev, data]);
-      handleCountrySelect(data.code, data.name);
-      showNotification("Country added successfully!", "success");
-    } catch(err) { console.error(err); showNotification("Error adding country", "error"); }
-  };
+  // // ======= MANUAL ENTRY API CALLS =======
+  // const handleManualCountry = async () => {
+  //   if (!countrySearch.trim()) return;
+  //   try {
+  //     const res = await fetch("https://hotels-8v0p.onrender.com/api/countries", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ name: countrySearch.trim(), code: countrySearch.trim().slice(0,2).toUpperCase() })
+  //     });
+  //     if (!res.ok) throw new Error("Failed to create country");
+  //     const data = await res.json();
+  //     setCountries(prev => [...prev, data]);
+  //     handleCountrySelect(data.code, data.name);
+  //     showNotification("Country added successfully!", "success");
+  //   } catch(err) { console.error(err); showNotification("Error adding country", "error"); }
+  // };
 
-  const handleManualCity = async () => {
-    if (!citySearch.trim() || !formData.countryCode) return;
-    try {
-      const res = await fetch(`https://hotels-8v0p.onrender.com/api/cities`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: citySearch.trim(), countryCode: formData.countryCode })
-      });
-      if (!res.ok) throw new Error("Failed to create city");
-      const data = await res.json();
-      setCitiesByCountry(prev => ({
-        ...prev,
-        [formData.countryCode]: [...(prev[formData.countryCode] || []), data.name]
-      }));
-      handleCitySelect(data.name, data.id);
-      showNotification("City added successfully!", "success");
-    } catch(err) { console.error(err); showNotification("Error adding city", "error"); }
-  };
+  // const handleManualCity = async () => {
+  //   if (!citySearch.trim() || !formData.countryCode) return;
+  //   try {
+  //     const res = await fetch(`https://hotels-8v0p.onrender.com/api/cities`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ name: citySearch.trim(), countryCode: formData.countryCode })
+  //     });
+  //     if (!res.ok) throw new Error("Failed to create city");
+  //     const data = await res.json();
+  //     setCitiesByCountry(prev => ({
+  //       ...prev,
+  //       [formData.countryCode]: [...(prev[formData.countryCode] || []), data.name]
+  //     }));
+  //     handleCitySelect(data.name, data.id);
+  //     showNotification("City added successfully!", "success");
+  //   } catch(err) { console.error(err); showNotification("Error adding city", "error"); }
+  // };
 
-  const handleManualHotel = async () => {
-    if (!hotelSearch.trim() || !formData.cityId) { setError('Please enter hotel name'); return; }
-    try {
-      const newHotel = {
-        hotelName: hotelSearch,
-        cityId: formData.cityId,
-        countryId: formData.countryCode,
-        address: formData.address,
-        hotelEmail: formData.hotelEmail,
-        hotelContactNumber: formData.hotelContactNumber
-      };
-      const res = await fetch("https://hotels-8v0p.onrender.com/api/hotels", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newHotel)
-      });
-      if (!res.ok) throw new Error("Failed to create hotel");
-      const data = await res.json();
-      setHotelsInCity(prev => [...prev, data]);
-      handleHotelSelect(data);
-      showNotification("Hotel added successfully!", "success");
-      setError('');
-    } catch(err) { console.error(err); showNotification("Error adding hotel", "error"); }
-  };
+  // const handleManualHotel = async () => {
+  //   if (!hotelSearch.trim() || !formData.cityId) { setError('Please enter hotel name'); return; }
+  //   try {
+  //     const newHotel = {
+  //       hotelName: hotelSearch,
+  //       cityId: formData.cityId,
+  //       countryId: formData.countryCode,
+  //       address: formData.address,
+  //       hotelEmail: formData.hotelEmail,
+  //       hotelContactNumber: formData.hotelContactNumber
+  //     };
+  //     const res = await fetch("https://hotels-8v0p.onrender.com/api/hotels", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(newHotel)
+  //     });
+  //     if (!res.ok) throw new Error("Failed to create hotel");
+  //     const data = await res.json();
+  //     setHotelsInCity(prev => [...prev, data]);
+  //     handleHotelSelect(data);
+  //     showNotification("Hotel added successfully!", "success");
+  //     setError('');
+  //   } catch(err) { console.error(err); showNotification("Error adding hotel", "error"); }
+  // };
 
   // ======= CONTACT PERSONS HELPERS =======
   const addPerson = (role) => setFormData(prev => ({ ...prev, [role]: [...prev[role], { name: '', email: '', contact: '' }] }));
@@ -414,14 +558,33 @@ const filteredHotels = hotelsInCity.filter(h => (h.HotelName || '').toLowerCase(
           <div className="section-header"><h3><FaBuilding /> Hotel Information</h3></div>
           <div className="form-grid">
             {/* Country */}
-            <div className="form-group searchable-dropdown" ref={countryDropdownRef}>
-              <label>Country <span className="required">*</span></label>
-              <div className="dropdown-container">
-                <input type="text" value={countrySearch} onChange={(e)=>{setCountrySearch(e.target.value); setShowCountryDropdown(true);}} onFocus={()=>setShowCountryDropdown(true)} placeholder="Search country..." required className={validationErrors.country ? 'error' : ''} />
-                <FaChevronDown className="dropdown-chevron"/>
+            {/* Country Input */}
+      <div className="form-group">
+        <label>Country</label>
+        <input
+          value={countrySearch}
+          onChange={e => {
+            setCountrySearch(e.target.value);
+            setShowCountryDropdown(true);
+          }}
+          onFocus={() => setShowCountryDropdown(true)}
+        />
+        {showCountryDropdown && (
+          <div className="dropdown-options">
+            {filteredCountries.length > 0 ? (
+              filteredCountries.map(c => (
+                <div key={c.code} className="dropdown-option" onClick={() => handleCountrySelect(c.code, c.name)}>
+                  {highlightText(c.name, countrySearch)}
+                </div>
+              ))
+            ) : (
+              <div className="dropdown-option manual-option" onClick={handleManualCountry}>
+                Use "{countrySearch}" as new country
               </div>
-              {showCountryDropdown && <div className="dropdown-options">{filteredCountries.map(c => <div key={c.code} className="dropdown-option" onClick={()=>handleCountrySelect(c.code,c.name)}>{highlightText(c.name,countrySearch)}</div>)}</div>}
-            </div>
+            )}
+          </div>
+        )}
+      </div>
 
             {/* City */}
             <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
