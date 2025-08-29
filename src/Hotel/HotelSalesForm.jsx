@@ -346,21 +346,25 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   };
 
 const handleManualHotel = async () => {
-  // Ensure hotelName is filled from typed input
-  if (!formData.hotelName.trim()) return showNotification('Enter hotel name first', 'error');
-  if (!formData.cityId || !formData.countryCode || !formData.address.trim()) {
-    return showNotification('Please fill required fields first', 'error');
-  }
+  const hotelName = hotelSearch.trim();
+  if (!hotelName) return showNotification('Enter hotel name first', 'error');
 
+  if (!formData.cityId) return showNotification('Select a valid city first', 'error');
+  if (!formData.countryCode) return showNotification('Select a valid country first', 'error');
+
+  const selectedCountry = countries.find(c => c.code === formData.countryCode);
+  if (!selectedCountry) return showNotification('Select a valid country first', 'error');
+
+  // Create payload for API
   const payload = {
-    hotelName: formData.hotelName,
-    hotelEmail: formData.hotelEmail,
-    hotelContactNumber: formData.hotelContactNumber,
-    address: formData.address,
-    hotelChain: formData.hotelChain,
+    hotelName,
+    hotelEmail: formData.hotelEmail || '',
+    hotelContactNumber: formData.hotelContactNumber || '',
+    address: formData.address || '',
+    hotelChain: formData.hotelChain || '',
     cityId: formData.cityId,
-    countryId: countries.find(c => c.code === formData.countryCode).id,
-    specialRemarks: formData.specialRemarks,
+    countryId: selectedCountry.id,
+    specialRemarks: formData.specialRemarks || '',
     salesPersons: formData.salesPersons,
     reservationPersons: formData.reservationPersons,
     accountsPersons: formData.accountsPersons,
@@ -375,11 +379,14 @@ const handleManualHotel = async () => {
       body: JSON.stringify(payload)
     });
 
-    if (!res.ok) throw new Error('Failed to create hotel');
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || 'Failed to create hotel');
+    }
 
     const data = await res.json();
     setHotelsInCity(prev => [...prev, data]);
-    handleHotelSelect(data);
+    handleHotelSelect(data); // select newly created hotel
     showNotification('Hotel added successfully!', 'success');
   } catch (err) {
     console.error(err);
@@ -632,38 +639,27 @@ const handleManualHotel = async () => {
     <input
       type="text"
       value={hotelSearch}
-      onChange={e => {
-        setHotelSearch(e.target.value);
-        setFormData(prev => ({ ...prev, hotelName: e.target.value })); // sync typed hotel name
-        setShowHotelDropdown(true);
-      }}
+      onChange={e => { setHotelSearch(e.target.value); setShowHotelDropdown(true); }}
       onFocus={() => setShowHotelDropdown(true)}
       placeholder="Search hotel..."
       required
       disabled={!formData.city}
       className={validationErrors.hotelName ? 'error' : ''}
-      onKeyDown={handleHotelDropdownKeys} // <-- keyboard nav
     />
     <FaChevronDown className="dropdown-chevron" />
   </div>
-
   {showHotelDropdown && formData.city && (
     <div className="dropdown-options">
       {filteredHotels.length > 0 ? (
-        filteredHotels.map((h, idx) => (
-          <div
-            key={h.id}
-            className={`dropdown-option hotel-option ${idx === highlightedIndex ? 'highlighted' : ''}`}
-            onClick={() => handleHotelSelect(h)}
-          >
+        filteredHotels.map(h => (
+          <div key={h.id} className="dropdown-option hotel-option" onClick={() => handleHotelSelect(h)}>
             {highlightText(h.hotelName, hotelSearch)}
           </div>
-        ))
-      ) : (
-        <div
-          className="dropdown-option manual-option"
-          onClick={handleManualHotel} // create new hotel
-        >
+      ))) : (
+        <div className="dropdown-option manual-option"  onClick={() => {
+  setFormData(prev => ({ ...prev, hotelName: hotelSearch }));
+  handleManualHotel();
+}}>
           Add "{hotelSearch}" as new hotel
         </div>
       )}
@@ -671,7 +667,6 @@ const handleManualHotel = async () => {
   )}
   {error && <p className="error-message">{error}</p>}
 </div>
-
 
           {/* Address */}
           <div className="form-group">
