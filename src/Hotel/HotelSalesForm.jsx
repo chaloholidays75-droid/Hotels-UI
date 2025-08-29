@@ -338,7 +338,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   useEffect(() => {
     const fetchCountries = async () => {
       try {
-        const res = await fetch(`${API_BASE_HOTEL.replace("/hotels","")}/countries`);
+        const res = await fetch(`${API_BASE}/countries`);
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
         setCountries(data);
