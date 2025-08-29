@@ -194,11 +194,11 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
 
 const filteredCountries = countries.filter(c => (c.name || '').toLowerCase().includes((countrySearch || '').toLowerCase()));
 
-const filteredCities = formData.countryCode 
-  ? (citiesByCountry[formData.countryCode]?.filter(c => (c || '').toLowerCase().includes((citySearch || '').toLowerCase())) || []) 
+const filteredCities = formData.countryCode
+  ? (citiesByCountry[formData.countryCode]?.filter(c => (c || '').toLowerCase().includes((citySearch || '').toLowerCase())) || [])
   : [];
 
-const filteredHotels = hotelsInCity.filter(h => (h.hotelName || '').toLowerCase().includes((hotelSearch || '').toLowerCase()));
+const filteredHotels = hotelsInCity.filter(h => (h.HotelName || '').toLowerCase().includes((hotelSearch || '').toLowerCase()));
 
 
   const highlightText = (text, search) => {
