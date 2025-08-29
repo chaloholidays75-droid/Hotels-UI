@@ -461,13 +461,20 @@ const handlePhoneChange = (e, field) => {
         <div className="form-grid">
 
           {/* Country */}
-          <div className="form-group">
-            <label>Country</label>
-            <input
-              value={countrySearch}
-              onChange={e => { setCountrySearch(e.target.value); setShowCountryDropdown(true); }}
-              onFocus={() => setShowCountryDropdown(true)}
-            />
+          <div className="form-group searchable-dropdown" ref={countryDropdownRef}>
+            <label>Country <span className="required">*</span></label>
+            <div className="dropdown-container">
+              <input
+                type="text"
+                value={countrySearch}
+                onChange={e => { setCountrySearch(e.target.value); setShowCountryDropdown(true); }}
+                onFocus={() => setShowCountryDropdown(true)}
+                placeholder="Search country..."
+                required
+                className={validationErrors.country ? 'error' : ''}
+              />
+              <FaChevronDown className="dropdown-chevron" />
+            </div>
             {showCountryDropdown && (
               <div className="dropdown-options">
                 {filteredCountries.length > 0 ? (
@@ -475,8 +482,7 @@ const handlePhoneChange = (e, field) => {
                     <div key={c.code} className="dropdown-option" onClick={() => handleCountrySelect(c.code, c.name)}>
                       {highlightText(c.name, countrySearch)}
                     </div>
-                  ))
-                ) : (
+                ))) : (
                   <div className="dropdown-option manual-option" onClick={handleManualCountry}>
                     Use "{countrySearch}" as new country
                   </div>
@@ -484,6 +490,7 @@ const handlePhoneChange = (e, field) => {
               </div>
             )}
           </div>
+
 
           {/* City */}
           <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
