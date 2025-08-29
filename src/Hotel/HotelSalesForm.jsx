@@ -335,15 +335,7 @@ try {
     body: JSON.stringify(payload)
   });
 
-  let data;
-  const text = await res.text(); // read as text first
-
-  try {
-    data = JSON.parse(text); // try parse as JSON
-  } catch {
-    data = { message: text }; // fallback to raw text
-  }
-
+const data = await res.json();
   if (!res.ok) {
     console.error("Hotel creation error:", data);
     throw new Error(data?.message || "Failed to create hotel");
