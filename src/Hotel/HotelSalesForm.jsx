@@ -163,7 +163,7 @@ const API_BASE_HOTEL = "https://hotels-8v0p.onrender.com/api/hotels";
 const API_BASE = "https://hotels-8v0p.onrender.com/api";
 
 
-const AddHotelTab = ({ showNotification, setActiveTab }) => {
+const AddHotelTab = async ({ showNotification, setActiveTab }) => {
   const [formData, setFormData] = useState({
     country: '', countryCode: '', city: '', cityId: '', hotelName: '', hotelEmail: '', hotelContactNumber: '', address: '', hotelChain: '',
     salesPersons: [{ name: '', email: '', contact: '' }],
@@ -328,64 +328,36 @@ const handleManualCity = async () => {
   }
 };
 
-const handleManualHotel = async () => {
-  // Trim hotel name
-  const hotelName = hotelSearch.trim();
-  
-  if (!hotelName) {
-    setError("Please enter hotel name");
-    return;
-  }
+try {
+  const res = await fetch(`${API_BASE_HOTEL}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
 
-  if (!formData.cityId) {
-    setError("City must be selected or created first");
-    return;
-  }
-
-  if (!formData.countryCode) {
-    setError("Country must be selected first");
-    return;
-  }
-
-  // Prepare payload
-  const payload = {
-    hotelName,
-    cityId: formData.cityId,
-    countryCode: formData.countryCode,
-    address: formData.address || "",
-    hotelEmail: formData.hotelEmail || "",
-    hotelContactNumber: formData.hotelContactNumber || "",
-    hotelChain: formData.hotelChain || ""
-  };
-
-  console.log("Creating Hotel Payload:", payload); // Debug
+  let data;
+  const text = await res.text(); // read as text first
 
   try {
-    const res = await fetch(`${API_BASE_HOTEL}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      console.error("Hotel creation error:", errorData);
-      throw new Error(errorData?.message || "Failed to create hotel");
-    }
-
-    const data = await res.json();
-
-    // Add hotel to local state
-    setHotelsInCity(prev => [...prev, data]);
-    handleHotelSelect(data);
-    showNotification("Hotel added successfully!", "success");
-    setError('');
-
-  } catch (err) {
-    console.error(err);
-    showNotification(`Error adding hotel: ${err.message}`, "error");
+    data = JSON.parse(text); // try parse as JSON
+  } catch {
+    data = { message: text }; // fallback to raw text
   }
-};
+
+  if (!res.ok) {
+    console.error("Hotel creation error:", data);
+    throw new Error(data?.message || "Failed to create hotel");
+  }
+
+  setHotelsInCity(prev => [...prev, data]);
+  handleHotelSelect(data);
+  showNotification("Hotel added successfully!", "success");
+  setError('');
+
+} catch (err) {
+  console.error(err);
+  showNotification(`Error adding hotel: ${err.message}`, "error");
+}
 
 
   // ================= Fetch Data =================
