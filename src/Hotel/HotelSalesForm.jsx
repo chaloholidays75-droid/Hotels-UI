@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-// import countriesData from '../data/countries.json';
-// import citiesData from '../data/cities.json';
-// import hotelsData from '../data/hotels.json';
+
 import {
   FaCheckCircle, FaTimesCircle, FaUserTie, FaEnvelope, FaPhone,
   FaMinus, FaPlus, FaBuilding, FaMapMarkerAlt, FaStar, FaInfoCircle,
@@ -194,7 +192,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
 
   const filteredCountries = countries.filter(c => c.name.toLowerCase().includes(countrySearch.toLowerCase()));
   const filteredCities = formData.countryCode ? citiesByCountry[formData.countryCode]?.filter(c => c.toLowerCase().includes(citySearch.toLowerCase())) || [] : [];
-  const filteredHotels = hotelsInCity.filter(h => h.HotelName.toLowerCase().includes(hotelSearch.toLowerCase()));
+  const filteredHotels = hotelsInCity.filter(h => h.hotelName.toLowerCase().includes(hotelSearch.toLowerCase()));
 
   const highlightText = (text, search) => {
     if (!search) return text;
