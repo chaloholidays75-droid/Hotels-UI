@@ -270,28 +270,27 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     fetchHotels(id);
   };
 
-  const handleHotelSelect = hotel => {
-    setFormData({
-      ...formData,
-      hotelName: hotel.hotelName,
-      hotelEmail: hotel.hotelEmail || "",
-      hotelContactNumber: hotel.hotelContactNumber || "",
-      address: hotel.address || "",
-      hotelChain: hotel.hotelChain || "",
-      cityId: hotel.cityId,       
-      
-      countryId: hotel.countryId, 
-     
-    });
-    setHotelSearch(hotel.hotelName);
-    setShowHotelDropdown(false);
-      console.log("Selected hotel payload:", {
+const handleHotelSelect = hotel => {
+  setFormData({
+    ...formData,
     hotelName: hotel.hotelName,
+    hotelEmail: hotel.hotelEmail || "",
+    hotelContactNumber: hotel.hotelContactNumber || "",
+    address: hotel.address || "",
+    hotelChain: hotel.hotelChain || "",
+    salesPersons: hotel.salesPersons || [{ name: "", email: "", contact: "" }],
+    reservationPersons: hotel.reservationPersons || [{ name: "", email: "", contact: "" }],
+    accountsPersons: hotel.accountsPersons || [{ name: "", email: "", contact: "" }],
+    receptionPersons: hotel.receptionPersons || [{ name: "", email: "", contact: "" }],
+    concierges: hotel.concierges || [{ name: "", email: "", contact: "" }],
+    specialRemarks: hotel.specialRemarks || "",
     cityId: hotel.cityId,
-    countryId: hotel.countryId
+    countryId: hotel.countryId,
   });
-   setHotelSource('database'); 
-  };
+  setHotelSearch(hotel.hotelName);
+  setShowHotelDropdown(false);
+};
+
   const handleContactChange = (role, index, field, value) => {
   setFormData(prev => {
     const updatedRole = [...(prev[role]|| [])];
@@ -450,32 +449,54 @@ const handleManualHotel = async () => {
   };
 
   // ================= Submit =================
-  const handleSubmit = async e => {
-    e.preventDefault();
-    if (!validateForm()) return showNotification("Please fill required fields first", "error");
+const handleSubmit = async e => {
+  e.preventDefault();
 
-    setIsSubmitting(true);
-    try {
-      const res = await fetch(API_BASE_HOTEL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          countryId: formData.countryId,
-          cityId: formData.cityId
-        })
-      });
-      if (!res.ok) throw new Error("Failed to create hotel");
-      const data = await res.json();
-      showNotification("Hotel created successfully!", "success");
-      setActiveTab("view");
-    } catch (err) {
-      console.error(err);
-      showNotification("Error creating hotel", "error");
-    } finally {
-      setIsSubmitting(false);
+  if (!validateForm()) return showNotification("Please fill required fields first", "error");
+
+  setIsSubmitting(true);
+
+  try {
+    const payload = {
+      hotelName: formData.hotelName,
+      hotelEmail: formData.hotelEmail,
+      hotelContactNumber: formData.hotelContactNumber,
+      address: formData.address,
+      hotelChain: formData.hotelChain,
+      salesPersons: formData.salesPersons,
+      reservationPersons: formData.reservationPersons,
+      accountsPersons: formData.accountsPersons,
+      receptionPersons: formData.receptionPersons,
+      concierges: formData.concierges,
+      specialRemarks: formData.specialRemarks,
+      cityId: formData.cityId,
+      countryId: formData.countryId,
+    };
+
+    const res = await fetch(API_BASE_HOTEL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      throw new Error(errData.message || "Failed to save hotel");
     }
-  };
+
+    const data = await res.json();
+    showNotification("Hotel saved successfully!", "success");
+    resetForm();
+    setActiveTab("view");
+
+  } catch (err) {
+    console.error(err);
+    showNotification(err.message || "Error saving hotel", "error");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   return (
   <div className="hotel-form-container">
@@ -589,14 +610,14 @@ const handleManualHotel = async () => {
                     <div
                       key={h.id}
                       className="dropdown-option hotel-option"
-                      onClick={() => handleHotelSelect(h)}
+                      onClick={() => handleHotelSelect(h)} // Only populate form
                     >
                       {highlightText(h.hotelName, hotelSearch)}
                     </div>
                   ))
                 ) : (
-                  <div className="dropdown-option manual-option" onClick={handleManualHotel}>
-                    Add "{hotelSearch}" as new hotel
+                  <div className="dropdown-option manual-option">
+                    {`Type to add new hotel: "${hotelSearch}"`}
                   </div>
                 )}
               </div>
