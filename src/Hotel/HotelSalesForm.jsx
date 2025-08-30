@@ -392,7 +392,287 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   };
 
   return (
-<div className="hotel-form-container"> <div className="form-header"> <h2>Add Hotel Information</h2> <p>Fill in the details to add a new hotel</p> </div> <form onSubmit={handleSubmit} className="hotel-form"> {/* Hotel Info Section */} <div className="form-section"> <div className="section-header"><h3><FaBuilding /> Hotel Information</h3></div> <div className="form-grid"> {/* ================= Country Dropdown ================= */} <div className="form-group searchable-dropdown" ref={countryDropdownRef}> <label>Country <span className="required">*</span></label> <div className="dropdown-container"> <input type="text" value={countrySearch} onChange={e => { setCountrySearch(e.target.value); setShowCountryDropdown(true); }} onFocus={() => setShowCountryDropdown(true)} placeholder="Search country..." required className={validationErrors.country ? 'error' : ''} /> <FaChevronDown className="dropdown-chevron" /> </div> {showCountryDropdown && ( <div className="dropdown-options"> {filteredCountries.length > 0 ? ( filteredCountries.map(c => ( <div key={c.code} className="dropdown-option" onClick={() => handleCountrySelect(c.code, c.name)}> {highlightText(c.name, countrySearch)} </div> ))) : ( <div className="dropdown-option manual-option" onClick={handleManualCountry}> Add "{countrySearch}" as new country </div> )} </div> )} </div> {/* ================= City Dropdown ================= */} <div className="form-group searchable-dropdown" ref={cityDropdownRef}> <label>City <span className="required">*</span></label> <div className="dropdown-container"> <input type="text" value={citySearch} onChange={e => { setCitySearch(e.target.value); setShowCityDropdown(true); }} onFocus={() => setShowCityDropdown(true)} placeholder="Search city..." required disabled={!formData.country} className={validationErrors.city ? 'error' : ''} /> <FaChevronDown className="dropdown-chevron" /> </div> {showCityDropdown && formData.country && ( <div className="dropdown-options"> {filteredCities.length > 0 ? ( filteredCities.map(c => ( <div key={c.id} className="dropdown-option" onClick={() => handleCitySelect(c.name, c.id)}> {highlightText(c.name, citySearch)} </div> )) ) : ( <div className="dropdown-option manual-option" onClick={handleManualCity}> Use "{citySearch}" as new city </div> )} </div> )} </div> {/* ================= Hotel Dropdown ================= */} <div className="form-group searchable-dropdown" ref={hotelDropdownRef}> <label>Hotel <span className="required">*</span></label> <div className="dropdown-container"> <input type="text" value={hotelSearch} onChange={e => { setHotelSearch(e.target.value); setShowHotelDropdown(true); }} onFocus={() => setShowHotelDropdown(true)} placeholder="Search hotel..." required disabled={!formData.city} className={validationErrors.hotelName ? 'error' : ''} /> <FaChevronDown className="dropdown-chevron" /> </div> {showHotelDropdown && formData.city && ( <div className="dropdown-options"> {filteredHotels.length > 0 ? ( filteredHotels.map(h => ( <div key={h.id} className="dropdown-option hotel-option" onClick={() => handleHotelSelect(h)}> {highlightText(h.hotelName, hotelSearch)} </div> ))) : ( <div className="dropdown-option manual-option" onClick={handleManualHotel}> Add "{hotelSearch}" as new hotel </div> )} </div> )} {error && <p className="error-message">{error}</p>} </div> {/* Address */} <div className="form-group"> <label>Address <span className="required">*</span></label> <input type="text" name="address" value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} placeholder="Hotel address" required readOnly={isHotelFromDatabase} /> </div> {/* Hotel Contact */} <div className="form-group"> <label>Hotel Contact Number</label> <div className="phone-input-container"> <span className="phone-prefix">{getCurrentPhoneCode()}</span> <input type="tel" value={formData.hotelContactNumber.replace(getCurrentPhoneCode(), '').trim()} onChange={e => handlePhoneChange(e, 'hotelContactNumber')} placeholder="XXX XXX XXXX" readOnly={isHotelFromDatabase} /> </div> </div> {/* Hotel Email */} <div className="form-group"> <label>Email</label> <input type="email" name="hotelEmail" value={formData.hotelEmail} onChange={e => setFormData({ ...formData, hotelEmail: e.target.value })} placeholder="hotel@example.com" readOnly={isHotelFromDatabase} /> </div> {/* Hotel Chain */} <div className="form-group"> <label>Hotel Chain</label> <input type="text" name="hotelChain" value={formData.hotelChain} onChange={e => setFormData({ ...formData, hotelChain: e.target.value })} placeholder="Hotel chain (optional)" readOnly={isHotelFromDatabase} /> </div> </div> </div> {/* Contact Persons Section */} <div className="form-section"> <div className="section-header"><h3><FaUserTie /> Contact Persons</h3><p>Add contact information for hotel departments</p></div> <ContactRoleSection title="Sales Person" persons={formData.salesPersons} onAdd={() => addPerson('salesPersons')} onRemove={i => removePerson('salesPersons', i)} onChange={(i, f, v) => changePerson('salesPersons', i, f, v)} phoneCode={getCurrentPhoneCode()} icon={<FaUserTie />} /> <ContactRoleSection title="Reservation Person" persons={formData.reservationPersons} onAdd={() => addPerson('reservationPersons')} onRemove={i => removePerson('reservationPersons', i)} onChange={(i, f, v) => changePerson('reservationPersons', i, f, v)} phoneCode={getCurrentPhoneCode()} icon={<FaClipboardList />} /> <ContactRoleSection title="Accounts Person" persons={formData.accountsPersons} onAdd={() => addPerson('accountsPersons')} onRemove={i => removePerson('accountsPersons', i)} onChange={(i, f, v) => changePerson('accountsPersons', i, f, v)} phoneCode={getCurrentPhoneCode()} icon={<FaMoneyCheckAlt />} /> <ContactRoleSection title="Reception Person" persons={formData.receptionPersons} onAdd={() => addPerson('receptionPersons')} onRemove={i => removePerson('receptionPersons', i)} onChange={(i, f, v) => changePerson('receptionPersons', i, f, v)} phoneCode={getCurrentPhoneCode()} icon={<FaReceipt />} /> <ContactRoleSection title="Concierge" persons={formData.concierges} onAdd={() => addPerson('concierges')} onRemove={i => removePerson('concierges', i)} onChange={(i, f, v) => changePerson('concierges', i, f, v)} phoneCode={getCurrentPhoneCode()} icon={<FaConciergeBell />} /> </div> {/* Special Remarks */} <div className="form-section"> <div className="section-header"><h3><FaInfoCircle /> Special Remarks</h3></div> <div className="form-group full-width"> <textarea name="specialRemarks" value={formData.specialRemarks} onChange={e => setFormData({ ...formData, specialRemarks: e.target.value })} placeholder="Enter remarks" rows="5" /> </div> </div> {/* Form Actions */} <div className="form-actions"> <button type="submit" className="btn btn-primary" disabled={isSubmitting}> {isSubmitting ? 'Submitting...' : <><FaSave /> Submit Form</>} </button> <button type="button" className="btn btn-secondary" onClick={resetForm}>Reset Form</button> </div> </form> </div> )}
+  <div className="hotel-form-container">
+    <div className="form-header"> 
+      <h2>Add Hotel Information</h2> 
+      <p>Fill in the details to add a new hotel</p> 
+    </div> 
+
+    {error && <p className="error-message">{error}</p>} {/* ✅ safe now */}
+
+    <form onSubmit={handleSubmit} className="hotel-form"> 
+      {/* ================= Hotel Info Section ================= */}
+      <div className="form-section">
+        <div className="section-header">
+          <h3><FaBuilding /> Hotel Information</h3>
+        </div>
+
+        <div className="form-grid">
+          {/* Country */}
+          <div className="form-group searchable-dropdown" ref={countryDropdownRef}>
+            <label>Country <span className="required">*</span></label>
+            <div className="dropdown-container">
+              <input
+                type="text"
+                value={countrySearch}
+                onChange={e => { setCountrySearch(e.target.value); setShowCountryDropdown(true); }}
+                onFocus={() => setShowCountryDropdown(true)}
+                placeholder="Search country..."
+                required
+                className={validationErrors.country ? "error" : ""}
+              />
+              <FaChevronDown className="dropdown-chevron" />
+            </div>
+            {showCountryDropdown && (
+              <div className="dropdown-options">
+                {filteredCountries.length > 0 ? (
+                  filteredCountries.map(c => (
+                    <div
+                      key={c.code}
+                      className="dropdown-option"
+                      onClick={() => handleCountrySelect(c.code, c.name, c.id)}
+                    >
+                      {highlightText(c.name, countrySearch)}
+                    </div>
+                  ))
+                ) : (
+                  <div className="dropdown-option manual-option" onClick={handleManualCountry}>
+                    Add "{countrySearch}" as new country
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* City */}
+          <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
+            <label>City <span className="required">*</span></label>
+            <div className="dropdown-container">
+              <input
+                type="text"
+                value={citySearch}
+                onChange={e => { setCitySearch(e.target.value); setShowCityDropdown(true); }}
+                onFocus={() => setShowCityDropdown(true)}
+                placeholder="Search city..."
+                required
+                disabled={!formData.country}
+                className={validationErrors.city ? "error" : ""}
+              />
+              <FaChevronDown className="dropdown-chevron" />
+            </div>
+            {showCityDropdown && formData.country && (
+              <div className="dropdown-options">
+                {filteredCities.length > 0 ? (
+                  filteredCities.map(c => (
+                    <div
+                      key={c.id}
+                      className="dropdown-option"
+                      onClick={() => handleCitySelect(c.name, c.id)}
+                    >
+                      {highlightText(c.name, citySearch)}
+                    </div>
+                  ))
+                ) : (
+                  <div className="dropdown-option manual-option" onClick={handleManualCity}>
+                    Use "{citySearch}" as new city
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Hotel */}
+          <div className="form-group searchable-dropdown" ref={hotelDropdownRef}>
+            <label>Hotel <span className="required">*</span></label>
+            <div className="dropdown-container">
+              <input
+                type="text"
+                value={hotelSearch}
+                onChange={e => { setHotelSearch(e.target.value); setShowHotelDropdown(true); }}
+                onFocus={() => setShowHotelDropdown(true)}
+                placeholder="Search hotel..."
+                required
+                disabled={!formData.city}
+                className={validationErrors.hotelName ? "error" : ""}
+              />
+              <FaChevronDown className="dropdown-chevron" />
+            </div>
+            {showHotelDropdown && formData.city && (
+              <div className="dropdown-options">
+                {filteredHotels.length > 0 ? (
+                  filteredHotels.map(h => (
+                    <div
+                      key={h.id}
+                      className="dropdown-option hotel-option"
+                      onClick={() => handleHotelSelect(h)}
+                    >
+                      {highlightText(h.hotelName, hotelSearch)}
+                    </div>
+                  ))
+                ) : (
+                  <div className="dropdown-option manual-option" onClick={handleManualHotel}>
+                    Add "{hotelSearch}" as new hotel
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Address */}
+          <div className="form-group">
+            <label>Address <span className="required">*</span></label>
+            <input
+              type="text"
+              value={formData.address}
+              onChange={e => setFormData({ ...formData, address: e.target.value })}
+              placeholder="Hotel address"
+              required
+              readOnly={isHotelFromDatabase}
+            />
+          </div>
+
+          {/* Hotel Contact */}
+          <div className="form-group">
+            <label>Hotel Contact Number</label>
+            <div className="phone-input-container">
+              <span className="phone-prefix">{getCurrentPhoneCode()}</span>
+              <input
+                type="tel"
+                value={formData.hotelContactNumber.replace(getCurrentPhoneCode(), "").trim()}
+                onChange={e =>
+                  setFormData({ ...formData, hotelContactNumber: `${getCurrentPhoneCode()} ${e.target.value.replace(/\D/g, "")}` })
+                }
+                placeholder="XXX XXX XXXX"
+                readOnly={isHotelFromDatabase}
+              />
+            </div>
+          </div>
+
+          {/* Hotel Email */}
+          <div className="form-group">
+            <label>Email</label>
+            <input
+              type="email"
+              value={formData.hotelEmail}
+              onChange={e => setFormData({ ...formData, hotelEmail: e.target.value })}
+              placeholder="hotel@example.com"
+              readOnly={isHotelFromDatabase}
+            />
+          </div>
+
+          {/* Hotel Chain */}
+          <div className="form-group">
+            <label>Hotel Chain</label>
+            <input
+              type="text"
+              value={formData.hotelChain}
+              onChange={e => setFormData({ ...formData, hotelChain: e.target.value })}
+              placeholder="Hotel chain (optional)"
+              readOnly={isHotelFromDatabase}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ================= Contact Persons ================= */}
+      <div className="form-section">
+        <div className="section-header">
+          <h3><FaUserTie /> Contact Persons</h3>
+          <p>Add contact information for hotel departments</p>
+        </div>
+
+        <ContactRoleSection
+          title="Sales Person"
+          persons={formData.salesPersons}
+          onAdd={() => setFormData({ ...formData, salesPersons: [...formData.salesPersons, { name: "", email: "", contact: "" }] })}
+          onRemove={i => setFormData({ ...formData, salesPersons: formData.salesPersons.filter((_, idx) => idx !== i) })}
+          onChange={(i, f, v) => {
+            const updated = [...formData.salesPersons];
+            updated[i][f] = v;
+            setFormData({ ...formData, salesPersons: updated });
+          }}
+          phoneCode={getCurrentPhoneCode()}
+          icon={<FaUserTie />}
+        />
+
+        <ContactRoleSection
+          title="Reservation Person"
+          persons={formData.reservationPersons}
+          onAdd={() => setFormData({ ...formData, reservationPersons: [...formData.reservationPersons, { name: "", email: "", contact: "" }] })}
+          onRemove={i => setFormData({ ...formData, reservationPersons: formData.reservationPersons.filter((_, idx) => idx !== i) })}
+          onChange={(i, f, v) => {
+            const updated = [...formData.reservationPersons];
+            updated[i][f] = v;
+            setFormData({ ...formData, reservationPersons: updated });
+          }}
+          phoneCode={getCurrentPhoneCode()}
+          icon={<FaClipboardList />}
+        />
+
+        <ContactRoleSection
+          title="Accounts Person"
+          persons={formData.accountsPersons}
+          onAdd={() => setFormData({ ...formData, accountsPersons: [...formData.accountsPersons, { name: "", email: "", contact: "" }] })}
+          onRemove={i => setFormData({ ...formData, accountsPersons: formData.accountsPersons.filter((_, idx) => idx !== i) })}
+          onChange={(i, f, v) => {
+            const updated = [...formData.accountsPersons];
+            updated[i][f] = v;
+            setFormData({ ...formData, accountsPersons: updated });
+          }}
+          phoneCode={getCurrentPhoneCode()}
+          icon={<FaMoneyCheckAlt />}
+        />
+
+        <ContactRoleSection
+          title="Reception Person"
+          persons={formData.receptionPersons}
+          onAdd={() => setFormData({ ...formData, receptionPersons: [...formData.receptionPersons, { name: "", email: "", contact: "" }] })}
+          onRemove={i => setFormData({ ...formData, receptionPersons: formData.receptionPersons.filter((_, idx) => idx !== i) })}
+          onChange={(i, f, v) => {
+            const updated = [...formData.receptionPersons];
+            updated[i][f] = v;
+            setFormData({ ...formData, receptionPersons: updated });
+          }}
+          phoneCode={getCurrentPhoneCode()}
+          icon={<FaReceipt />}
+        />
+
+        <ContactRoleSection
+          title="Concierge"
+          persons={formData.concierges}
+          onAdd={() => setFormData({ ...formData, concierges: [...formData.concierges, { name: "", email: "", contact: "" }] })}
+          onRemove={i => setFormData({ ...formData, concierges: formData.concierges.filter((_, idx) => idx !== i) })}
+          onChange={(i, f, v) => {
+            const updated = [...formData.concierges];
+            updated[i][f] = v;
+            setFormData({ ...formData, concierges: updated });
+          }}
+          phoneCode={getCurrentPhoneCode()}
+          icon={<FaConciergeBell />}
+        />
+      </div>
+
+      {/* ================= Special Remarks ================= */}
+      <div className="form-section">
+        <div className="section-header"><h3><FaInfoCircle /> Special Remarks</h3></div>
+        <div className="form-group full-width">
+          <textarea
+            name="specialRemarks"
+            value={formData.specialRemarks}
+            onChange={e => setFormData({ ...formData, specialRemarks: e.target.value })}
+            placeholder="Enter remarks"
+            rows="5"
+          />
+        </div>
+      </div>
+{/* Form Actions */} 
+<div className="form-actions">
+   <button type="submit" className="btn btn-primary" disabled={isSubmitting}> {isSubmitting ? 'Submitting...' : <><FaSave /> Submit Form</>} </button>
+    <button type="button" className="btn btn-secondary" onClick={resetForm}>Reset Form</button> 
+    </div> 
+    </form> 
+  </div> 
+)}
 // Modal Component
 const Modal = ({ isOpen, onClose, children, title, size = 'medium' }) => {
   if (!isOpen) return null;
