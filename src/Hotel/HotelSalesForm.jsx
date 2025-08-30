@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import StatsBar from '../components/statsbar';
 
 import {
   FaCheckCircle, FaTimesCircle, FaUserTie, FaEnvelope, FaPhone,
@@ -43,13 +44,13 @@ const HotelManagementSystem = () => {
         <p>Manage hotel information, contacts, and facilities</p>
       </div>
       
-      <div className="stats-bar">
+      {/* <div className="stats-bar">
         <div className="stat-item"><FaHotel /> Total Hotels <span>156</span></div>
         <div className="stat-item active-contacts"><FaUsers /> Active Contacts <span>342</span></div>
         <div className="stat-item"><FaGlobe /> Countries <span>24</span></div>
         <div className="stat-item new-this-month"><FaCalendar /> New This Month <span>12</span></div>
-      </div>
-      
+      </div> */}
+      <StatsBar />
       <div className="tabs-container">
         <div className="tabs">
           <button 
