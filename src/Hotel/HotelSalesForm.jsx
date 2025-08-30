@@ -942,7 +942,7 @@ const AnalyticsTab = () => {
 };
 
 // Hotel Sales List Component
-const HotelSalesList = ({ showNotification }) => {
+const HotelSalesList = ({ showNotification, countriesData, citiesData }) => {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingHotel, setEditingHotel] = useState(null);
@@ -957,21 +957,33 @@ const HotelSalesList = ({ showNotification }) => {
   const [bulkAction, setBulkAction] = useState('');
   const itemsPerPage = 10;
 
+  // Map ID → Name
+  const getCountryNameById = (id) => {
+    const country = countriesData.find(c => c.id === id);
+    return country ? country.name : "";
+  };
+  const getCityNameById = (id) => {
+    const city = citiesData.find(c => c.id === id);
+    return city ? city.name : "";
+  };
 
   const fetchHotels = async () => {
     setLoading(true);
     try {
       const res = await fetch(API_BASE_HOTEL);
       const data = await res.json();
+
       const adjustedData = data.map(hotel => ({
         ...hotel,
-        salesPersons: Array.isArray(hotel.salesPersons) ? hotel.salesPersons : (hotel.salesPersonName ? [{name: hotel.salesPersonName, email: hotel.salesPersonEmail, contact: hotel.salesPersonContact}] : []),
-        reservationPersons: Array.isArray(hotel.reservationPersons) ? hotel.reservationPersons : (hotel.reservationPersonName ? [{name: hotel.reservationPersonName, email: hotel.reservationPersonEmail, contact: hotel.reservationPersonContact}] : []),
-        accountsPersons: Array.isArray(hotel.accountsPersons) ? hotel.accountsPersons : (hotel.accountsPersonName ? [{name: hotel.accountsPersonName, email: hotel.accountsPersonEmail, contact: hotel.accountsPersonContact}] : []),
-        receptionPersons: Array.isArray(hotel.receptionPersons) ? hotel.receptionPersons : (hotel.receptionPersonName ? [{name: hotel.receptionPersonName, email: hotel.receptionPersonEmail, contact: hotel.receptionPersonContact}] : []),
-        concierges: Array.isArray(hotel.concierges) ? hotel.concierges : (hotel.conciergeName ? [{name: hotel.conciergeName, email: hotel.conciergeEmail, contact: hotel.conciergeContact}] : []),
+        hotelName: hotel.hotelName || "",
+        country: getCountryNameById(hotel.countryId),
+        city: getCityNameById(hotel.cityId),
+        salesPersons: Array.isArray(hotel.salesPersons) ? hotel.salesPersons : [],
+        reservationPersons: Array.isArray(hotel.reservationPersons) ? hotel.reservationPersons : [],
+        accountsPersons: Array.isArray(hotel.accountsPersons) ? hotel.accountsPersons : [],
+        receptionPersons: Array.isArray(hotel.receptionPersons) ? hotel.receptionPersons : [],
+        concierges: Array.isArray(hotel.concierges) ? hotel.concierges : [],
       }));
-      console.log("Fetched Hotels:", data);
 
       setHotels(adjustedData);
     } catch (err) {
@@ -985,6 +997,7 @@ const HotelSalesList = ({ showNotification }) => {
     fetchHotels();
   }, []);
 
+  // Delete single hotel
   const deleteHotel = async (id) => {
     if (!window.confirm("Are you sure you want to delete this hotel?")) return;
     try {
@@ -997,6 +1010,7 @@ const HotelSalesList = ({ showNotification }) => {
     }
   };
 
+  // Delete multiple hotels
   const deleteMultipleHotels = async () => {
     if (!selectedHotels.length || !window.confirm(`Are you sure you want to delete ${selectedHotels.length} hotels?`)) return;
     try {
@@ -1013,22 +1027,7 @@ const HotelSalesList = ({ showNotification }) => {
     }
   };
 
-  const saveHotel = async (hotel) => {
-    try {
-      await fetch(`${API_BASE_HOTEL}/${hotel.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(hotel),
-      });
-      setEditingHotel(null);
-      fetchHotels();
-      showNotification("Hotel updated successfully!", "success");
-    } catch (err) {
-      console.error("Error updating hotel:", err);
-      showNotification("Error updating hotel", "error");
-    }
-  };
-
+  // Sorting
   const handleSort = (field) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -1039,26 +1038,28 @@ const HotelSalesList = ({ showNotification }) => {
   };
 
   const sortedHotels = [...hotels].sort((a, b) => {
-    const aValue = a[sortField] || '';
-    const bValue = b[sortField] || '';
+    const aValue = (a[sortField] || "").toString().toLowerCase();
+    const bValue = (b[sortField] || "").toString().toLowerCase();
     
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
     if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
     return 0;
   });
 
+  // Filtering
   const filteredHotels = sortedHotels.filter(hotel => {
-    const matchesSearch = hotel.HotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          hotel.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          hotel.country?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (hotel.hotelName || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (hotel.city || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (hotel.country || "").toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCountry = filterCountry ? hotel.country === filterCountry : true;
     const matchesCity = filterCity ? hotel.city === filterCity : true;
     return matchesSearch && matchesCountry && matchesCity;
   });
 
-  const countries = [...new Set(hotels.map(hotel => hotel.country).filter(Boolean))];
-  const cities = [...new Set(hotels.map(hotel => hotel.city).filter(Boolean))];
+  const countries = [...new Set(hotels.map(h => h.country).filter(Boolean))];
+  const cities = [...new Set(hotels.map(h => h.city).filter(Boolean))];
 
+  // Pagination
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
   const currentHotels = filteredHotels.slice(indexOfFirst, indexOfLast);
@@ -1066,12 +1067,9 @@ const HotelSalesList = ({ showNotification }) => {
 
   const toggleSelectHotel = (id) => {
     setSelectedHotels(prev => 
-      prev.includes(id) 
-        ? prev.filter(hotelId => hotelId !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter(hotelId => hotelId !== id) : [...prev, id]
     );
   };
-
   const toggleSelectAll = () => {
     if (selectedHotels.length === currentHotels.length) {
       setSelectedHotels([]);
@@ -1080,6 +1078,7 @@ const HotelSalesList = ({ showNotification }) => {
     }
   };
 
+  
   if (loading) return (
     <div className="loading-container">
       <div className="spinner"></div>
