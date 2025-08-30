@@ -1012,7 +1012,7 @@ const HotelSalesList = ({ showNotification }) => {
       showNotification("Error deleting hotels", "error");
     }
   };
-
+  
   const saveHotel = async (hotel) => {
     try {
       await fetch(`${API_BASE_HOTEL}/${hotel.id}`, {
@@ -1336,20 +1336,7 @@ const HotelSalesList = ({ showNotification }) => {
                 </div>
               </div>
             </div>
-            <Modal 
-                isOpen={!!editingHotel} 
-                onClose={() => setEditingHotel(null)} 
-                title="Edit Hotel" 
-                size="large"
-              >
-                {editingHotel && (
-                  <EditHotelForm 
-                    hotel={editingHotel} 
-                    onSave={saveHotel} 
-                    onCancel={() => setEditingHotel(null)} 
-                  />
-                )}
-              </Modal>
+
 
 
             <div className="modal-section">
@@ -1436,117 +1423,115 @@ const HotelSalesList = ({ showNotification }) => {
     </div>
   );
 };
+<Modal
+  isOpen={!!editingHotel}
+  onClose={() => setEditingHotel(null)}
+  title="Edit Hotel"
+  size="large"
+>
+  {editingHotel && (
+    <EditHotelForm
+      hotel={editingHotel}
+      onSave={saveHotel}
+      onCancel={() => setEditingHotel(null)}
+    />
+  )}
+</Modal>
+
 
 // Edit Hotel Form Component
-const EditHotelForm = ({ hotel, onSave, onCancel}) => {
-  const [formData, setFormData] = useState(hotel);
+const EditHotelForm = ({ hotel, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    ...hotel,
+    salesPersons: hotel.salesPersons || [],
+    reservationPersons: hotel.reservationPersons || [],
+    accountsPersons: hotel.accountsPersons || [],
+    receptionPersons: hotel.receptionPersons || [],
+    concierges: hotel.concierges || [],
+  });
+
   const [isSaving, setIsSaving] = useState(false);
 
+  // Update basic hotel fields
+  const updateField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Update contact person safely
+  const updatePerson = (role, index, field, value) => {
+    const key = `${role}s`;
+    setFormData(prev => {
+      const updated = prev[key] ? [...prev[key]] : [];
+      updated[index] = { ...updated[index], [field]: value };
+      return { ...prev, [key]: updated };
+    });
+  };
+
+  // Add a new contact person safely
+  const addPerson = (role) => {
+    const key = `${role}s`;
+    setFormData(prev => ({
+      ...prev,
+      [key]: prev[key] ? [...prev[key], { name: '', email: '', contact: '' }] : [{ name: '', email: '', contact: '' }]
+    }));
+  };
+
+  // Remove a contact person safely
+  const removePerson = (role, index) => {
+    const key = `${role}s`;
+    setFormData(prev => ({
+      ...prev,
+      [key]: prev[key] ? prev[key].filter((_, i) => i !== index) : []
+    }));
+  };
+
+  // Save changes
   const handleSave = async () => {
     setIsSaving(true);
     await onSave(formData);
     setIsSaving(false);
   };
 
-  const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const updatePerson = (role, index, field, value) => {
-    const key = `${role}s`;
-    setFormData(prev => {
-      const updated = [...prev[key]];
-      updated[index][field] = value;
-      return { ...prev, [key]: updated };
-    });
-  };
-
-  const addPerson = (role) => {
-    const key = `${role}s`;
-    setFormData(prev => ({
-      ...prev,
-      [key]: [...prev[key], { name: '', email: '', contact: '' }]
-    }));
-  };
-
-  const removePerson = (role, index) => {
-    const key = `${role}s`;
-    setFormData(prev => ({
-      ...prev,
-      [key]: prev[key].filter((_, i) => i !== index)
-    }));
-  };
-
-
   return (
     <div className="edit-hotel-form">
+      {/* Hotel Information */}
       <div className="form-section">
-        <div className="section-header">
-          <h3><FaBuilding /> Hotel Information</h3>
-        </div>
+        <div className="section-header"><h3><FaBuilding /> Hotel Information</h3></div>
         <div className="form-grid">
           <div className="form-group">
             <label>Hotel Name <span className="required">*</span></label>
-            <input 
-              value={formData.hotelName || ""} 
-              onChange={(e) => updateField('hotelName', e.target.value)} 
-              required 
-            />
+            <input value={formData.hotelName || ""} onChange={e => updateField('hotelName', e.target.value)} required />
           </div>
           <div className="form-group">
             <label>Country <span className="required">*</span></label>
-            <input 
-              value={formData.country || ""} 
-              onChange={(e) => updateField('country', e.target.value)} 
-              required 
-            />
+            <input value={formData.country || ""} onChange={e => updateField('country', e.target.value)} required />
           </div>
           <div className="form-group">
             <label>City <span className="required">*</span></label>
-            <input 
-              value={formData.city || ""} 
-              onChange={(e) => updateField('city', e.target.value)} 
-              required 
-            />
+            <input value={formData.city || ""} onChange={e => updateField('city', e.target.value)} required />
           </div>
           <div className="form-group">
             <label>Address <span className="required">*</span></label>
-            <input 
-              value={formData.address || ""} 
-              onChange={(e) => updateField('address', e.target.value)} 
-              required 
-            />
+            <input value={formData.address || ""} onChange={e => updateField('address', e.target.value)} required />
           </div>
           <div className="form-group">
             <label>Contact Number</label>
-            <input 
-              value={formData.hotelContactNumber || ""} 
-              onChange={(e) => updateField('hotelContactNumber', e.target.value)} 
-            />
-            <div className="form-group">
-            <label>Hotel Email</label>
-            <input 
-              type="email"
-              value={formData.hotelEmail || ""} 
-              onChange={(e) => updateField('hotelEmail', e.target.value)} 
-            />
+            <input value={formData.hotelContactNumber || ""} onChange={e => updateField('hotelContactNumber', e.target.value)} />
           </div>
+          <div className="form-group">
+            <label>Hotel Email</label>
+            <input type="email" value={formData.hotelEmail || ""} onChange={e => updateField('hotelEmail', e.target.value)} />
           </div>
           <div className="form-group">
             <label>Hotel Chain</label>
-            <input 
-              value={formData.hotelChain || ""} 
-              onChange={(e) => updateField('hotelChain', e.target.value)} 
-            />
+            <input value={formData.hotelChain || ""} onChange={e => updateField('hotelChain', e.target.value)} />
           </div>
         </div>
-
       </div>
-      
+
+      {/* Contact Persons */}
       <div className="form-section">
-        <div className="section-header">
-          <h3><FaUserTie /> Contact Persons</h3>
-        </div>
+        <div className="section-header"><h3><FaUserTie /> Contact Persons</h3></div>
         <ContactRoleSection 
           title="Sales Person" 
           role="salesPerson" 
@@ -1598,20 +1583,20 @@ const EditHotelForm = ({ hotel, onSave, onCancel}) => {
           icon={<FaConciergeBell />}
         />
       </div>
-      
+
+      {/* Special Remarks */}
       <div className="form-section">
-        <div className="section-header">
-          <h3><FaInfoCircle /> Special Remarks</h3>
-        </div>
+        <div className="section-header"><h3><FaInfoCircle /> Special Remarks</h3></div>
         <div className="form-group full-width">
           <textarea
             value={formData.specialRemarks || ""}
-            onChange={(e) => updateField('specialRemarks', e.target.value)}
+            onChange={e => updateField('specialRemarks', e.target.value)}
             rows="5"
           />
         </div>
       </div>
-      
+
+      {/* Actions */}
       <div className="form-actions">
         <button className="btn btn-primary" onClick={handleSave} disabled={isSaving}>
           {isSaving ? <div className="spinner"></div> : <FaSave />}
@@ -1624,5 +1609,6 @@ const EditHotelForm = ({ hotel, onSave, onCancel}) => {
     </div>
   );
 };
+
 
 export default HotelManagementSystem;
