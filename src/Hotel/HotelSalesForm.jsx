@@ -216,6 +216,26 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     );
   };
 
+  const resetForm = () => {
+  setFormData({
+    country: "", countryCode: "", countryId: null,
+    city: "", cityId: null,
+    hotelName: "", hotelEmail: "", hotelContactNumber: "", address: "", hotelChain: "",
+    salesPersons: [{ name: "", email: "", contact: "" }],
+    reservationPersons: [{ name: "", email: "", contact: "" }],
+    accountsPersons: [{ name: "", email: "", contact: "" }],
+    receptionPersons: [{ name: "", email: "", contact: "" }],
+    concierges: [{ name: "", email: "", contact: "" }],
+    specialRemarks: "", facilitiesAvailable: [], creditCategory: ""
+  });
+  setCountrySearch("");
+  setCitySearch("");
+  setHotelSearch("");
+  setValidationErrors({});
+  setError("");
+};
+
+
   // ================= Filters =================
   const filteredCountries = countries.filter(c =>
     (c.name || "").toLowerCase().includes((countrySearch || "").toLowerCase())
