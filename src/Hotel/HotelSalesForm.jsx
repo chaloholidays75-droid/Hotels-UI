@@ -292,6 +292,17 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   });
    setHotelSource('database'); 
   };
+  const handleContactChange = (role, index, field, value) => {
+  setFormData(prev => {
+    const updatedRole = [...prev[role]];
+
+    // Initialize if undefined
+    if (!updatedRole[index]) updatedRole[index] = { name: "", email: "", contact: "" };
+
+    updatedRole[index][field] = value;
+    return { ...prev, [role]: updatedRole };
+  });
+};
 
   // ================= Keyboard Navigation =================
   const handleDropdownKeys = (e, type, items, onSelect) => {
@@ -644,8 +655,7 @@ const handleManualHotel = async () => {
               value={formData.hotelChain}
               onChange={e => setFormData({ ...formData, hotelChain: e.target.value })}
               placeholder="Hotel chain (optional)"
-              readOnly={hotelSource === 'database'}
-
+             
             />
           </div>
         </div>
@@ -663,11 +673,7 @@ const handleManualHotel = async () => {
           persons={formData.salesPersons}
           onAdd={() => setFormData({ ...formData, salesPersons: [...formData.salesPersons, { name: "", email: "", contact: "" }] })}
           onRemove={i => setFormData({ ...formData, salesPersons: formData.salesPersons.filter((_, idx) => idx !== i) })}
-          onChange={(i, f, v) => {
-            const updated = [...formData.salesPersons];
-            updated[i][f] = v;
-            setFormData({ ...formData, salesPersons: updated });
-          }}
+          onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaUserTie />}
         />
@@ -677,11 +683,7 @@ const handleManualHotel = async () => {
           persons={formData.reservationPersons}
           onAdd={() => setFormData({ ...formData, reservationPersons: [...formData.reservationPersons, { name: "", email: "", contact: "" }] })}
           onRemove={i => setFormData({ ...formData, reservationPersons: formData.reservationPersons.filter((_, idx) => idx !== i) })}
-          onChange={(i, f, v) => {
-            const updated = [...formData.reservationPersons];
-            updated[i][f] = v;
-            setFormData({ ...formData, reservationPersons: updated });
-          }}
+          onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaClipboardList />}
         />
@@ -691,11 +693,7 @@ const handleManualHotel = async () => {
           persons={formData.accountsPersons}
           onAdd={() => setFormData({ ...formData, accountsPersons: [...formData.accountsPersons, { name: "", email: "", contact: "" }] })}
           onRemove={i => setFormData({ ...formData, accountsPersons: formData.accountsPersons.filter((_, idx) => idx !== i) })}
-          onChange={(i, f, v) => {
-            const updated = [...formData.accountsPersons];
-            updated[i][f] = v;
-            setFormData({ ...formData, accountsPersons: updated });
-          }}
+          onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaMoneyCheckAlt />}
         />
@@ -705,11 +703,7 @@ const handleManualHotel = async () => {
           persons={formData.receptionPersons}
           onAdd={() => setFormData({ ...formData, receptionPersons: [...formData.receptionPersons, { name: "", email: "", contact: "" }] })}
           onRemove={i => setFormData({ ...formData, receptionPersons: formData.receptionPersons.filter((_, idx) => idx !== i) })}
-          onChange={(i, f, v) => {
-            const updated = [...formData.receptionPersons];
-            updated[i][f] = v;
-            setFormData({ ...formData, receptionPersons: updated });
-          }}
+          onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaReceipt />}
         />
@@ -719,11 +713,7 @@ const handleManualHotel = async () => {
           persons={formData.concierges}
           onAdd={() => setFormData({ ...formData, concierges: [...formData.concierges, { name: "", email: "", contact: "" }] })}
           onRemove={i => setFormData({ ...formData, concierges: formData.concierges.filter((_, idx) => idx !== i) })}
-          onChange={(i, f, v) => {
-            const updated = [...formData.concierges];
-            updated[i][f] = v;
-            setFormData({ ...formData, concierges: updated });
-          }}
+          onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaConciergeBell />}
         />
