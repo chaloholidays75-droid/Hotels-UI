@@ -327,6 +327,32 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       showNotification("Error adding city", "error");
     }
   };
+  const handleManualHotel = async () => {
+  if (!hotelSearch.trim() || !formData.cityId) return;
+  try {
+    const res = await fetch(`${API_BASE_HOTEL}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        hotelName: hotelSearch.trim(),
+        cityId: formData.cityId,
+        address: "",
+        hotelEmail: "",
+        hotelContactNumber: "",
+        hotelChain: ""
+      })
+    });
+    if (!res.ok) throw new Error("Failed to create hotel");
+    const data = await res.json();
+    setHotelsInCity(prev => [...prev, data]);
+    handleHotelSelect(data);
+    showNotification("Hotel added successfully!", "success");
+  } catch (err) {
+    console.error(err);
+    showNotification("Error adding hotel", "error");
+  }
+};
+
 
   // ================= Fetch =================
   useEffect(() => {
