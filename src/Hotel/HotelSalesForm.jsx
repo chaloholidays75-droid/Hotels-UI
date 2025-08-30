@@ -484,8 +484,7 @@ const handleManualHotel = async () => {
       <p>Fill in the details to add a new hotel</p> 
     </div> 
 
-    {error && <p className="error-message">{error}</p>} {/* ✅ safe now */}
-
+    {error && <p className="error-message">{error}</p>} 
     <form onSubmit={handleSubmit} className="hotel-form"> 
       {/* ================= Hotel Info Section ================= */}
       <div className="form-section">
@@ -670,6 +669,7 @@ const handleManualHotel = async () => {
 
         <ContactRoleSection
           title="Sales Person"
+          role="salesPersons"
           persons={formData.salesPersons}
           onAdd={() => setFormData({ ...formData, salesPersons: [...formData.salesPersons, { name: "", email: "", contact: "" }] })}
           onRemove={i => setFormData({ ...formData, salesPersons: formData.salesPersons.filter((_, idx) => idx !== i) })}
@@ -680,6 +680,7 @@ const handleManualHotel = async () => {
 
         <ContactRoleSection
           title="Reservation Person"
+           role="reservationPersons"
           persons={formData.reservationPersons}
           onAdd={() => setFormData({ ...formData, reservationPersons: [...formData.reservationPersons, { name: "", email: "", contact: "" }] })}
           onRemove={i => setFormData({ ...formData, reservationPersons: formData.reservationPersons.filter((_, idx) => idx !== i) })}
@@ -690,6 +691,7 @@ const handleManualHotel = async () => {
 
         <ContactRoleSection
           title="Accounts Person"
+           role="accountsPersons"
           persons={formData.accountsPersons}
           onAdd={() => setFormData({ ...formData, accountsPersons: [...formData.accountsPersons, { name: "", email: "", contact: "" }] })}
           onRemove={i => setFormData({ ...formData, accountsPersons: formData.accountsPersons.filter((_, idx) => idx !== i) })}
@@ -700,6 +702,7 @@ const handleManualHotel = async () => {
 
         <ContactRoleSection
           title="Reception Person"
+           role="receptionPersons"
           persons={formData.receptionPersons}
           onAdd={() => setFormData({ ...formData, receptionPersons: [...formData.receptionPersons, { name: "", email: "", contact: "" }] })}
           onRemove={i => setFormData({ ...formData, receptionPersons: formData.receptionPersons.filter((_, idx) => idx !== i) })}
@@ -710,6 +713,7 @@ const handleManualHotel = async () => {
 
         <ContactRoleSection
           title="Concierge"
+           role="conciergePersons"
           persons={formData.concierges}
           onAdd={() => setFormData({ ...formData, concierges: [...formData.concierges, { name: "", email: "", contact: "" }] })}
           onRemove={i => setFormData({ ...formData, concierges: formData.concierges.filter((_, idx) => idx !== i) })}
