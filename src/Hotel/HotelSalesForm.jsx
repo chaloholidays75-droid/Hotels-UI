@@ -387,19 +387,17 @@ const handleManualHotel = async () => {
   setHotelSource('manual');
 
   try {
+    const payload = {
+      ...formData, // send all fields
+      hotelName: hotelSearch.trim(),
+      countryId: formData.countryId,
+      cityId: formData.cityId
+    };
+
     const res = await fetch(`${API_BASE_HOTEL}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        hotelName: hotelSearch.trim(),
-        countryId: formData.countryId,
-        cityId: formData.cityId,
-        address: formData.address,
-        hotelEmail: formData.hotelEmail ,
-        hotelContactNumber: formData.hotelContactNumber,
-        hotelChain: formData.hotelChain ,
-        specialRemarks: formData.specialRemarks 
-      })
+      body: JSON.stringify(payload)
     });
 
     if (!res.ok) {
@@ -417,6 +415,7 @@ const handleManualHotel = async () => {
     showNotification(err.message || "Error adding hotel", "error");
   }
 };
+
 
 
 
@@ -635,13 +634,13 @@ const handleSubmit = async (e) => {
                     <div
                       key={h.id}
                       className="dropdown-option hotel-option"
-                      onClick={() => handleHotelSelect(h)} // Only populate form
+                      onClick={() => handleHotelSelect(h)} 
                     >
                       {highlightText(h.hotelName, hotelSearch)}
                     </div>
                   ))
                 ) : (
-                  <div className="dropdown-option manual-option">
+                  <div className="dropdown-option manual-option" onClick={handleManualHotel}>
                     {`Type to add new hotel: "${hotelSearch}"`}
                   </div>
                 )}
