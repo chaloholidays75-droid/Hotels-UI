@@ -591,7 +591,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
               onChange={e => setFormData({ ...formData, address: e.target.value })}
               placeholder="Hotel address"
               required
-              readOnly={hotelSource === 'database'}
+              
             />
           </div>
 
@@ -607,7 +607,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
                   setFormData({ ...formData, hotelContactNumber: `${getCurrentPhoneCode()} ${e.target.value.replace(/\D/g, "")}` })
                 }
                 placeholder="XXX XXX XXXX"
-                readOnly={hotelSource === 'database'}
+                
               />
             </div>
           </div>
@@ -620,7 +620,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
               value={formData.hotelEmail}
               onChange={e => setFormData({ ...formData, hotelEmail: e.target.value })}
               placeholder="hotel@example.com"
-              readOnly={hotelSource === 'database'}
+              
 
             />
           </div>
