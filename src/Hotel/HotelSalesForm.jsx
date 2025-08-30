@@ -278,9 +278,9 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       address: hotel.address || "",
       hotelChain: hotel.hotelChain || "",
       cityId: hotel.cityId,       // <-- add this
-      city: hotel.cityName || "", // optional display field
+      
       countryId: hotel.countryId, // <-- add this
-      country: hotel.countryName || "" // optional display field
+     
     });
     setHotelSearch(hotel.hotelName);
     setShowHotelDropdown(false);
@@ -367,6 +367,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         hotelName: hotelSearch.trim(),
+        countryId: formData.countryId,
         cityId: formData.cityId,
         address: "",
         hotelEmail: "",
@@ -374,7 +375,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
         hotelChain: ""
       })
     });
-    if (!res.ok) throw new Error("Failed to create hotel");
+    if (!res.ok) throw new Error("Failed to create hotel", error);
     const data = await res.json();
     setHotelsInCity(prev => [...prev, data]);
     handleHotelSelect(data);
