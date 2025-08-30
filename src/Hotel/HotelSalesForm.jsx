@@ -299,6 +299,25 @@ const handleHotelSelect = hotel => {
   setHotelSearch(hotel.hotelName);
   setShowHotelDropdown(false);
 };
+const handleHotelInput = (name) => {
+  setFormData(prev => ({
+    ...prev,
+    hotelName: name,
+    hotelEmail: "",
+    hotelContactNumber: "",
+    address: "",
+    hotelChain: "",
+    salesPersons: [{ name: "", email: "", contact: "" }],
+    reservationPersons: [{ name: "", email: "", contact: "" }],
+    accountsPersons: [{ name: "", email: "", contact: "" }],
+    receptionPersons: [{ name: "", email: "", contact: "" }],
+    concierges: [{ name: "", email: "", contact: "" }],
+    specialRemarks: ""
+  }));
+  setHotelSearch(name);
+  setShowHotelDropdown(false);
+};
+
 
   const handleContactChange = (role, index, field, value) => {
   setFormData(prev => {
@@ -640,7 +659,7 @@ const handleSubmit = async (e) => {
                     </div>
                   ))
                 ) : (
-                  <div className="dropdown-option manual-option" onClick={handleManualHotel}>
+                  <div className="dropdown-option manual-option" onClick={() => handleHotelInput(hotelSearch)} >
                     {`Type to add new hotel: "${hotelSearch}"`}
                   </div>
                 )}
@@ -717,7 +736,8 @@ const handleSubmit = async (e) => {
           role="salesPersons"
           persons={formData.salesPersons}
           onAdd={() => setFormData({ ...formData, salesPersons: [...formData.salesPersons, { name: "", email: "", contact: "" }] })}
-          onRemove={i => setFormData(prev => ({ ...prev, salesPersons: prev.salesPersons.filter((_, idx) => idx !== i) }))}
+          // onRemove={i => setFormData(prev => ({ ...prev, salesPersons: prev.salesPersons.filter((_, idx) => idx !== i) }))}
+          onRemove={(i) => handleRemovePerson('salesPersons', i)}
           onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaUserTie />}
@@ -728,7 +748,8 @@ const handleSubmit = async (e) => {
            role="reservationPersons"
           persons={formData.reservationPersons}
           onAdd={() => setFormData({ ...formData, reservationPersons: [...formData.reservationPersons, { name: "", email: "", contact: "" }] })}
-          onRemove={i => setFormData(prev => ({ ...prev, salesPersons: prev.salesPersons.filter((_, idx) => idx !== i) }))}
+          // onRemove={i => setFormData(prev => ({ ...prev, salesPersons: prev.salesPersons.filter((_, idx) => idx !== i) }))}
+          onRemove={(i) => handleRemovePerson('reservationPersons', i)}
           onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaClipboardList />}
@@ -739,7 +760,8 @@ const handleSubmit = async (e) => {
            role="accountsPersons"
           persons={formData.accountsPersons}
           onAdd={() => setFormData({ ...formData, accountsPersons: [...formData.accountsPersons, { name: "", email: "", contact: "" }] })}
-          onRemove={i => setFormData(prev => ({ ...prev, salesPersons: prev.salesPersons.filter((_, idx) => idx !== i) }))}
+          // onRemove={i => setFormData(prev => ({ ...prev, salesPersons: prev.salesPersons.filter((_, idx) => idx !== i) }))}
+          onRemove={(i) => handleRemovePerson('accountsPersons', i)}
           onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaMoneyCheckAlt />}
@@ -750,7 +772,8 @@ const handleSubmit = async (e) => {
            role="receptionPersons"
           persons={formData.receptionPersons}
           onAdd={() => setFormData({ ...formData, receptionPersons: [...formData.receptionPersons, { name: "", email: "", contact: "" }] })}
-          onRemove={i => setFormData(prev => ({ ...prev, salesPersons: prev.salesPersons.filter((_, idx) => idx !== i) }))}
+          // onRemove={i => setFormData(prev => ({ ...prev, salesPersons: prev.salesPersons.filter((_, idx) => idx !== i) }))}
+          onRemove={(i) => handleRemovePerson('receptionPersons', i)}
           onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaReceipt />}
@@ -761,7 +784,8 @@ const handleSubmit = async (e) => {
            role="concierges"
           persons={formData.concierges}
           onAdd={() => setFormData({ ...formData, concierges: [...formData.concierges, { name: "", email: "", contact: "" }] })}
-          onRemove={i => setFormData(prev => ({ ...prev, salesPersons: prev.salesPersons.filter((_, idx) => idx !== i) }))}
+          // onRemove={i => setFormData(prev => ({ ...prev, salesPersons: prev.salesPersons.filter((_, idx) => idx !== i) }))}
+           onRemove={(i) => handleRemovePerson('concierges', i)}
           onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaConciergeBell />}

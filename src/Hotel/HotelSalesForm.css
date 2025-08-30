@@ -260,7 +260,9 @@ h4 {
   font-family: var(--font-secondary);
   animation: shake 0.3s;
 }
-
+input[type="email"]{
+  text-transform: lowercase;
+}
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   25%, 75% { transform: translateX(-5px); }
