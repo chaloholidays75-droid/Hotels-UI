@@ -959,33 +959,64 @@ const HotelSalesList = ({ showNotification }) => {
 
 
   const fetchHotels = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(API_BASE_HOTEL);
-      const data = await res.json();
-      const adjustedData = data.map(hotel => ({
-          ...hotel,
-        country: countriesData.find(c => c.id === hotel.countryId)?.name || '',
-        city: citiesData.find(c => c.id === hotel.cityId)?.name || '',
-        salesPersons: Array.isArray(hotel.salesPersons) ? hotel.salesPersons : (hotel.salesPersonName ? [{name: hotel.salesPersonName, email: hotel.salesPersonEmail, contact: hotel.salesPersonContact}] : []),
-        reservationPersons: Array.isArray(hotel.reservationPersons) ? hotel.reservationPersons : (hotel.reservationPersonName ? [{name: hotel.reservationPersonName, email: hotel.reservationPersonEmail, contact: hotel.reservationPersonContact}] : []),
-        accountsPersons: Array.isArray(hotel.accountsPersons) ? hotel.accountsPersons : (hotel.accountsPersonName ? [{name: hotel.accountsPersonName, email: hotel.accountsPersonEmail, contact: hotel.accountsPersonContact}] : []),
-        receptionPersons: Array.isArray(hotel.receptionPersons) ? hotel.receptionPersons : (hotel.receptionPersonName ? [{name: hotel.receptionPersonName, email: hotel.receptionPersonEmail, contact: hotel.receptionPersonContact}] : []),
-        concierges: Array.isArray(hotel.concierges) ? hotel.concierges : (hotel.conciergeName ? [{name: hotel.conciergeName, email: hotel.conciergeEmail, contact: hotel.conciergeContact}] : []),
-      }));
-      console.log("Fetched Hotels:", data);
+  setLoading(true);
+  try {
+    const res = await fetch(API_BASE_HOTEL);
+    if (!res.ok) throw new Error("Failed to fetch hotels");
+    const data = await res.json();
 
-      setHotels(adjustedData);
-    } catch (err) {
-      console.error("Error fetching hotels:", err);
-      showNotification("Error fetching hotels", "error");
-    }
-    setLoading(false);
-  };
+    const adjustedData = data.map(hotel => {
+      // find country name
+      const countryName = (countries || []).find(c => c.id === hotel.countryId)?.name || "";
 
-  useEffect(() => {
-    fetchHotels();
-  }, []);
+      // find city name (using the countryCode if available)
+      const cityList = citiesByCountry[hotel.countryCode] || [];
+      const cityName = cityList.find(c => c.id === hotel.cityId)?.name || "";
+
+      return {
+        ...hotel,
+        country: countryName,
+        city: cityName,
+        salesPersons: Array.isArray(hotel.salesPersons)
+          ? hotel.salesPersons
+          : (hotel.salesPersonName
+              ? [{ name: hotel.salesPersonName, email: hotel.salesPersonEmail, contact: hotel.salesPersonContact }]
+              : []),
+        reservationPersons: Array.isArray(hotel.reservationPersons)
+          ? hotel.reservationPersons
+          : (hotel.reservationPersonName
+              ? [{ name: hotel.reservationPersonName, email: hotel.reservationPersonEmail, contact: hotel.reservationPersonContact }]
+              : []),
+        accountsPersons: Array.isArray(hotel.accountsPersons)
+          ? hotel.accountsPersons
+          : (hotel.accountsPersonName
+              ? [{ name: hotel.accountsPersonName, email: hotel.accountsPersonEmail, contact: hotel.accountsPersonContact }]
+              : []),
+        receptionPersons: Array.isArray(hotel.receptionPersons)
+          ? hotel.receptionPersons
+          : (hotel.receptionPersonName
+              ? [{ name: hotel.receptionPersonName, email: hotel.receptionPersonEmail, contact: hotel.receptionPersonContact }]
+              : []),
+        concierges: Array.isArray(hotel.concierges)
+          ? hotel.concierges
+          : (hotel.conciergeName
+              ? [{ name: hotel.conciergeName, email: hotel.conciergeEmail, contact: hotel.conciergeContact }]
+              : []),
+      };
+    });
+
+    console.log("Fetched Hotels:", adjustedData);
+    setHotels(adjustedData);
+  } catch (err) {
+    console.error("Error fetching hotels:", err);
+    showNotification("Error fetching hotels", "error");
+  }
+  setLoading(false);
+};
+
+useEffect(() => {
+  fetchHotels();
+}, [countries, citiesByCountry]); // run again when countries/cities load
 
   const deleteHotel = async (id) => {
     if (!window.confirm("Are you sure you want to delete this hotel?")) return;
