@@ -64,19 +64,19 @@ const HotelManagementSystem = () => {
           >
             <FaBuilding /> View Hotels
           </button>
-          <button 
+          {/* <button 
             className={activeTab === 'analytics' ? 'active' : ''} 
             onClick={() => setActiveTab('analytics')}
           >
             <FaChartBar /> Analytics
-          </button>
+          </button> */}
         </div>
       </div>
       
       <div className="tab-content">
         {activeTab === 'add' && <AddHotelTab showNotification={showNotification} />}
         {activeTab === 'view' && <HotelSalesList showNotification={showNotification} />}
-        {activeTab === 'analytics' && <AnalyticsTab />}
+        {/* {activeTab === 'analytics' && <AnalyticsTab />} */}
       </div>
     </div>
   );
@@ -191,6 +191,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [hotelSource, setHotelSource] = useState(null);
 
 
   const countryDropdownRef = useRef(null);
@@ -277,9 +278,9 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       hotelContactNumber: hotel.hotelContactNumber || "",
       address: hotel.address || "",
       hotelChain: hotel.hotelChain || "",
-      cityId: hotel.cityId,       // <-- add this
+      cityId: hotel.cityId,       
       
-      countryId: hotel.countryId, // <-- add this
+      countryId: hotel.countryId, 
      
     });
     setHotelSearch(hotel.hotelName);
@@ -289,6 +290,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     cityId: hotel.cityId,
     countryId: hotel.countryId
   });
+   setHotelSource('database'); 
   };
 
   // ================= Keyboard Navigation =================
@@ -361,6 +363,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   };
   const handleManualHotel = async () => {
   if (!hotelSearch.trim() || !formData.cityId) return;
+    setHotelSource('manual'); 
   try {
     const res = await fetch(`${API_BASE_HOTEL}`, {
       method: "POST",
@@ -588,7 +591,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
               onChange={e => setFormData({ ...formData, address: e.target.value })}
               placeholder="Hotel address"
               required
-              readOnly={isHotelFromDatabase}
+              readOnly={hotelSource === 'database'}
             />
           </div>
 
@@ -604,7 +607,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
                   setFormData({ ...formData, hotelContactNumber: `${getCurrentPhoneCode()} ${e.target.value.replace(/\D/g, "")}` })
                 }
                 placeholder="XXX XXX XXXX"
-                readOnly={isHotelFromDatabase}
+                readOnly={hotelSource === 'database'}
               />
             </div>
           </div>
@@ -617,7 +620,8 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
               value={formData.hotelEmail}
               onChange={e => setFormData({ ...formData, hotelEmail: e.target.value })}
               placeholder="hotel@example.com"
-              readOnly={isHotelFromDatabase}
+              readOnly={hotelSource === 'database'}
+
             />
           </div>
 
@@ -629,7 +633,8 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
               value={formData.hotelChain}
               onChange={e => setFormData({ ...formData, hotelChain: e.target.value })}
               placeholder="Hotel chain (optional)"
-              readOnly={isHotelFromDatabase}
+              readOnly={hotelSource === 'database'}
+
             />
           </div>
         </div>
