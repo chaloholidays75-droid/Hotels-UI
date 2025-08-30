@@ -124,7 +124,7 @@ const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCod
       </div>
       {index > 0 && (
         <div className="form-group remove-btn-container">
-          <button type="button" className="remove-person-btn" onClick={() => onRemove(index)}>
+          <button type="button" className="remove-person-btn" onClick={() => onRemove(index)} disabled={index === 0}>
             <FaMinus />
           </button>
         </div>
