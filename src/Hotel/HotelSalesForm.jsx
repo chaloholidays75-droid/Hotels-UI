@@ -198,7 +198,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const cityDropdownRef = useRef(null);
   const hotelDropdownRef = useRef(null);
 
-  const isHotelFromDatabase = !!formData.hotelName && hotelsInCity.some(h => h.hotelName === formData.hotelName);
+  // const isHotelFromDatabase = !!formData.hotelName && hotelsInCity.some(h => h.hotelName === formData.hotelName);
 
 
   const [highlightedIndex, setHighlightedIndex] = useState({ country: -1, city: -1, hotel: -1 });
@@ -361,9 +361,12 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       showNotification("Error adding city", "error");
     }
   };
-  const handleManualHotel = async () => {
-  if (!hotelSearch.trim() || !formData.cityId) return;
-    setHotelSource('manual'); 
+const handleManualHotel = async () => {
+  // Validate mandatory fields
+  if (!hotelSearch.trim() || !formData.cityId || !formData.countryId) return;
+
+  setHotelSource('manual'); 
+
   try {
     const res = await fetch(`${API_BASE_HOTEL}`, {
       method: "POST",
@@ -372,22 +375,30 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
         hotelName: hotelSearch.trim(),
         countryId: formData.countryId,
         cityId: formData.cityId,
-        address: "",
-        hotelEmail: "",
-        hotelContactNumber: "",
-        hotelChain: ""
+        address: formData.address || "",
+        hotelEmail: formData.hotelEmail || "",
+        hotelContactNumber: formData.hotelContactNumber || "",
+        hotelChain: formData.hotelChain || ""
       })
     });
-    if (!res.ok) throw new Error("Failed to create hotel", error);
+    console.log(res);
+    
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.message || "Failed to create hotel");
+    }
+
     const data = await res.json();
     setHotelsInCity(prev => [...prev, data]);
     handleHotelSelect(data);
     showNotification("Hotel added successfully!", "success");
+
   } catch (err) {
     console.error(err);
-    showNotification("Error adding hotel", "error");
+    showNotification(err.message || "Error adding hotel", "error");
   }
 };
+
 
 
   // ================= Fetch =================
