@@ -294,7 +294,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   };
   const handleContactChange = (role, index, field, value) => {
   setFormData(prev => {
-    const updatedRole = [...prev[role]];
+    const updatedRole = [...(prev[role]|| [])];
 
     // Initialize if undefined
     if (!updatedRole[index]) updatedRole[index] = { name: "", email: "", contact: "" };
