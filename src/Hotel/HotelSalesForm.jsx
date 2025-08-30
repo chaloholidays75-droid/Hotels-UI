@@ -190,6 +190,8 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
 
   const [validationErrors, setValidationErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
 
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
