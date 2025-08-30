@@ -1336,6 +1336,21 @@ const HotelSalesList = ({ showNotification }) => {
                 </div>
               </div>
             </div>
+            <Modal 
+                isOpen={!!editingHotel} 
+                onClose={() => setEditingHotel(null)} 
+                title="Edit Hotel" 
+                size="large"
+              >
+                {editingHotel && (
+                  <EditHotelForm 
+                    hotel={editingHotel} 
+                    onSave={saveHotel} 
+                    onCancel={() => setEditingHotel(null)} 
+                  />
+                )}
+              </Modal>
+
 
             <div className="modal-section">
               <h4><FaUserTie /> Contact Persons</h4>
