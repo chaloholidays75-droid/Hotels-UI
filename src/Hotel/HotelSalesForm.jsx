@@ -964,7 +964,9 @@ const HotelSalesList = ({ showNotification }) => {
       const res = await fetch(API_BASE_HOTEL);
       const data = await res.json();
       const adjustedData = data.map(hotel => ({
-        ...hotel,
+          ...hotel,
+        country: countriesData.find(c => c.id === hotel.countryId)?.name || '',
+        city: citiesData.find(c => c.id === hotel.cityId)?.name || '',
         salesPersons: Array.isArray(hotel.salesPersons) ? hotel.salesPersons : (hotel.salesPersonName ? [{name: hotel.salesPersonName, email: hotel.salesPersonEmail, contact: hotel.salesPersonContact}] : []),
         reservationPersons: Array.isArray(hotel.reservationPersons) ? hotel.reservationPersons : (hotel.reservationPersonName ? [{name: hotel.reservationPersonName, email: hotel.reservationPersonEmail, contact: hotel.reservationPersonContact}] : []),
         accountsPersons: Array.isArray(hotel.accountsPersons) ? hotel.accountsPersons : (hotel.accountsPersonName ? [{name: hotel.accountsPersonName, email: hotel.accountsPersonEmail, contact: hotel.accountsPersonContact}] : []),
@@ -1048,7 +1050,7 @@ const HotelSalesList = ({ showNotification }) => {
   });
 
   const filteredHotels = sortedHotels.filter(hotel => {
-    const matchesSearch = hotel.hotelname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = hotel.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           hotel.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           hotel.country?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCountry = filterCountry ? hotel.country === filterCountry : true;
@@ -1214,7 +1216,8 @@ const HotelSalesList = ({ showNotification }) => {
                     </td>
                     <td>
                       <div className="hotel-name-cell">
-                        <div className="hotel-name">{hotel.hotelName}</div>
+                        <div className="hotel-name">{hotel.hotelName || 'No Name Provided'}</div>
+
                         {hotel.hotelChain && <div className="hotel-chain">{hotel.hotelChain}</div>}
                       </div>
                     </td>
