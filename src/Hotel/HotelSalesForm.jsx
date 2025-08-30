@@ -1419,11 +1419,7 @@ const HotelSalesList = ({ showNotification }) => {
           </div>
         )}
       </Modal>
-
-    </div>
-  );
-};
-<Modal
+        <Modal
   isOpen={!!editingHotel}
   onClose={() => setEditingHotel(null)}
   title="Edit Hotel"
@@ -1437,6 +1433,10 @@ const HotelSalesList = ({ showNotification }) => {
     />
   )}
 </Modal>
+
+    </div>
+  );
+};
 
 
 // Edit Hotel Form Component
