@@ -1255,9 +1255,6 @@ useEffect(() => {
                     <td>{hotel.city}</td>
                     <td>
                       <div className="country-cell">
-                        <span className="country-flag">
-                          {countriesData.find(c => c.name === hotel.country)?.flag}
-                        </span>
                         {hotel.country}
                       </div>
                     </td>
