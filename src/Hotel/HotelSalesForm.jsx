@@ -955,6 +955,8 @@ const HotelSalesList = ({ showNotification }) => {
   const [sortDirection, setSortDirection] = useState('asc');
   const [selectedHotels, setSelectedHotels] = useState([]);
   const [bulkAction, setBulkAction] = useState('');
+
+
   const itemsPerPage = 10;
 
 
