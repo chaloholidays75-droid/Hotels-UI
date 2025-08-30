@@ -284,6 +284,11 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     });
     setHotelSearch(hotel.hotelName);
     setShowHotelDropdown(false);
+      console.log("Selected hotel payload:", {
+    hotelName: hotel.hotelName,
+    cityId: hotel.cityId,
+    countryId: hotel.countryId
+  });
   };
 
   // ================= Keyboard Navigation =================
