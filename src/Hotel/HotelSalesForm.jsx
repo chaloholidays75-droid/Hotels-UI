@@ -122,9 +122,9 @@ const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCod
           />
         </div>
       </div>
-      {index > 0 && (
+      {(
         <div className="form-group remove-btn-container">
-          <button type="button" className="remove-person-btn" onClick={() => onRemove(index)} disabled={index === 0}>
+          <button type="button" className="remove-person-btn" onClick={() => onRemove(index)} >
             <FaMinus />
           </button>
         </div>
@@ -132,6 +132,14 @@ const ContactPersonFields = ({ person, onChange, onRemove, index, role, phoneCod
     </div>
   </div>
 );
+const handleRemovePerson = (role, index) => {
+  setFormData(prev => {
+    const updatedRole = [...prev[role]];
+    updatedRole.splice(index, 1);
+    // Ensure at least one empty person exists
+    return { ...prev, [role]: updatedRole.length ? updatedRole : [{ name: "", email: "", contact: "" }] };
+  });
+};
 
 // Contact Role Section
 const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, phoneCode, icon }) => (
@@ -142,7 +150,7 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
     </div>
     {persons.map((person, index) => (
       <ContactPersonFields 
-        key={index} 
+        key={person.id || `${role}-${index}-${Date.now()}`} 
         person={person} 
         onChange={(idx, field, value) => onChange(role, idx, field, value)} 
         onRemove={(idx) => onRemove(role, idx)}
@@ -156,6 +164,7 @@ const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, p
     </button>
   </div>
 );
+
 
 // Add Hotel Tab Component
 
@@ -291,17 +300,37 @@ const handleHotelSelect = hotel => {
   setShowHotelDropdown(false);
 };
 
-  const handleContactChange = (role, index, field, value) => {
+// Update a contact person field
+const handleContactChange = (role, index, field, value) => {
   setFormData(prev => {
-    const updatedRole = [...(prev[role]|| [])];
+    const updatedRole = [...(prev[role] || [])];
 
-    // Initialize if undefined
+    // Initialize if the person doesn't exist yet
     if (!updatedRole[index]) updatedRole[index] = { name: "", email: "", contact: "" };
 
     updatedRole[index][field] = value;
     return { ...prev, [role]: updatedRole };
   });
 };
+
+// Add a new contact person
+const handleAddPerson = (role) => {
+  setFormData(prev => {
+    const updatedRole = [...(prev[role] || [])];
+    updatedRole.push({ name: "", email: "", contact: "" });
+    return { ...prev, [role]: updatedRole };
+  });
+};
+
+// Remove a contact person by index
+const handleRemovePerson = (role, index) => {
+  setFormData(prev => {
+    const updatedRole = [...(prev[role] || [])];
+    if (index > -1) updatedRole.splice(index, 1); // Remove the selected person
+    return { ...prev, [role]: updatedRole };
+  });
+};
+
 
   // ================= Keyboard Navigation =================
   const handleDropdownKeys = (e, type, items, onSelect) => {
@@ -449,53 +478,68 @@ const handleManualHotel = async () => {
   };
 
   // ================= Submit =================
-const handleSubmit = async e => {
+const handleSubmit = async (e) => {
   e.preventDefault();
 
-  if (!validateForm()) return showNotification("Please fill required fields first", "error");
-
-  setIsSubmitting(true);
+  // Ensure all contact person arrays exist
+  const safePayload = {
+    ...formData,
+    salesPersons: formData.salesPersons?.map(p => ({
+      name: p.name || "",
+      email: p.email || "",
+      contact: p.contact || ""
+    })) || [],
+    reservationPersons: formData.reservationPersons?.map(p => ({
+      name: p.name || "",
+      email: p.email || "",
+      contact: p.contact || ""
+    })) || [],
+    accountsPersons: formData.accountsPersons?.map(p => ({
+      name: p.name || "",
+      email: p.email || "",
+      contact: p.contact || ""
+    })) || [],
+    receptionPersons: formData.receptionPersons?.map(p => ({
+      name: p.name || "",
+      email: p.email || "",
+      contact: p.contact || ""
+    })) || [],
+    concierges: formData.concierges?.map(p => ({
+      name: p.name || "",
+      email: p.email || "",
+      contact: p.contact || ""
+    })) || [],
+    hotelName: formData.hotelName || "",
+    hotelEmail: formData.hotelEmail || "",
+    hotelContactNumber: formData.hotelContactNumber || "",
+    address: formData.address || "",
+    hotelChain: formData.hotelChain || "",
+    specialRemarks: formData.specialRemarks || "",
+    cityId: formData.cityId,
+    countryId: formData.countryId
+  };
 
   try {
-    const payload = {
-      hotelName: formData.hotelName,
-      hotelEmail: formData.hotelEmail,
-      hotelContactNumber: formData.hotelContactNumber,
-      address: formData.address,
-      hotelChain: formData.hotelChain,
-      salesPersons: formData.salesPersons,
-      reservationPersons: formData.reservationPersons,
-      accountsPersons: formData.accountsPersons,
-      receptionPersons: formData.receptionPersons,
-      concierges: formData.concierges,
-      specialRemarks: formData.specialRemarks,
-      cityId: formData.cityId,
-      countryId: formData.countryId,
-    };
-
-    const res = await fetch(API_BASE_HOTEL, {
+    const response = await fetch(`${API_BASE_HOTEL}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(safePayload),
     });
 
-    if (!res.ok) {
-      const errData = await res.json();
-      throw new Error(errData.message || "Failed to save hotel");
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to save hotel");
     }
 
-    const data = await res.json();
-    showNotification("Hotel saved successfully!", "success");
-    resetForm();
-    setActiveTab("view");
-
+    const data = await response.json();
+    console.log("Hotel saved:", data);
+    alert("Hotel saved successfully!");
   } catch (err) {
     console.error(err);
-    showNotification(err.message || "Error saving hotel", "error");
-  } finally {
-    setIsSubmitting(false);
+    alert(`Error: ${err.message}`);
   }
 };
+
 
 
   return (
@@ -692,8 +736,8 @@ const handleSubmit = async e => {
           title="Sales Person"
           role="salesPersons"
           persons={formData.salesPersons}
-          onAdd={() => setFormData({ ...formData, salesPersons: [...formData.salesPersons, { name: "", email: "", contact: "" }] })}
-          onRemove={i => setFormData({ ...formData, salesPersons: formData.salesPersons.filter((_, idx) => idx !== i) })}
+          onAdd={() => handleAddPerson("salesPersons")}
+          onRemove={(i) => handleRemovePerson("salesPersons", i)}
           onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaUserTie />}
@@ -703,8 +747,8 @@ const handleSubmit = async e => {
           title="Reservation Person"
            role="reservationPersons"
           persons={formData.reservationPersons}
-          onAdd={() => setFormData({ ...formData, reservationPersons: [...formData.reservationPersons, { name: "", email: "", contact: "" }] })}
-          onRemove={i => setFormData({ ...formData, reservationPersons: formData.reservationPersons.filter((_, idx) => idx !== i) })}
+          onAdd={() => handleAddPerson("reservationPersons")}
+          onRemove={(i) => handleRemovePerson("reservationPersons", i)}
           onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaClipboardList />}
@@ -714,8 +758,8 @@ const handleSubmit = async e => {
           title="Accounts Person"
            role="accountsPersons"
           persons={formData.accountsPersons}
-          onAdd={() => setFormData({ ...formData, accountsPersons: [...formData.accountsPersons, { name: "", email: "", contact: "" }] })}
-          onRemove={i => setFormData({ ...formData, accountsPersons: formData.accountsPersons.filter((_, idx) => idx !== i) })}
+          onAdd={() => handleAddPerson("accountsPersons")}
+          onRemove={(i) => handleRemovePerson("accountsPersons", i)}
           onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaMoneyCheckAlt />}
@@ -725,8 +769,10 @@ const handleSubmit = async e => {
           title="Reception Person"
            role="receptionPersons"
           persons={formData.receptionPersons}
-          onAdd={() => setFormData({ ...formData, receptionPersons: [...formData.receptionPersons, { name: "", email: "", contact: "" }] })}
-          onRemove={i => setFormData({ ...formData, receptionPersons: formData.receptionPersons.filter((_, idx) => idx !== i) })}
+          // onAdd={() => setFormData({ ...formData, receptionPersons: [...formData.receptionPersons, { name: "", email: "", contact: "" }] })}
+          // onRemove={i => setFormData({ ...formData, receptionPersons: formData.receptionPersons.filter((_, idx) => idx !== i) })}
+           onAdd={() => handleAddPerson("receptionPersons")}
+          onRemove={(i) => handleRemovePerson("receptionPersons", i)}
           onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaReceipt />}
@@ -736,8 +782,10 @@ const handleSubmit = async e => {
           title="Concierge"
            role="concierges"
           persons={formData.concierges}
-          onAdd={() => setFormData({ ...formData, concierges: [...formData.concierges, { name: "", email: "", contact: "" }] })}
-          onRemove={i => setFormData({ ...formData, concierges: formData.concierges.filter((_, idx) => idx !== i) })}
+          // onAdd={() => setFormData({ ...formData, concierges: [...formData.concierges, { name: "", email: "", contact: "" }] })}
+          // onRemove={i => setFormData({ ...formData, concierges: formData.concierges.filter((_, idx) => idx !== i) })}
+          onAdd={() => handleAddPerson("concierges")}
+          onRemove={(i) => handleRemovePerson("concierges", i)}
           onChange={handleContactChange}
           phoneCode={getCurrentPhoneCode()}
           icon={<FaConciergeBell />}
