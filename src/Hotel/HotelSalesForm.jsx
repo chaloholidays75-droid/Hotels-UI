@@ -276,7 +276,11 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       hotelEmail: hotel.hotelEmail || "",
       hotelContactNumber: hotel.hotelContactNumber || "",
       address: hotel.address || "",
-      hotelChain: hotel.hotelChain || ""
+      hotelChain: hotel.hotelChain || "",
+      cityId: hotel.cityId,       // <-- add this
+      city: hotel.cityName || "", // optional display field
+      countryId: hotel.countryId, // <-- add this
+      country: hotel.countryName || "" // optional display field
     });
     setHotelSearch(hotel.hotelName);
     setShowHotelDropdown(false);
