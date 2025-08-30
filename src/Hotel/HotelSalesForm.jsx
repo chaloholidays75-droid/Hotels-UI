@@ -373,10 +373,9 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     }
   };
 const handleManualHotel = async () => {
-  // Validate mandatory fields
   if (!hotelSearch.trim() || !formData.cityId || !formData.countryId) return;
 
-  setHotelSource('manual'); 
+  setHotelSource('manual');
 
   try {
     const res = await fetch(`${API_BASE_HOTEL}`, {
@@ -386,14 +385,14 @@ const handleManualHotel = async () => {
         hotelName: hotelSearch.trim(),
         countryId: formData.countryId,
         cityId: formData.cityId,
-        address: formData.address || "",
-        hotelEmail: formData.hotelEmail || "",
-        hotelContactNumber: formData.hotelContactNumber || "",
-        hotelChain: formData.hotelChain || ""
+        address: formData.address,
+        hotelEmail: formData.hotelEmail ,
+        hotelContactNumber: formData.hotelContactNumber,
+        hotelChain: formData.hotelChain ,
+        specialRemarks: formData.specialRemarks 
       })
     });
-    console.log(res);
-    
+
     if (!res.ok) {
       const errorData = await res.json();
       throw new Error(errorData.message || "Failed to create hotel");
@@ -409,6 +408,7 @@ const handleManualHotel = async () => {
     showNotification(err.message || "Error adding hotel", "error");
   }
 };
+
 
 
 
