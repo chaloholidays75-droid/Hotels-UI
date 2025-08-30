@@ -197,6 +197,9 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const cityDropdownRef = useRef(null);
   const hotelDropdownRef = useRef(null);
 
+  const isHotelFromDatabase = !!formData.hotelName && hotelsInCity.some(h => h.hotelName === formData.hotelName);
+
+
   const [highlightedIndex, setHighlightedIndex] = useState({ country: -1, city: -1, hotel: -1 });
 
   // ================= Utility =================
