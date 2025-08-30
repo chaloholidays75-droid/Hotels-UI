@@ -971,6 +971,8 @@ const HotelSalesList = ({ showNotification }) => {
         receptionPersons: Array.isArray(hotel.receptionPersons) ? hotel.receptionPersons : (hotel.receptionPersonName ? [{name: hotel.receptionPersonName, email: hotel.receptionPersonEmail, contact: hotel.receptionPersonContact}] : []),
         concierges: Array.isArray(hotel.concierges) ? hotel.concierges : (hotel.conciergeName ? [{name: hotel.conciergeName, email: hotel.conciergeEmail, contact: hotel.conciergeContact}] : []),
       }));
+      console.log("Fetched Hotels:", data);
+
       setHotels(adjustedData);
     } catch (err) {
       console.error("Error fetching hotels:", err);
