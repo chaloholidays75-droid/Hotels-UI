@@ -1214,7 +1214,8 @@ const HotelSalesList = ({ showNotification }) => {
                     </td>
                     <td>
                       <div className="hotel-name-cell">
-                        <div className="hotel-name">{hotel.hotelName}</div>
+                        <div className="hotel-name">{hotel.hotelName || 'No Name Provided'}</div>
+
                         {hotel.hotelChain && <div className="hotel-chain">{hotel.hotelChain}</div>}
                       </div>
                     </td>
