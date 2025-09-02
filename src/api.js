@@ -193,3 +193,5 @@ export async function getHotelsByCity(cityId) {
   if (!cityId) return null; // Safety check
   return await safeAxios(`${API_BASE}/hotels/by-city/${cityId}`);
 }
+
+export default api;
