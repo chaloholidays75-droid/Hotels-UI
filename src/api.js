@@ -148,13 +148,19 @@ export async function login(email, password) {
 // Auth: Register
 export async function register(firstName, lastName, email, password) {
   try {
+    console.log("📡 Sending Register request to:", `${API_BASE}/auth/register`);
+    console.log("📦 Payload:", { firstName, lastName, email, password });
+
     await api.post('/auth/register', { firstName, lastName, email, password });
     return true;
   } catch (error) {
-    console.error('Registration failed:', error.response?.data || error.message);
+    console.error("❌ Registration failed for:", `${API_BASE}/auth/register`);
+    console.error("Response:", error.response?.data);
+    console.error("Status:", error.response?.status);
     throw new Error('Registration failed');
   }
 }
+
 
 // Auth: Forgot Password
 export async function forgotPassword(email) {
