@@ -1,46 +1,88 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../api.js';
+import { useNavigate, Link } from 'react-router-dom';
+import { z } from 'zod';
+import { login } from '../services/api';
+
+// Zod schema for form validation
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password must be 100 characters or less'),
+});
 
 function Login({ setUserName, setIsAuthenticated }) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+  });
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: '' });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrors({});
+
+    // Validate form data with Zod
+    const result = loginSchema.safeParse(formData);
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      setErrors(fieldErrors);
+      return;
+    }
+
     try {
-      const { userFullName } = await api.login(email, password);
+      const { userFullName } = await login(formData.email, formData.password);
       setUserName(userFullName);
       setIsAuthenticated(true);
       navigate('/');
     } catch (err) {
-      setError('Invalid credentials');
+      setErrors({ general: 'Invalid credentials' });
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto">
-      <input
-        type="email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Email"
-        className="border p-2 mb-2 w-full"
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        placeholder="Password"
-        className="border p-2 mb-2 w-full"
-      />
-      {error && <p className="text-red-500">{error}</p>}
-      <button type="submit" className="bg-blue-500 text-white p-2 w-full">
-        Login
-      </button>
-    </form>
+    <div className="container">
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Email"
+          required
+        />
+        {errors.email && <p style={{ color: 'red', marginBottom: '10px' }}>{errors.email}</p>}
+        <input
+          type="password"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Password"
+          required
+        />
+        {errors.password && <p style={{ color: 'red', marginBottom: '10px' }}>{errors.password}</p>}
+        {errors.general && <p style={{ color: 'red', marginBottom: '10px' }}>{errors.general}</p>}
+        <button type="submit">Login</button>
+      </form>
+      <div style={{ marginTop: '10px' }}>
+        <p>
+          Don't have an account?{' '}
+          <Link to="/register" style={{ color: '#007bff', textDecoration: 'none' }}>
+            Create an account
+          </Link>
+        </p>
+        <p>
+          <Link to="/forgot" style={{ color: '#007bff', textDecoration: 'none' }}>
+            Forgot password?
+          </Link>
+        </p>
+      </div>
+    </div>
   );
 }
 
