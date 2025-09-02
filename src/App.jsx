@@ -6,7 +6,7 @@ import ResetPassword from './Login/ResetPassword';
 import HotelSalesForm from './Hotel/HotelSalesForm';
 import HotelSalesList from './Hotel/HotelSalesList';
 import { useState, useEffect } from 'react';
-import { checkAuth } from './services/api';
+import { checkAuth } from './api.js';
 import './App.css';
 
 function ProtectedRoute({ children, isAuthenticated }) {
