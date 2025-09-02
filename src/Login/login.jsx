@@ -1,13 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { z } from 'zod';
+
 import { login } from '../api';
 
-// Zod schema for form validation
-const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters').max(100, 'Password must be 100 characters or less'),
-});
+
 
 function Login({ setUserName, setIsAuthenticated }) {
   const [formData, setFormData] = useState({
