@@ -810,6 +810,9 @@ const handleSubmit = async (e) => {
 <div className="form-actions">
    <button type="submit" className="btn btn-primary" disabled={isSubmitting}> {isSubmitting ? 'Submitting...' : <><FaSave /> Submit Form</>} </button>
     <button type="button" className="btn btn-secondary" onClick={resetForm}>Reset Form</button> 
+     <Link to="/agency" className="btn btn-secondary">
+            Agency Registration
+          </Link>
     </div> 
     </form> 
   </div> 

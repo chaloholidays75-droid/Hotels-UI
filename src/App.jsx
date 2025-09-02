@@ -4,6 +4,7 @@ import Register from './Login/register';
 import ForgotPassword from './Login/ForgotPassword';
 import ResetPassword from './Login/ResetPassword';
 import HotelSalesForm from './Hotel/HotelSalesForm';
+import AgencyManagement from './Agent/AgencyManagement';
 import HotelSalesList from './Hotel/HotelSalesList';
 import { useState, useEffect } from 'react';
 import { checkAuth } from './api';
@@ -80,7 +81,7 @@ function App() {
     <Router>
       <Routes>
         <Route
-          path="/"
+          path="/home"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Home userName={userName} onLogout={handleLogout} />
@@ -88,10 +89,18 @@ function App() {
           }
         />
         <Route
-          path="/form"
+          path="/"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <HotelSalesForm />
+              <HotelSalesForm  userName={userName} onLogout={handleLogout}/>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/agency"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <AgencyManagement />
             </ProtectedRoute>
           }
         />
