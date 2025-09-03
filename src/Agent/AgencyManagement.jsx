@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import * as XLSX from 'xlsx';
+import LocationSelector from '../components/LocationSelector';
 import './AgencyManagement.css';
 
 const AgencyManagement = () => {
@@ -79,6 +80,16 @@ const AgencyManagement = () => {
     }
     setPasswordStrength(strength);
   };
+  const handleLocationChange = (field, value) => {
+  setFormData(prev => ({
+    ...prev,
+    [field]: value
+  }));
+
+  if (errors[field]) {
+    setErrors(prev => ({ ...prev, [field]: '' }));
+  }
+};
 
   const validateEmail = (email) => {
     const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -377,43 +388,22 @@ const AgencyManagement = () => {
                 
                 <div className="form-group">
                   <label htmlFor="country" className="form-label required">Country</label>
-                  <select
-                    id="country"
-                    name="country"
+                  <LocationSelector
+                    type="country"                // if your component distinguishes type
                     value={formData.country}
-                    onChange={handleChange}
-                    className={errors.country ? 'form-select error' : 'form-select'}
-                  >
-                    <option value="">Select Country</option>
-                    <option value="US">United States</option>
-                    <option value="UK">United Kingdom</option>
-                    <option value="CA">Canada</option>
-                    <option value="AU">Australia</option>
-                    <option value="DE">Germany</option>
-                    <option value="FR">France</option>
-                  </select>
+                    onChange={(value) => handleLocationChange('country', value)}
+                  />
                   {errors.country && <span className="error-message">{errors.country}</span>}
                 </div>
-              </div>
-              
-              <div className="form-row">
+
                 <div className="form-group">
                   <label htmlFor="city" className="form-label required">City</label>
-                  <select
-                    id="city"
-                    name="city"
+                  <LocationSelector
+                    type="city"
+                    country={formData.country}   // pass selected country to filter cities
                     value={formData.city}
-                    onChange={handleChange}
-                    className={errors.city ? 'form-select error' : 'form-select'}
-                  >
-                    <option value="">Select City</option>
-                    <option value="New York">New York</option>
-                    <option value="London">London</option>
-                    <option value="Toronto">Toronto</option>
-                    <option value="Sydney">Sydney</option>
-                    <option value="Berlin">Berlin</option>
-                    <option value="Paris">Paris</option>
-                  </select>
+                    onChange={(value) => handleLocationChange('city', value)}
+                  />
                   {errors.city && <span className="error-message">{errors.city}</span>}
                 </div>
                 

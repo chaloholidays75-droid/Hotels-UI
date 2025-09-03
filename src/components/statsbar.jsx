@@ -12,7 +12,6 @@ const StatsBar = () => {
   return (
     <div className="stats-bar">
       <div className="stat-item"><FaHotel /> Total Hotels <span>{stats.totalHotels}</span></div>
-      <div className="stat-item active-contacts"><FaUsers /> Active Contacts <span>{stats.activeContacts}</span></div>
       <div className="stat-item"><FaGlobe /> Countries <span>{stats.totalCountries}</span></div>
       <div className="stat-item new-this-month"><FaCalendar /> New This Month <span>{stats.newThisMonth}</span></div>
     </div>
