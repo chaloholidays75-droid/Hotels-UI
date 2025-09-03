@@ -387,7 +387,7 @@ const AgencyManagement = () => {
                 </div>
                 
                 <div className="form-group">
-                  <label htmlFor="country" className="form-label required">Country</label>
+                  {/* <label htmlFor="country" className="form-label required">Country</label> */}
                   <LocationSelector
                     type="country"                // if your component distinguishes type
                     value={formData.country}
@@ -397,7 +397,7 @@ const AgencyManagement = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="city" className="form-label required">City</label>
+                  {/* <label htmlFor="city" className="form-label required">City</label> */}
                   <LocationSelector
                     type="city"
                     country={formData.country}   // pass selected country to filter cities

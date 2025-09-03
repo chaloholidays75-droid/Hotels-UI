@@ -224,35 +224,6 @@ const LocationSelector = ({
           </div>
         )}
       </div>
-
-      {/* Hotel */}
-      <div className="form-group searchable-dropdown" ref={hotelDropdownRef}>
-        <label>Hotel</label>
-        <input
-          type="text"
-          value={hotelSearch}
-          onChange={e => setHotelSearch(e.target.value)}
-          onFocus={() => setShowHotelDropdown(true)}
-          placeholder="Search hotel..."
-          disabled={!cityId}
-        />
-        <FaChevronDown className="dropdown-chevron" />
-        {showHotelDropdown && cityId && (
-          <div className="dropdown-options">
-            {filteredHotels.length > 0 ? (
-              filteredHotels.map(h => (
-                <div key={h.id} onClick={() => handleHotelSelect(h)}>
-                  {h.hotelName}
-                </div>
-              ))
-            ) : (
-              <div className="dropdown-option manual-option" onClick={handleManualHotel}>
-                Type to add new hotel: "{hotelSearch}"
-              </div>
-            )}
-          </div>
-        )}
-      </div>
     </div>
   );
 };
