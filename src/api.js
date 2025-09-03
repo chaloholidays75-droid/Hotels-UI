@@ -141,7 +141,7 @@ export async function login(email, password) {
     return { userFullName: data.userFullName, accessToken: data.accessToken };
   } catch (error) {
     console.error('Login failed:', error.response?.data || error.message);
-    throw new Error('Invalid credentials');
+    throw new Error(error.response?.data?.message || 'Login failed. Check server.');
   }
 }
 
