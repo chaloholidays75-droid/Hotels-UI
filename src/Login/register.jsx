@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { z } from 'zod';
-import { register } from '../api.js';
+import { register } from '../api';
 
 // Zod schema for form validation
 const registerSchema = z.object({
