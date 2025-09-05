@@ -1,20 +1,32 @@
-.container {
-  max-width: 600px;
-  margin: 20px auto;
-  padding: 20px;
-  background-color: white;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+.app-container {
+  display: flex;
+  min-height: 100vh;
 }
-input {
-  padding: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
+
+.main-content {
+  flex: 1;
+  /* Same as sidebar width */
+  padding: 2px 20px;
+  transition: margin-left 0.3s ease;
 }
-button.green {
-  background-color: #28a745;
+
+/* When sidebar is collapsed */
+.sidebar.collapsed ~ .main-content {
+  margin-left: 70px; /* Same as collapsed sidebar width */
 }
-button.green:hover {
-  background-color: #218838;
+
+/* For mobile responsiveness */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    padding: 15px;
+  }
+  
+  .sidebar:not(.collapsed) ~ .main-content {
+    margin-left: 0;
+  }
+  
+  .sidebar.collapsed ~ .main-content {
+    margin-left: 0;
+  }
 }

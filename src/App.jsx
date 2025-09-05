@@ -3,52 +3,30 @@ import Login from './Login/login';
 import Register from './Login/register';
 import ForgotPassword from './Login/ForgotPassword';
 import ResetPassword from './Login/ResetPassword';
-import HotelSalesForm from './Hotel/HotelSalesForm';
+import HotelManagementSystem from './Hotel/HotelManagementSystem';
 import AgencyManagement from './Agent/AgencyManagement';
-import HotelSalesList from './Hotel/HotelSalesList';
+import HotelSalesList from './Hotelextra/HotelSalesList';
 import { useState, useEffect } from 'react';
 import { checkAuth } from './api';
 import './App.css';
+import Loader from './components/loader';
+import Sidebar from './components/Sidebar'; // Import your Sidebar component
 
-function ProtectedRoute({ children, isAuthenticated }) {
-  return isAuthenticated ? children : <Navigate to="/login" />;
-}
-
-function Home({ userName, onLogout }) {
+// Create a Layout component that includes the Sidebar
+function Layout({ children, userName, onLogout }) {
   return (
-    <div className="container">
-      <h1>Welcome{userName ? `, ${userName}` : ''}!</h1>
-      <nav>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li>
-            <Link to="/" style={{ color: '#007bff', textDecoration: 'none', marginRight: '10px' }}>
-              Add Hotel Sale
-            </Link>
-          </li>
-          <li>
-            <Link to="/list" style={{ color: '#007bff', textDecoration: 'none', marginRight: '10px' }}>
-              View Hotel Sales
-            </Link>
-          </li>
-          <li>
-            <button
-              onClick={onLogout}
-              style={{
-                padding: '10px',
-                border: 'none',
-                borderRadius: '4px',
-                backgroundColor: '#dc3545',
-                color: 'white',
-                cursor: 'pointer',
-              }}
-            >
-              Logout
-            </button>
-          </li>
-        </ul>
-      </nav>
+    <div className="app-container">
+      <Sidebar userName={userName} onLogout={onLogout} />
+      <div className="main-content">
+        {children}
+      </div>
     </div>
   );
+}
+
+// Add the missing ProtectedRoute component
+function ProtectedRoute({ children, isAuthenticated }) {
+  return isAuthenticated ? children : <Navigate to="/login" />;
 }
 
 function App() {
@@ -74,7 +52,7 @@ function App() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <Loader />;
   }
 
   return (
@@ -84,7 +62,25 @@ function App() {
           path="/home"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Home userName={userName} onLogout={handleLogout} />
+              <Layout userName={userName} onLogout={handleLogout}>
+                <div className="container">
+                  <h1>Welcome{userName ? `, ${userName}` : ''}!</h1>
+                  <nav>
+                    <ul style={{ listStyle: 'none', padding: 0 }}>
+                      <li>
+                        <Link to="/" style={{ color: '#007bff', textDecoration: 'none', marginRight: '10px' }}>
+                          Add Hotel Sale
+                        </Link>
+                      </li>
+                      <li>
+                        <Link to="/list" style={{ color: '#007bff', textDecoration: 'none', marginRight: '10px' }}>
+                          View Hotel Sales
+                        </Link>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
+              </Layout>
             </ProtectedRoute>
           }
         />
@@ -92,7 +88,19 @@ function App() {
           path="/"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <HotelSalesForm  userName={userName} onLogout={handleLogout}/>
+              <Layout userName={userName} onLogout={handleLogout}>
+                <HotelManagementSystem userName={userName} onLogout={handleLogout} />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/hotel"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Layout userName={userName} onLogout={handleLogout}>
+                <HotelManagementSystem userName={userName} onLogout={handleLogout} />
+              </Layout>
             </ProtectedRoute>
           }
         />
@@ -100,7 +108,9 @@ function App() {
           path="/agency"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <AgencyManagement />
+              <Layout userName={userName} onLogout={handleLogout}>
+                <AgencyManagement />
+              </Layout>
             </ProtectedRoute>
           }
         />
@@ -108,7 +118,9 @@ function App() {
           path="/list"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <HotelSalesList />
+              <Layout userName={userName} onLogout={handleLogout}>
+                <HotelSalesList />
+              </Layout>
             </ProtectedRoute>
           }
         />

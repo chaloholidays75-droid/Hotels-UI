@@ -1,0 +1,730 @@
+/* viewhotel.css - Color Scheme from Reference Image */
+
+/* Variables based on the reference image */
+:root {
+  --primary-color: #3b82f6;
+  --primary-dark: #2563eb;
+  --primary-light: #93c5fd;
+  --secondary-color: #64748b;
+  --accent-color: #f97316;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --info-color: #3b82f6;
+  
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-light: #94a3b8;
+  --divider-color: #e2e8f0;
+  --background-color: #f8fafc;
+  --card-background: #ffffff;
+  --header-background: #f1f5f9;
+  
+  --border-radius: 8px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  color: var(--text-primary);
+ font-family: "poppins", sans-serif;
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+.hsl-hotel-sales-list {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header styles */
+.hsl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 20px;
+  border-radius: var(--border-radius);
+  background-color: var(--header-background);
+  border: 1px solid var(--divider-color);
+}
+
+.hsl-title-section h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: var(--text-primary);
+}
+
+.hsl-title-section p {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Card component */
+.hsl-card {
+  background-color: var(--card-background);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid var(--divider-color);
+  width: 88vw;
+}
+
+/* Controls section */
+.hsl-list-controls {
+  margin-bottom: 24px;
+}
+
+.hsl-search-filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+/* Search box */
+.hsl-search-box {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.hsl-search-box input {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  border: 1px solid var(--divider-color);
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background-color: var(--background-color);
+}
+
+.hsl-search-box input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.hsl-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.hsl-clear-search {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hsl-clear-search:hover {
+  background-color: var(--divider-color);
+}
+
+/* Filter controls */
+.hsl-filter-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.hsl-filter-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.hsl-filter-group label {
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+}
+
+.hsl-filter-group select {
+  padding: 10px 12px;
+  border: 1px solid var(--divider-color);
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  min-width: 150px;
+  background-color: var(--background-color);
+  color: var(--text-primary);
+}
+
+.hsl-filter-group select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+/* Bulk actions */
+.hsl-bulk-actions-card {
+  background-color: #fffbeb;
+  border-radius: var(--border-radius);
+  padding: 16px;
+  border-left: 4px solid var(--warning-color);
+  margin-top: 16px;
+}
+
+.hsl-bulk-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.hsl-bulk-header svg {
+  color: var(--warning-color);
+}
+
+.hsl-clear-selection {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-left: auto;
+  padding: 4px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hsl-clear-selection:hover {
+  background-color: var(--divider-color);
+}
+
+.hsl-bulk-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.hsl-bulk-controls select {
+  padding: 8px 12px;
+  border: 1px solid var(--divider-color);
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  background-color: var(--background-color);
+}
+
+/* Results info */
+.hsl-results-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--divider-color);
+}
+
+.hsl-results-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hsl-results-text {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.hsl-results-text strong {
+  color: var(--text-primary);
+}
+
+/* Sort controls */
+.hsl-sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.hsl-sort-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.hsl-sort-btn:hover {
+  background-color: var(--divider-color);
+}
+
+.hsl-sort-btn.hsl-active {
+  color: var(--primary-color);
+  background-color: rgba(59, 130, 246, 0.1);
+  font-weight: 500;
+}
+
+/* Table styles */
+.hsl-hotels-table-container {
+  overflow-x: auto;
+  margin-bottom: 16px;
+  border: 1px solid var(--divider-color);
+  border-radius: var(--border-radius);
+}
+
+.hsl-hotels-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.hsl-hotels-table th {
+  text-align: left;
+  padding: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background-color: var(--header-background);
+  border-bottom: 1px solid var(--divider-color);
+  white-space: nowrap;
+}
+
+.hsl-sortable-header {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.hsl-sortable-header:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.hsl-sortable-header > div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hsl-hotels-table td {
+  padding: 12px;
+  border-bottom: 1px solid var(--divider-color);
+  transition: background-color 0.2s ease;
+}
+
+.hsl-hotels-table tr:last-child td {
+  border-bottom: none;
+}
+
+.hsl-hotels-table tr.hsl-selected {
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.hsl-hotels-table tr:hover td {
+  background-color: var(--header-background);
+}
+
+/* Select column */
+.hsl-select-column {
+  width: 40px;
+  text-align: center;
+}
+
+.hsl-select-column input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary-color);
+}
+
+/* Hotel name cell */
+.hsl-hotel-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hsl-hotel-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.hsl-hotel-chain {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Contact info */
+.hsl-contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hsl-contact-count {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.hsl-contact-preview {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Action buttons */
+.hsl-action-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.hsl-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.hsl-btn-icon:hover {
+  background-color: var(--divider-color);
+}
+
+.hsl-view-btn:hover {
+  color: var(--info-color);
+}
+
+.hsl-edit-btn:hover {
+  color: var(--primary-color);
+}
+
+.hsl-delete-btn:hover {
+  color: var(--error-color);
+}
+
+.hsl-more-btn:hover {
+  color: var(--text-primary);
+}
+
+/* Table footer */
+.hsl-table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--divider-color);
+}
+
+.hsl-rows-info {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Pagination */
+.hsl-pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hsl-pagination-btn {
+  padding: 8px 12px;
+  border: 1px solid var(--divider-color);
+  background-color: var(--card-background);
+  color: var(--text-primary);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.hsl-pagination-btn:hover:not(:disabled) {
+  background-color: var(--header-background);
+  border-color: var(--primary-light);
+}
+
+.hsl-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hsl-pagination-btn.hsl-active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.hsl-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.hsl-pagination-ellipsis {
+  padding: 0 8px;
+  color: var(--text-secondary);
+}
+
+/* No results */
+.hsl-no-results {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-secondary);
+  background-color: var(--header-background);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--divider-color);
+}
+
+.hsl-no-results svg {
+  font-size: 48px;
+  margin-bottom: 16px;
+  color: var(--warning-color);
+}
+
+.hsl-no-results h3 {
+  font-size: 18px;
+  margin: 0 0 8px 0;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.hsl-no-results p {
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Button styles */
+.hsl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.hsl-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.hsl-btn-primary {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.hsl-btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.hsl-btn-secondary {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--divider-color);
+}
+
+.hsl-btn-secondary:hover:not(:disabled) {
+  background-color: var(--header-background);
+}
+
+.hsl-btn-danger {
+  background-color: var(--error-color);
+  color: white;
+  border-color: var(--error-color);
+}
+
+.hsl-btn-danger:hover:not(:disabled) {
+  background-color: #dc2626;
+  border-color: #dc2626;
+}
+
+.hsl-btn-text {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  padding: 8px;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.hsl-btn-text:hover {
+  color: var(--primary-dark);
+}
+
+/* Status indicators */
+.hsl-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.hsl-status-success {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+}
+
+.hsl-status-pending {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--warning-color);
+}
+
+.hsl-status-unfulfilled {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--error-color);
+}
+
+.hsl-status-fulfilled {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--success-color);
+}
+
+/* Loading spinner */
+.hsl-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.hsl-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--divider-color);
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: hsl-spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes hsl-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.hsl-spin {
+  animation: hsl-spin 1s linear infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .hsl-search-filter-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .hsl-search-box {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .hsl-hotel-sales-list {
+    padding: 16px;
+  }
+  
+  .hsl-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  
+  .hsl-results-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .hsl-table-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .hsl-pagination {
+    flex-wrap: wrap;
+  }
+  
+  .hsl-filter-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .hsl-filter-group select {
+    min-width: auto;
+  }
+  
+  .hsl-bulk-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 480px) {
+  .hsl-action-buttons {
+    flex-direction: column;
+  }
+  
+  .hsl-page-numbers {
+    display: none;
+  }
+  
+  .hsl-card {
+    padding: 16px;
+  }
+}
