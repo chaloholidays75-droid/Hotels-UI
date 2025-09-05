@@ -31,8 +31,9 @@ const HotelSalesList = ({ showNotification }) => {
   const itemsPerPage = 10;
 
 const API_BASE_HOTEL = "https://hotels-8v0p.onrender.com/api/hotels";
-const API_BASE_COUNTRIES = "https://hotels-8v0p.onrender.com/api/countries";
-const API_BASE_CITIES = "https://hotels-8v0p.onrender.com/api/cities";
+const API_BASE_CITIES = "https://hotels-8v0p.onrender.com/api/cities/by-country";
+
+
 
 const fetchHotels = async () => {
   setRefreshing(true);
