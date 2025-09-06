@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import LocationSelector from '../components/LocationSelector';
 import './AgencyManagement.css';
@@ -803,78 +803,76 @@ const handleUserSubmit = async (e) => {
               </div>
             </div>
             
-            {agencies.length === 0 ? (
-              <div className="empty-state">
-                <p>No agencies registered yet.</p>
+{agencies.length === 0 ? (
+  <div className="empty-state">
+    <p>No agencies registered yet.</p>
+    <button 
+      className="secondary-button"
+      onClick={() => handleTabChange('add')}
+    >
+      Add Your First Agency
+    </button>
+  </div>
+) : (
+  <div className="agencies-table-container">
+    <table className="agencies-table">
+      <thead>
+        <tr>
+          <th>Agency Name</th>
+          <th>Country</th>
+          <th>City</th>
+          <th>Contact Person</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {agencies.map(agency => (
+          <tr key={agency.id} className={agency.status === 'Inactive' ? 'inactive' : ''}>
+            <td>{agency.agencyName}</td>
+            <td>{agency.country?.name || 'N/A'}</td>
+            <td>{agency.city?.name || 'N/A'}</td>
+            <td>{agency.firstName} {agency.lastName}</td>
+            <td>{agency.phoneNo}</td>
+            <td>{agency.emailId}</td>
+            <td>
+              <span className={`status-indicator ${agency.status === 'Active' ? 'active' : 'inactive'}`}>
+                {agency.status}
+              </span>
+            </td>
+            <td>
+              <div className="table-actions">
                 <button 
-                  className="secondary-button"
-                  onClick={() => handleTabChange('add')}
+                  className="action-btn view"
+                  onClick={() => openViewModal(agency)}
+                  title="View Details"
                 >
-                  Add Your First Agency
+                  View
+                </button>
+                <button 
+                  className="action-btn edit"
+                  onClick={() => openEditModal(agency)}
+                  title="Edit Agency"
+                >
+                  Edit
+                </button>
+                <button 
+                  className={`toggle-btn ${agency.status === 'Active' ? 'active' : 'inactive'}`}
+                  onClick={() => toggleAgencyStatus(agency.id)}
+                  title={`Mark as ${agency.status === 'Active' ? 'Inactive' : 'Active'}`}
+                >
+                  {agency.status === 'Active' ? 'Deactivate' : 'Activate'}
                 </button>
               </div>
-            ) : (
-              <div className="agencies-container">
-                {agencies.map(agency => (
-                  <div key={agency.id} className={`agency-card ${agency.status === 'Inactive' ? 'inactive' : ''}`}>
-                    <div className="agency-header">
-                      <h3>{agency.agencyName}</h3>
-                      <div className="status-toggle">
-                        <span className={`status-indicator ${agency.status === 'Active' ? 'active' : 'inactive'}`}>
-                          {agency.status}
-                        </span>
-                        <button 
-                          className={`toggle-btn ${agency.status === 'Active' ? 'active' : 'inactive'}`}
-                          onClick={() => toggleAgencyStatus(agency.id)}
-                          title={`Mark as ${agency.status === 'Active' ? 'Inactive' : 'Active'}`}
-                        >
-                          {agency.status === 'Active' ? 'Deactivate' : 'Activate'}
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="agency-details">
-                      <div className="detail-row">
-                        <span className="detail-label">Location:</span>
-                        <span className="detail-value">{agency.city?.name || 'N/A'}, {agency.country?.name|| 'N/A'}</span>
-                      </div>
-                      
-                      <div className="detail-row">
-                        <span className="detail-label">Contact:</span>
-                        <span className="detail-value">{agency.phoneNo}</span>
-                      </div>
-                      
-                      <div className="detail-row">
-                        <span className="detail-label">Main User:</span>
-                        <span className="detail-value">{agency.firstName} {agency.lastName}</span>
-                      </div>
-                      
-                      <div className="detail-row">
-                        <span className="detail-label">Status:</span>
-                        <span className={`detail-value status ${agency.status.toLowerCase()}`}>
-                          {agency.status}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="agency-actions">
-                      <button 
-                        className="action-btn view"
-                        onClick={() => openViewModal(agency)}
-                      >
-                        View Details
-                      </button>
-                      <button 
-                        className="action-btn edit"
-                        onClick={() => openEditModal(agency)}
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
           </div>
         )}
       </div>
