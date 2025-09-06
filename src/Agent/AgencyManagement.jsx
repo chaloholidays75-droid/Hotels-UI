@@ -813,7 +813,7 @@ const handleUserSubmit = async (e) => {
                     <div className="agency-details">
                       <div className="detail-row">
                         <span className="detail-label">Location:</span>
-                        <span className="detail-value">{agency.city?.name}, {agency.country.name}</span>
+                        <span className="detail-value">{agency.city?.name || 'N/A'}, {agency.country?.name|| 'N/A'}</span>
                       </div>
                       
                       <div className="detail-row">
