@@ -35,7 +35,7 @@ ChartJS.register(
   Filler
 );
 
-const API_BASE = "http://localhost:5039/api";
+const API_BASE = "https://hotels-8v0p.onrender.com/api";
 const API_STATS = `${API_BASE}/dashboard/stats`;
 const API_RECENT_ACTIVITIES = `${API_BASE}/dashboard/recent-activities`;
 const API_HOTELS_BY_COUNTRY = `${API_BASE}/dashboard/hotels-by-country`;
