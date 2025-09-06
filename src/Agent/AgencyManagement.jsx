@@ -59,7 +59,30 @@ const AgencyManagement = () => {
       checkPasswordStrength(value);
     }
   };
-
+  useEffect(() => {
+    if (activeTab === 'view') {
+      const fetchAgencies = async () => {
+        try {
+          const response = await fetch("https://hotels-8v0p.onrender.com/api/agency", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+          });
+          const data = await response.json();
+          console.log("Fetched agencies:", data);
+          if (response.ok) {
+            setAgencies(data); // Assuming data is an array of agencies
+          } else {
+            console.error("Failed to fetch agencies:", data);
+            alert("Failed to fetch agencies");
+          }
+        } catch (error) {
+          console.error("Error fetching agencies:", error);
+          alert("An error occurred while fetching agencies");
+        }
+      };
+      fetchAgencies();
+    }
+  }, [activeTab]);
   const handleEditChange = (e) => {
     const { name, value, type, checked } = e.target;
     setEditModal({
