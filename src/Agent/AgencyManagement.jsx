@@ -312,8 +312,8 @@ const handleUserSubmit = async (e) => {
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(agencies.map(agency => ({
       'Agency Name': agency.agencyName,
-      'Country': agency.country?.name,
-      'City': agency.city?.name,
+      'Country': agency.country?.name || 'N/A',
+      'City': agency.city?.name || 'N/A',
       'Post Code': agency.postCode,
       'Address': agency.address,
       'Phone': agency.phoneNo,
@@ -875,7 +875,7 @@ const handleUserSubmit = async (e) => {
                     </div>
                     <div className="detail-row">
                       <span className="detail-label">Address:</span>
-                      <span className="detail-value">{viewModal.agency.address}, {viewModal.agency.city?.name}, {viewModal.agency.country?.name} {viewModal.agency.postCode}</span>
+                      <span className="detail-value">{viewModal.agency.address}, {viewModal.agency.city?.name || ''}, {viewModal.agency.country?.name || ''} {viewModal.agency.postCode}</span>
                     </div>
                     <div className="detail-row">
                       <span className="detail-label">Phone:</span>
