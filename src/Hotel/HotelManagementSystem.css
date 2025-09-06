@@ -5,13 +5,14 @@
 
 /* Root container */
 .hms-hotel-management-system {
-  font-family: 'Inter', sans-serif;
+  
   background: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
   min-height: 100vh;
-  height: 100vh;
-  width: 100vw;
+  /* height: 100vh; */
+  /* width: 100vw; */
   /* color: #1f2a44; */
-  overflow-x: hidden;
+  /* overflow-x: hidden; */
+  border: 1px solid #342d5e;
 }
 
 /* Notification System */
@@ -87,7 +88,7 @@
 .hms-system-header {
   /* background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%); */
   color: #342d5e;
-  padding: 2rem 1rem;
+  padding: 1rem 1rem;
   /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
   /* position: relative; */
   /* overflow: hidden; */
@@ -109,13 +110,13 @@
 } */
 
 .hms-header-content {
-  max-width: 1800px;
+  /* max-width: 1800px; */
   margin: 0 auto;
   display: flex;
   /* margin-left: 45px; */
   flex-direction: row;
   justify-content: space-between;
-  gap: 25rem;
+  gap: 35rem;
   /* border: 1px solid #1f2a44; */
 }
 

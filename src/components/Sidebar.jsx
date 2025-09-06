@@ -23,21 +23,25 @@ const Sidebar = () => {
     });
   };
 
-  useEffect(() => {
-    document.body.classList.toggle('sb-collapsed', isCollapsed);
+  // useEffect(() => {
+  //   document.body.classList.toggle('sb-collapsed', isCollapsed);
     
     // Adjust page content based on sidebar state
-    const pageContent = document.querySelector('.page-content');
-    if (pageContent) {
-      if (isCollapsed) {
-        pageContent.style.marginLeft = '80px';
-        pageContent.style.width = 'calc(100% - 80px)';
-      } else {
-        pageContent.style.marginLeft = '250px';
-        pageContent.style.width = 'calc(100% - 250px)';
-      }
-    }
-  }, [isCollapsed]);
+  //   const pageContent = document.querySelector('.page-content');
+  //   if (pageContent) {
+  //     if (isCollapsed) {
+  //       pageContent.style.marginLeft = '80px';
+  //       pageContent.style.width = 'calc(100% - 80px)';
+  //     } else {
+  //       pageContent.style.marginLeft = '250px';
+  //       pageContent.style.width = 'calc(100% - 250px)';
+  //     }
+  //   }
+  // }, [isCollapsed]);
+  useEffect(() => {
+  document.body.classList.toggle('sb-collapsed', isCollapsed);
+}, [isCollapsed]);
+
 
   return (
     <>

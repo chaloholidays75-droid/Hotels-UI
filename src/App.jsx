@@ -6,6 +6,7 @@ import ResetPassword from './Login/ResetPassword';
 import HotelManagementSystem from './Hotel/HotelManagementSystem';
 import AgencyManagement from './Agent/AgencyManagement';
 import HotelSalesList from './Hotelextra/HotelSalesList';
+import Dashboard from './Pages/dashboard';
 import { useState, useEffect } from 'react';
 import { checkAuth } from './api';
 import './App.css';
@@ -17,7 +18,7 @@ function Layout({ children, userName, onLogout }) {
   return (
     <div className="app-container">
       <Sidebar userName={userName} onLogout={onLogout} />
-      <div className="main-content">
+      <div className="page-content">
         {children}
       </div>
     </div>
@@ -89,7 +90,16 @@ function App() {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
-                <HotelManagementSystem userName={userName} onLogout={handleLogout} />
+                <Dashboard userName={userName} onLogout={handleLogout} />
+              </Layout>
+            </ProtectedRoute>
+          }
+        /><Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Layout userName={userName} onLogout={handleLogout}>
+                <Dashboard userName={userName} onLogout={handleLogout} />
               </Layout>
             </ProtectedRoute>
           }

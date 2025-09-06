@@ -30,3 +30,65 @@
     margin-left: 0;
   }
 }
+/* Style for all dropdown options */
+
+/* Dropdown container styling */
+select {
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  font-size: 14px;
+  color: #333;
+  background-color: #fff;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+/* Focus state for select */
+select:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+/* Style for custom dropdown options (like in your LocationSelector) */
+.dropdown-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-option {
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  transition: all 0.2s ease;
+}
+
+.dropdown-option:hover {
+  background-color: #f0f7ff;
+  color: #0066cc;
+}
+
+.manual-option {
+  color: #007bff;
+  font-style: italic;
+}
+
+.manual-option:hover {
+  background-color: #e6f7ff;
+  color: #0066cc;
+}

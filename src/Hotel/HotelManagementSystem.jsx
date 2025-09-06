@@ -3,12 +3,17 @@ import StatsBar from '../components/statsbar';
 import AddHotelTab from './AddHotelTab';
 import HotelSalesList from './HotelSalesList';
 import { FaCheckCircle, FaTimesCircle, FaTimes } from 'react-icons/fa';
+import ViewHotelModal from './ViewHotelModal';
+import EditHotelModal from './EditHotelModal';
+import Modal from './Modal';
 import './HotelManagementSystem.css';
 
 // Main Component
 const HotelManagementSystem = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const [activeView, setActiveView] = useState('view');
+    const [editingHotel, setEditingHotel] = useState(null);
+    const [viewHotel, setViewHotel] = useState(null);
 
   const showNotification = useCallback((message, type) => {
     setNotification({ show: true, message, type });
@@ -16,7 +21,7 @@ const HotelManagementSystem = () => {
   }, []);
 
   return (
-    <div className="hms-page-content page-content">
+    <div className="hms-page-content ">
       {/* Notification System */}
       {notification.show && (
         <div className={`hms-notification ${notification.type}`}>
@@ -67,6 +72,19 @@ const HotelManagementSystem = () => {
         {activeView === 'add' && <AddHotelTab showNotification={showNotification} />}
         {activeView === 'view' && <HotelSalesList showNotification={showNotification} />}
       </main>
+       <Modal isOpen={!!viewHotel} onClose={() => setViewHotel(null)} title="Hotel Details" size="large">
+        <ViewHotelModal hotel={viewHotel} onClose={() => setViewHotel(null)} />
+      </Modal>
+      
+      <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel" size="large">
+        {editingHotel && (
+          <EditHotelModal
+            hotel={editingHotel}
+            onSave={saveHotel}
+            onCancel={() => setEditingHotel(null)}
+          />
+        )}
+      </Modal>
     </div>
   );
 };

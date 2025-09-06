@@ -44,7 +44,7 @@ body {
 
 .hsl-hotel-sales-list {
   padding: 24px;
-  max-width: 1400px;
+  /* max-width: 1400px; */
   margin: 0 auto;
 }
 
@@ -81,7 +81,7 @@ body {
   padding: 24px;
   margin-bottom: 24px;
   border: 1px solid var(--divider-color);
-  width: 88vw;
+
 }
 
 /* Controls section */

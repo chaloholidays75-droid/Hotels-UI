@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ContactRoleSection from './ContactRoleSection';
-import { FaBuilding, FaUserTie, FaInfoCircle, FaSave, FaTimes } from 'react-icons/fa';
+import { FaBuilding, FaUserTie, FaInfoCircle, FaSave, FaTimes , FaClipboardList ,FaMoneyCheckAlt ,  FaReceipt ,FaConciergeBell}  from 'react-icons/fa';
 
 const EditHotelModal = ({ hotel, onSave, onCancel }) => {
   const [formData, setFormData] = useState({

@@ -29,9 +29,11 @@ body:not(.sb-collapsed) {
   margin-left: var(--sb-width);
   width: calc(100% - var(--sb-width));
   transition: var(--sb-transition);
-  min-height: 100vh;
   padding: 20px;
+  min-height: 100vh; /* so it flows properly */
+  box-sizing: border-box;
 }
+
 
 /* Main Sidebar */
 .sb-sidebar {
