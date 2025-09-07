@@ -10,9 +10,9 @@ const Sidebar = () => {
   const location = useLocation();
 
   const menuItems = [
-    { id: 1, name: 'Dashboard', icon: <fml-icon name="analytics-outline"></fml-icon>, path: '/dashboard' },
-    { id: 2, name: 'Hotel', icon: <fml-icon name="pricetag-outline"></fml-icon>, path: '/hotel' },
-    { id: 3, name: 'Agency', icon: <fml-icon name="people-outline"></fml-icon>, path: '/agency' },
+    { id: 1, name: 'Dashboard', icon: <fml-icon name="analytics-outline"></fml-icon>, path: '/backend/product/dashboard' },
+    { id: 2, name: 'Hotel', icon: <fml-icon name="pricetag-outline"></fml-icon>, path: '/backend/product/hotel' },
+    { id: 3, name: 'Agency', icon: <fml-icon name="people-outline"></fml-icon>, path: '/backend/product/agency' },
   ];
 
   const toggleSidebar = () => {
