@@ -27,7 +27,7 @@ function Layout({ children, userName, onLogout }) {
 
 // Add the missing ProtectedRoute component
 function ProtectedRoute({ children, isAuthenticated }) {
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  return isAuthenticated ? children : <Navigate to="/backend/login" />;
 }
 
 function App() {
@@ -60,7 +60,7 @@ function App() {
     <Router>
       <Routes>
         <Route
-          path="/home"
+          path="/backend/product/home"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
@@ -95,7 +95,7 @@ function App() {
             </ProtectedRoute>
           }
         /><Route
-          path="/dashboard"
+          path="/backend/product/dashboard"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
@@ -105,7 +105,7 @@ function App() {
           }
         />
         <Route
-          path="/hotel"
+          path="/backend/product/hotel"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
@@ -115,7 +115,7 @@ function App() {
           }
         />
         <Route
-          path="/agency"
+          path="/backend/product/agency"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
@@ -125,7 +125,7 @@ function App() {
           }
         />
         <Route
-          path="/list"
+          path="/backend/product/list"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
