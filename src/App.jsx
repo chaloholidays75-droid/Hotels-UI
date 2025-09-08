@@ -128,7 +128,7 @@ function App() {
         />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot" element={<ForgotPassword />} />
-        <Route path="/reset" element={<ResetPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/backend/login" replace />} />
