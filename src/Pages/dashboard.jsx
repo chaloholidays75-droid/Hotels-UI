@@ -281,9 +281,9 @@ const Dashboard = ({ showNotification, onNavigate }) => {
     </div>
   );
 
-  const MetricCard = ({ title, value, change, icon, color }) => (
+  const MetricCard = ({ title, value, change, icon, backgroundColor, color, border  }) => (
     <div className="metric-card">
-      <div className="metric-icon" style={{ backgroundColor: color }}>
+      <div className="metric-icon" style={{ backgroundColor, color, border }}>
         {icon}
       </div>
       <div className="metric-content">
@@ -340,14 +340,18 @@ const Dashboard = ({ showNotification, onNavigate }) => {
           value={stats.totalHotels}
           change={12}
           icon={<FaHotel />}
-          color="#3498db"
+          backgroundColor=" rgb(232 246 255)"
+          color= "rgb(52, 152, 219)"
+          border=" 2px solid rgb(52, 152, 219)"
         />
         <MetricCard
           title="Total Agencies"
           value={stats.totalAgencies}
           change={8}
           icon={<FaBuilding />}
-          color="#2ecc71"
+          color=" rgb(46, 204, 113)"
+          backgroundColor=" rgb(221 255 235)"
+          border= " 2px solid rgb(46, 204, 113)"
         />
         <MetricCard
           title="Active Properties"
@@ -355,6 +359,8 @@ const Dashboard = ({ showNotification, onNavigate }) => {
           change={5}
           icon={<Activity size={20} />}
           color="#9b59b6"
+          backgroundColor="rgba(251, 241, 255, 1)"
+          border="2px solid rgb(155, 89, 182)"
         />
         <MetricCard
           title="Countries Covered"
@@ -362,6 +368,8 @@ const Dashboard = ({ showNotification, onNavigate }) => {
           change={3}
           icon={<Globe size={20} />}
           color="#e67e22"
+          backgroundColor="#fff9f4ff"
+          border="2px solid #e67e22"
         />
       </div>
 

@@ -1,0 +1,104 @@
+/* AgencyListSkeleton.css */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-title {
+  height: 32px;
+  width: 200px;
+  margin-bottom: 20px;
+}
+
+.skeleton-label {
+  height: 16px;
+  width: 60px;
+  margin-bottom: 8px;
+}
+
+.skeleton-select {
+  height: 36px;
+  width: 140px;
+}
+
+.skeleton-button {
+  height: 36px;
+  width: 120px;
+}
+
+.skeleton-text {
+  height: 16px;
+  width: 100px;
+}
+
+.skeleton-header-text {
+  height: 20px;
+  width: 80px;
+  margin: 0 auto;
+}
+
+.skeleton-checkbox {
+  height: 18px;
+  width: 18px;
+  margin: 0 auto;
+}
+
+.skeleton-hotel-name {
+  height: 18px;
+  width: 120px;
+  margin-bottom: 6px;
+}
+
+.skeleton-hotel-chain {
+  height: 14px;
+  width: 80px;
+}
+
+.skeleton-contact-count {
+  height: 14px;
+  width: 60px;
+  margin-bottom: 6px;
+}
+
+.skeleton-contact-preview {
+  height: 14px;
+  width: 90px;
+}
+
+.skeleton-icon-button {
+  height: 28px;
+  width: 28px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.skeleton-pagination-button {
+  height: 32px;
+  width: 80px;
+}
+
+.skeleton-pagination-number {
+  height: 32px;
+  width: 32px;
+  margin: 0 4px;
+  display: inline-block;
+}
+
+/* Adjust existing styles for skeleton */
+.hsl-search-box.skeleton {
+  height: 38px;
+  width: 100%;
+  border: none;
+}

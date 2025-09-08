@@ -59,7 +59,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route
+        {/* <Route
           path="/backend/product/home"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
@@ -84,7 +84,7 @@ function App() {
               </Layout>
             </ProtectedRoute>
           }
-        />
+        /> */}
         <Route
           path="/"
           element={
@@ -135,7 +135,7 @@ function App() {
           }
         />
         <Route
-          path="/login"
+          path="/backend/login"
           element={
             isAuthenticated ? (
               <Navigate to="/" />

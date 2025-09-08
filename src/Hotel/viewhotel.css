@@ -34,7 +34,7 @@
 }
 
 body {
-  font-family: var(--font-family);
+  /* font-family: "Aeonik" , sans-serif; */
   color: var(--text-primary);
  font-family: "poppins", sans-serif;
   margin: 0;
@@ -46,6 +46,7 @@ body {
   padding: 24px;
   /* max-width: 1400px; */
   margin: 0 auto;
+  border-radius: 50px;
 }
 
 /* Header styles */

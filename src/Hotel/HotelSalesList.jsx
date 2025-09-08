@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import ViewHotelModal from './ViewHotelModal';
 import EditHotelModal from './EditHotelModal';
+import HotelListSkeleton from '../components/HotelListSkeleton';
 import { 
   FaSearch, FaFilter, FaSortUp, FaSortDown, FaEye, 
   FaEdit, FaTrash, FaPlus, FaEllipsisV, FaTimes,
@@ -182,17 +183,15 @@ const fetchHotels = async () => {
   };
 
   if (loading) return (
-    <div className="hsl-loading-container">
-      <div className="hsl-spinner"></div>
-      <p>Loading hotels...</p>
-    </div>
+    <HotelListSkeleton rowCount={5} />
   );
 
   return (
     <div className="hsl-hotel-sales-list">
 
-
       <div className="hsl-card">
+      <h2 className="section-title" >Registered Hotels</h2>
+
         <div className="hsl-list-controls">
           <div className="hsl-search-filter-section">
             <div className="hsl-search-box">
@@ -466,19 +465,7 @@ const fetchHotels = async () => {
         )}
       </div>
       
-      <Modal isOpen={!!viewHotel} onClose={() => setViewHotel(null)} title="Hotel Details" size="large">
-        <ViewHotelModal hotel={viewHotel} onClose={() => setViewHotel(null)} />
-      </Modal>
-      
-      <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel" size="large">
-        {editingHotel && (
-          <EditHotelModal
-            hotel={editingHotel}
-            onSave={saveHotel}
-            onCancel={() => setEditingHotel(null)}
-          />
-        )}
-      </Modal>
+     
     </div>
   );
 };

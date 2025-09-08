@@ -783,7 +783,7 @@
   backdrop-filter: blur(10px);
 }
 
-.header-content h1 {
+/* .header-content h1 {
   color: #2c3e50;
   margin: 0 0 8px 0;
   font-weight: 800;
@@ -791,7 +791,7 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-}
+} */
 
 .header-content p {
   color: #6c757d;
@@ -887,6 +887,7 @@
   border-radius: 20px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
+  max-width: 100%;
 }
 
 .chart-header {
@@ -1189,9 +1190,6 @@
     grid-template-columns: 1fr;
   }
   
-  .charts-row {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 768px) {

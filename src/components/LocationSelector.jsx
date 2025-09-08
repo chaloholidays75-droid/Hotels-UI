@@ -3,33 +3,18 @@ import { FaChevronDown } from 'react-icons/fa';
 
 const API_BASE = "https://hotels-8v0p.onrender.com/api";
 
-const LocationSelector = ({ onCountrySelect, onCitySelect }) => {
+const LocationSelector = ({ onCountrySelect, onCitySelect, errors = {} }) => {
   const [countries, setCountries] = useState([]);
   const [citiesByCountry, setCitiesByCountry] = useState({});
-
   const [countrySearch, setCountrySearch] = useState("");
   const [citySearch, setCitySearch] = useState("");
-
   const [selectedCountryId, setSelectedCountryId] = useState(null);
-
   const [showCountryDropdown, setShowCountryDropdown] = useState(false);
   const [showCityDropdown, setShowCityDropdown] = useState(false);
-
   const [highlightedCountryIndex, setHighlightedCountryIndex] = useState(-1);
   const [highlightedCityIndex, setHighlightedCityIndex] = useState(-1);
-
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
-
-  // Close dropdowns on outside click
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (countryDropdownRef.current && !countryDropdownRef.current.contains(event.target)) setShowCountryDropdown(false);
-      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) setShowCityDropdown(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   // Fetch countries and cities
   useEffect(() => {
@@ -54,70 +39,46 @@ const LocationSelector = ({ onCountrySelect, onCitySelect }) => {
     ? (citiesByCountry[selectedCountryId]?.filter(c => c.name.toLowerCase().includes(citySearch.toLowerCase())) || [])
     : [];
 
-  // Selection handlers
   const handleCountrySelect = (name, id) => {
     setCountrySearch(name);
     setSelectedCountryId(id);
     setCitySearch("");
-    onCountrySelect?.(name, id);
+    if (onCountrySelect) onCountrySelect({ id, name });
     setShowCountryDropdown(false);
     setHighlightedCountryIndex(-1);
   };
+  useEffect(() => {
+  const match = countries.find(c => c.name.toLowerCase() === countrySearch.toLowerCase());
+  if (match) handleCountrySelect(match.name, match.id);
+}, [countrySearch]);
+
+useEffect(() => {
+  if (selectedCountryId) {
+    const match = (citiesByCountry[selectedCountryId] || [])
+      .find(c => c.name.toLowerCase() === citySearch.toLowerCase());
+    if (match) handleCitySelect(match.name, match.id);
+  }
+}, [citySearch, selectedCountryId]);
 
   const handleCitySelect = (name, id) => {
     setCitySearch(name);
-    onCitySelect?.(name, id);
+    if (onCitySelect) onCitySelect({ id, name });
     setShowCityDropdown(false);
     setHighlightedCityIndex(-1);
-  };
-
-  // Keyboard navigation
-  const handleCountryKeyDown = (e) => {
-    if (!showCountryDropdown) return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightedCountryIndex(prev => Math.min(prev + 1, filteredCountries.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightedCountryIndex(prev => Math.max(prev - 1, 0));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (highlightedCountryIndex >= 0) {
-        const country = filteredCountries[highlightedCountryIndex];
-        handleCountrySelect(country.name, country.id);
-      }
-    }
-  };
-
-  const handleCityKeyDown = (e) => {
-    if (!showCityDropdown) return;
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setHighlightedCityIndex(prev => Math.min(prev + 1, filteredCities.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setHighlightedCityIndex(prev => Math.max(prev - 1, 0));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (highlightedCityIndex >= 0) {
-        const city = filteredCities[highlightedCityIndex];
-        handleCitySelect(city.name, city.id);
-      }
-    }
   };
 
   return (
     <div className="location-selector">
       {/* Country */}
       <div className="form-group searchable-dropdown" ref={countryDropdownRef}>
-        <label>Country</label>
+        <label htmlFor="country" className="form-label required">Country</label>
         <input
           type="text"
           value={countrySearch}
           onChange={e => setCountrySearch(e.target.value)}
           onFocus={() => setShowCountryDropdown(true)}
-          onKeyDown={handleCountryKeyDown}
           placeholder="Search country..."
+          className={errors.country ? "form-input error" : "form-input"}
         />
         <FaChevronDown className="dropdown-chevron" onClick={() => setShowCountryDropdown(!showCountryDropdown)} />
         {showCountryDropdown && (
@@ -138,19 +99,20 @@ const LocationSelector = ({ onCountrySelect, onCitySelect }) => {
             )}
           </div>
         )}
+        {errors.country && <span className="error-message">{errors.country}</span>}
       </div>
 
       {/* City */}
       <div className="form-group searchable-dropdown" ref={cityDropdownRef}>
-        <label>City</label>
+        <label htmlFor="city" className="form-label required">City</label>
         <input
           type="text"
           value={citySearch}
           onChange={e => setCitySearch(e.target.value)}
           onFocus={() => setShowCityDropdown(true)}
-          onKeyDown={handleCityKeyDown}
           placeholder="Search city..."
           disabled={!selectedCountryId}
+          className={errors.city ? "form-input error" : "form-input"}
         />
         <FaChevronDown className="dropdown-chevron" onClick={() => selectedCountryId && setShowCityDropdown(!showCityDropdown)} />
         {showCityDropdown && selectedCountryId && (
@@ -171,6 +133,7 @@ const LocationSelector = ({ onCountrySelect, onCitySelect }) => {
             )}
           </div>
         )}
+        {errors.city && <span className="error-message">{errors.city}</span>}
       </div>
     </div>
   );

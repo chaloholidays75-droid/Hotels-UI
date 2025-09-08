@@ -358,9 +358,10 @@
 }
 
 .error-message {
-  background: #fed7d7;
+  /* background: #fed7d7; */
   color: #c53030;
   border-left: 4px solid #e53e3e;
+  padding-left: 12px;
 }
 
 .success-message {

@@ -57,7 +57,7 @@ function Register() {
           formData.email,
           formData.password
         );
-        navigate("/login");
+        navigate("/backend/login");
       } catch (err) {
         setErrors({
           general: "Registration failed: " + (err?.message || "Unknown error"),
@@ -231,7 +231,7 @@ function Register() {
               Already have an account?{" "}
               <Link
                 component={RouterLink}
-                to="/login"
+                to="/backend/login"
                 underline="hover"
                 sx={{ fontWeight: 600 }}
               >

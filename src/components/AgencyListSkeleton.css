@@ -1,0 +1,165 @@
+/* AgencyListSkeleton.css - Cleaner Version */
+/* .skeleton {
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    rgba(255, 255, 255, 0) 100%);
+  animation: subtle-pulse 2s ease-in-out infinite;
+} */
+/* Minimal static skeleton */
+.skeleton.static {
+  background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 50%, #f0f0f0 100%);
+  animation: none;
+}
+
+.skeleton.static::after {
+  display: none;
+}
+@keyframes subtle-pulse {
+  0% {
+    opacity: 0.3;
+    transform: translateX(-100%);
+  }
+  60% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0.3;
+    transform: translateX(100%);
+  }
+}
+
+/* Alternative: Even simpler fade animation */
+.skeleton.alternative {
+  animation: fade-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes fade-pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.skeleton-mode .ag-head {
+  margin-bottom: 20px;
+}
+
+.skeleton-title {
+  height: 32px;
+  width: 250px;
+  margin-bottom: 8px;
+}
+
+.skeleton-subtitle {
+  height: 16px;
+  width: 300px;
+}
+
+.skeleton-tab {
+  height: 40px;
+  width: 120px;
+  margin-right: 10px;
+}
+
+.skeleton-section-title {
+  height: 24px;
+  width: 200px;
+  margin-bottom: 20px;
+}
+
+.skeleton-button {
+  height: 36px;
+  width: 120px;
+  margin-left: 10px;
+}
+
+.skeleton-header-text {
+  height: 20px;
+  width: 80px;
+  margin: 0 auto;
+}
+
+.skeleton-text {
+  height: 16px;
+  width: 100px;
+}
+
+.skeleton-status {
+  height: 24px;
+  width: 60px;
+  border-radius: 12px;
+}
+
+.skeleton-action-button {
+  height: 28px;
+  width: 28px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+/* Form skeleton styles */
+.skeleton-step {
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+}
+
+.skeleton-label {
+  height: 16px;
+  width: 80px;
+  margin-bottom: 8px;
+}
+
+.skeleton-input {
+  height: 38px;
+  width: 100%;
+}
+
+.skeleton-select {
+  height: 38px;
+  width: 100%;
+}
+
+/* Adjust existing styles for skeleton */
+.agency-management-container.skeleton-mode .form-group {
+  margin-bottom: 20px;
+}
+
+.agency-management-container.skeleton-mode .form-row {
+  margin-bottom: 15px;
+}
+
+.agency-management-container.skeleton-mode .table-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Optional: Add a class to disable animation for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+  
+  .skeleton.alternative {
+    animation: none;
+    opacity: 0.7;
+  }
+}
