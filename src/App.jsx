@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Login from './Login/login';
 import Register from './Login/register';
 import ForgotPassword from './Login/ForgotPassword';
@@ -7,27 +8,24 @@ import HotelManagementSystem from './Hotel/HotelManagementSystem';
 import AgencyManagement from './Agent/AgencyManagement';
 import HotelSalesList from './Hotelextra/HotelSalesList';
 import Dashboard from './Pages/dashboard';
-import { useState, useEffect } from 'react';
 import { checkAuth } from './api';
-import './App.css';
 import Loader from './components/loader';
-import Sidebar from './components/Sidebar'; // Import your Sidebar component
+import Sidebar from './components/Sidebar';
+import './App.css';
 
-// Create a Layout component that includes the Sidebar
+// Layout for authenticated pages
 function Layout({ children, userName, onLogout }) {
   return (
     <div className="app-container">
       <Sidebar userName={userName} onLogout={onLogout} />
-      <div className="page-content">
-        {children}
-      </div>
+      <div className="page-content">{children}</div>
     </div>
   );
 }
 
-// Add the missing ProtectedRoute component
+// Protect routes
 function ProtectedRoute({ children, isAuthenticated }) {
-  return isAuthenticated ? children : <Navigate to="/backend/login" />;
+  return isAuthenticated ? children : <Navigate to="/backend/login" replace />;
 }
 
 function App() {
@@ -37,10 +35,16 @@ function App() {
 
   useEffect(() => {
     async function verifyAuth() {
-      const { isAuthenticated, userFullName } = await checkAuth();
-      setIsAuthenticated(isAuthenticated);
-      setUserName(userFullName);
-      setIsLoading(false);
+      try {
+        const { isAuthenticated, userFullName } = await checkAuth();
+        setIsAuthenticated(isAuthenticated);
+        setUserName(userFullName || null);
+      } catch {
+        setIsAuthenticated(false);
+        setUserName(null);
+      } finally {
+        setIsLoading(false);
+      }
     }
     verifyAuth();
   }, []);
@@ -59,47 +63,23 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* <Route
-          path="/backend/product/home"
-          element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
-                <div className="container">
-                  <h1>Welcome{userName ? `, ${userName}` : ''}!</h1>
-                  <nav>
-                    <ul style={{ listStyle: 'none', padding: 0 }}>
-                      <li>
-                        <Link to="/" style={{ color: '#007bff', textDecoration: 'none', marginRight: '10px' }}>
-                          Add Hotel Sale
-                        </Link>
-                      </li>
-                      <li>
-                        <Link to="/list" style={{ color: '#007bff', textDecoration: 'none', marginRight: '10px' }}>
-                          View Hotel Sales
-                        </Link>
-                      </li>
-                    </ul>
-                  </nav>
-                </div>
-              </Layout>
-            </ProtectedRoute>
-          }
-        /> */}
+        {/* Protected pages with sidebar */}
         <Route
           path="/"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
-                <Dashboard userName={userName} onLogout={handleLogout} />
+                <Dashboard userName={userName} />
               </Layout>
             </ProtectedRoute>
           }
-        /><Route
+        />
+        <Route
           path="/backend/product/dashboard"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
-                <Dashboard userName={userName} onLogout={handleLogout} />
+                <Dashboard userName={userName} />
               </Layout>
             </ProtectedRoute>
           }
@@ -109,7 +89,7 @@ function App() {
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
-                <HotelManagementSystem userName={userName} onLogout={handleLogout} />
+                <HotelManagementSystem />
               </Layout>
             </ProtectedRoute>
           }
@@ -134,11 +114,13 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* Auth routes WITHOUT sidebar */}
         <Route
           path="/backend/login"
           element={
             isAuthenticated ? (
-              <Navigate to="/" />
+              <Navigate to="/" replace />
             ) : (
               <Login setUserName={setUserName} setIsAuthenticated={setIsAuthenticated} />
             )
@@ -147,6 +129,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot" element={<ForgotPassword />} />
         <Route path="/reset" element={<ResetPassword />} />
+
+        {/* Catch-all */}
+        <Route path="*" element={<Navigate to="/backend/login" replace />} />
       </Routes>
     </Router>
   );
