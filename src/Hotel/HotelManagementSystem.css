@@ -6,15 +6,20 @@
 /* Root container */
 .hms-hotel-management-system {
   
-  background: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
   min-height: 100vh;
   /* height: 100vh; */
   /* width: 100vw; */
   /* color: #1f2a44; */
   /* overflow-x: hidden; */
   border: 1px solid #342d5e;
+  font-family: "Poppins",sans-serif;
 }
-
+.hms-page-content{
+  background: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
+  border-radius: 50px;
+  padding: 20px;
+  margin-top: -10px;
+}
 /* Notification System */
 .hms-notification {
   position: fixed;

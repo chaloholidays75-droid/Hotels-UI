@@ -42,14 +42,19 @@ body:not(.sb-collapsed) {
   left: 0;
   height: 100vh;
   width: var(--sb-width);
-  background: linear-gradient(to bottom, #ffffff, #f8f9fa);
-  border-right: 1px solid var(--sb-border);
+  /* background: linear-gradient(to bottom, #ffffff, #f8f9fa); */
+  /* border-right: 1px solid var(--sb-border); */
+  /* background-color: #7269ef; */
+  background-color: #03045e;
+  color: white;
   display: flex;
   flex-direction: column;
   transition: var(--sb-transition);
   z-index: 1000;
   overflow: hidden;
-  box-shadow: var(--sb-shadow);
+  /* box-shadow: var(--sb-shadow); */
+  /* border-bottom-right-radius: 50px;
+    border-start-end-radius: 30px; */
 }
 
 /* Sidebar Header */
@@ -58,7 +63,7 @@ body:not(.sb-collapsed) {
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem 1rem;
-  border-bottom: 1px solid var(--sb-border);
+  /* border-bottom: 1px solid var(--sb-border); */
   min-height: 4.5rem;
 }
 
@@ -89,8 +94,9 @@ body:not(.sb-collapsed) {
 .sb-logo-text {
   font-weight: 700;
   font-size: 1.50rem;
-  font-family: "poppins";
-  color: var(--sb-dark);
+   font-family: "Nunito" , sans-serif;
+
+  /* color: var(--sb-dark); */
   white-space: nowrap;
 }
 
@@ -110,7 +116,7 @@ body:not(.sb-collapsed) {
 
 .sb-toggle-btn:hover {
   background: white;
-  color: var(--sb-primary);
+  /* color: var(--sb-primary); */
   transform: rotate(360deg);
 }
 
@@ -139,7 +145,8 @@ body:not(.sb-collapsed) {
   justify-content: space-between;
   padding: 0.75rem 1rem;
   border-radius: var(--sb-radius);
-  color: var(--sb-secondary);
+  /* color: var(--sb-secondary); */
+  font-family: "poppins",sans-serif;
   text-decoration: none;
   transition: var(--sb-transition);
   position: relative;
@@ -153,7 +160,7 @@ body:not(.sb-collapsed) {
   left: -100%;
   width: 4px;
   height: 100%;
-  background: var(--sb-primary);
+  /* background: var(--sb-primary); */
   transition: var(--sb-transition);
   border-radius: 0 var(--sb-radius) var(--sb-radius) 0;
 }
@@ -169,8 +176,8 @@ body:not(.sb-collapsed) {
 
 .sb-sidebar-nav li.sb-active a {
   background-color: rgba(114, 105, 239, 0.1);
-  color: var(--sb-primary);
-  font-weight: 600;
+  /* color: var(--sb-primary); */
+  /* font-weight: 600; */
 }
 
 .sb-sidebar-nav li.sb-active a::before {
@@ -260,14 +267,14 @@ body:not(.sb-collapsed) {
 .sb-user-info h4 {
   margin: 0;
   font-size: 0.9rem;
-  color: var(--sb-dark);
+  /* color: var(--sb-dark); */
   font-weight: 600;
 }
 
 .sb-user-info p {
   margin: 0;
   font-size: 0.75rem;
-  color: var(--sb-secondary);
+  /* color: var(--sb-secondary); */
 }
 
 .sb-logout-btn {
@@ -276,7 +283,7 @@ body:not(.sb-collapsed) {
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-radius: var(--sb-radius);
-  color: var(--sb-secondary);
+  /* color: var(--sb-secondary); */
   text-decoration: none;
   transition: var(--sb-transition);
 }

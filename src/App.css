@@ -1,6 +1,8 @@
 .app-container {
   display: flex;
   min-height: 100vh;
+    background-color: #03045e;
+
 }
 
 .main-content {
@@ -91,4 +93,7 @@ select:focus {
 .manual-option:hover {
   background-color: #e6f7ff;
   color: #0066cc;
+}
+input[type="email"]{
+  text-transform: lowercase;
 }

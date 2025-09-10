@@ -20,6 +20,7 @@ import {
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { TrendingUp, Users, MapPin, Activity, Globe, Star } from 'lucide-react';
 import './Dashboard.css';
+import { borderRadius } from '@mui/system';
 
 // Register Chart.js components
 ChartJS.register(
@@ -63,32 +64,107 @@ const Dashboard = ({ showNotification, onNavigate }) => {
 
   
   // Chart options and data
-  const lineChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Monthly Performance',
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(255, 255, 255, 0.1)',
+const lineChartOptions = {
+  responsive: true,
+  plugins: {
+    legend: {
+      position: 'top',
+      labels: {
+        usePointStyle: true,
+        padding: 20,
+        font: {
+          size: 12,
+          family: "'Inter', sans-serif",
+          weight: '500'
         },
-      },
-      x: {
-        grid: {
-          color: 'rgba(255, 255, 255, 0.1)',
-        },
-      },
+        color: '#1a1a1a'
+      }
     },
-    maintainAspectRatio: false,
-  };
+    title: {
+      display: true,
+      text: 'Monthly Performance',
+      align: 'start',
+      font: {
+        size: 18,
+        family: "'Inter', sans-serif",
+        weight: '600'
+      },
+      padding: {
+        top: 0,
+        bottom: 20
+      },
+      color: '#1a1a1a'
+    },
+    tooltip: {
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      titleColor: '#1a1a1a',
+      bodyColor: '#1a1a1a',
+      borderColor: 'rgba(0, 0, 0, 0.1)',
+      borderWidth: 1,
+      padding: 12,
+      boxPadding: 6,
+      usePointStyle: true,
+      callbacks: {
+        label: function(context) {
+          return `${context.dataset.label}: ${context.parsed.y}`;
+        }
+      }
+    }
+  },
+  interaction: {
+    intersect: false,
+    mode: 'index',
+  },
+  elements: {
+    line: {
+      tension: 0.4,
+      borderWidth: 2,
+    },
+    point: {
+      radius: 4,
+      hoverRadius: 6,
+      borderWidth: 2,
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      grid: {
+        color: 'rgba(215, 215, 215, 0.2)',
+        drawBorder: false,
+      },
+      ticks: {
+        padding: 10,
+        font: {
+          size: 11,
+          family: "'Inter', sans-serif"
+        },
+        color: '#6b7280'
+      }
+    },
+    x: {
+      grid: {
+        color: 'rgba(204, 204, 204, 0.1)',
+        drawBorder: false,
+      },
+      ticks: {
+        padding: 10,
+        font: {
+          size: 11,
+          family: "'Inter', sans-serif"
+        },
+        color: '#6b7280'
+      }
+    },
+  },
+  maintainAspectRatio: false,
+  animations: {
+    tension: {
+      duration: 1000,
+      easing: 'linear'
+    }
+  }
+};
 
   const barChartOptions = {
     responsive: true,
@@ -195,27 +271,59 @@ const Dashboard = ({ showNotification, onNavigate }) => {
   }, []);
 
   // Prepare chart data
-  const lineChartData = {
-    labels: monthlyStats.map(stat => stat.month),
-    datasets: [
-      {
-        label: 'Hotels',
-        data: monthlyStats.map(stat => stat.hotels),
-        borderColor: 'rgb(75, 192, 192)',
-        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-        tension: 0.4,
-        fill: true,
+const lineChartData = {
+  labels: monthlyStats.map(stat => stat.month),
+  datasets: [
+    {
+      label: 'Hotels',
+      data: monthlyStats.map(stat => stat.hotels),
+      borderColor: 'rgba(79, 70, 229, 1)', // Modern indigo
+      backgroundColor: (context) => {
+        const chart = context.chart;
+        const {ctx, chartArea} = chart;
+        if (!chartArea) return null;
+        
+        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+        gradient.addColorStop(0, 'rgba(79, 70, 229, 0.1)');
+        gradient.addColorStop(0.7, 'rgba(79, 70, 229, 0.3)');
+        gradient.addColorStop(1, 'rgba(79, 70, 229, 0.5)');
+        return gradient;
       },
-      {
-        label: 'Agencies',
-        data: monthlyStats.map(stat => stat.agencies),
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        tension: 0.4,
-        fill: true,
+      pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+      pointBorderColor: '#ffffff',
+      pointBorderWidth: 2,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      tension: 0.4,
+      fill: true,
+      borderWidth: 3,
+    },
+    {
+      label: 'Agencies',
+      data: monthlyStats.map(stat => stat.agencies),
+      borderColor: 'rgba(220, 38, 38, 1)', // Modern red
+      backgroundColor: (context) => {
+        const chart = context.chart;
+        const {ctx, chartArea} = chart;
+        if (!chartArea) return null;
+        
+        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+        gradient.addColorStop(0, 'rgba(220, 38, 38, 0.1)');
+        gradient.addColorStop(0.7, 'rgba(220, 38, 38, 0.3)');
+        gradient.addColorStop(1, 'rgba(220, 38, 38, 0.5)');
+        return gradient;
       },
-    ],
-  };
+      pointBackgroundColor: 'rgba(220, 38, 38, 1)',
+      pointBorderColor: '#ffffff',
+      pointBorderWidth: 2,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      tension: 0.4,
+      fill: true,
+      borderWidth: 3,
+    },
+  ],
+};
 
   const barChartData = {
     labels: topCountries.slice(0, 5).map(country => country.countryName),
@@ -223,12 +331,15 @@ const Dashboard = ({ showNotification, onNavigate }) => {
       {
         label: 'Hotels',
         data: topCountries.slice(0, 5).map(country => country.hotelCount),
-        backgroundColor: 'rgba(91, 170, 223, 0.8)',
+        backgroundColor: 'rgba(13, 13, 110, 1)',
+        borderRadius: 5,
       },
       {
         label: 'Agencies',
         data: topCountries.slice(0, 5).map(country => country.agencyCount),
-        backgroundColor: 'rgba(255, 99, 132, 0.8)',
+        backgroundColor: 'rgba(208, 26, 26, 0.8)',
+        borderRadius: 5,
+
       },
     ],
   };
@@ -240,16 +351,16 @@ const Dashboard = ({ showNotification, onNavigate }) => {
         label: 'Distribution',
         data: [stats.totalHotels, stats.totalAgencies, stats.pendingApprovals],
         backgroundColor: [
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 99, 132, 0.8)',
+          'rgba(36, 36, 124, 1)',
+          'rgba(207, 25, 25, 0.8)',
           'rgba(255, 206, 86, 0.8)',
         ],
         borderColor: [
           'rgba(54, 162, 235, 1)',
-          'rgba(255, 99, 132, 1)',
+          'rgba(207, 25, 25, 0.8)',
           'rgba(255, 206, 86, 1)',
         ],
-        borderWidth: 2,
+        borderWidth: 1,
       },
     ],
   };
