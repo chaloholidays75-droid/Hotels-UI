@@ -1,10 +1,10 @@
 import axios from 'axios';
 
 // Hotel API base URL (unchanged)
-const API_BASE_HOTEL = 'https://hotels-8v0p.onrender.com/api/hotels';
+const API_BASE_HOTEL = 'https://backend.chaloholidayonline.com/api/hotels';
 
 // Auth API base URL (aligned with your .NET backend)
-const API_BASE = 'https://hotels-8v0p.onrender.com/api';
+const API_BASE = 'https://backend.chaloholidayonline.com/api';
 
 // Create Axios instance for auth-related calls
 const api = axios.create({

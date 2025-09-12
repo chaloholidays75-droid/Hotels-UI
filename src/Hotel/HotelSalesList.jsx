@@ -465,7 +465,25 @@ const fetchHotels = async () => {
         )}
       </div>
       
-     
+     {viewHotel && (
+  <ViewHotelModal
+    hotel={viewHotel}
+    onClose={() => setViewHotel(null)}
+  />
+)}
+
+{editingHotel && (
+  <>
+    {console.log("Opening edit modal for:", editingHotel)}
+    <EditHotelModal
+      hotel={editingHotel}
+      onSave={saveHotel}
+      onCancel={() => setEditingHotel(null)}
+    />
+  </>
+
+)}
+
     </div>
   );
 };

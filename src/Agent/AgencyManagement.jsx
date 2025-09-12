@@ -51,7 +51,7 @@ useEffect(() => {
     const fetchAgencies = async () => {
       setLoading(true);
       try {
-        const response = await fetch("https://hotels-8v0p.onrender.com/api/agency", {
+        const response = await fetch("https://backend.chaloholidayonline.com/api/agency", {
           method: "GET",
           headers: { "Content-Type": "application/json" }
         });
@@ -102,7 +102,7 @@ useEffect(() => {
     if (activeTab === 'view') {
       const fetchAgencies = async () => {
         try {
-          const response = await fetch("https://hotels-8v0p.onrender.com/api/agency", {
+          const response = await fetch("https://backend.chaloholidayonline.com/api/agency", {
             method: "GET",
             headers: { "Content-Type": "application/json" }
           });
@@ -287,7 +287,7 @@ const handleUserSubmit = async (e) => {
   console.log("Sending to backend:", newAgency);
 
   try {
-    const response = await fetch("https://hotels-8v0p.onrender.com/api/agency", {
+    const response = await fetch("https://backend.chaloholidayonline.com/api/agency", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newAgency)
@@ -439,7 +439,7 @@ const handleEditSubmit = async (e) => {
   
   try {
     const res = await fetch(
-      `https://hotels-8v0p.onrender.com/api/agency/${editModal.agency.id}`,
+      `https://backend.chaloholidayonline.com/api/agency/${editModal.agency.id}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },

@@ -4,6 +4,9 @@ import {
   FaSync, FaEye, FaPlus, FaExclamationTriangle,
   FaGlobe, FaExclamationCircle, FaArrowUp, FaArrowDown
 } from 'react-icons/fa';
+import { Pie, Line, Bar, Doughnut } from 'react-chartjs-2';
+import 'chartjs-adapter-date-fns';
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,9 +18,9 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  TimeScale
 } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { TrendingUp, Users, MapPin, Activity, Globe, Star } from 'lucide-react';
 import './Dashboard.css';
 import { borderRadius } from '@mui/system';
@@ -30,13 +33,14 @@ ChartJS.register(
   LineElement,
   BarElement,
   ArcElement,
+  TimeScale,
   Title,
   Tooltip,
   Legend,
   Filler
 );
 
-const API_BASE = "https://hotels-8v0p.onrender.com/api";
+const API_BASE = "https://backend.chaloholidayonline.com/api";
 const API_STATS = `${API_BASE}/dashboard/stats`;
 const API_RECENT_ACTIVITIES = `${API_BASE}/dashboard/recent-activities`;
 const API_HOTELS_BY_COUNTRY = `${API_BASE}/dashboard/hotels-by-country`;
@@ -45,6 +49,7 @@ const API_TOP_COUNTRIES = `${API_BASE}/dashboard/top-countries`;
 const API_MONTHLY_STATS = `${API_BASE}/dashboard/monthly-stats`;
 
 const Dashboard = ({ showNotification, onNavigate }) => {
+  
   const [stats, setStats] = useState({
     totalHotels: 0,
     totalAgencies: 0,
@@ -62,135 +67,214 @@ const Dashboard = ({ showNotification, onNavigate }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  
   // Chart options and data
-const lineChartOptions = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: 'top',
-      labels: {
-        usePointStyle: true,
-        padding: 20,
+  const lineChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 12,
+            family: "'Inter', sans-serif",
+            weight: '500'
+          },
+          color: '#1a1a1a'
+        }
+      },
+      title: {
+        display: true,
+        text: 'Monthly Performance',
+        align: 'start',
         font: {
-          size: 12,
+          size: 18,
           family: "'Inter', sans-serif",
-          weight: '500'
+          weight: '600'
+        },
+        padding: {
+          top: 0,
+          bottom: 20
         },
         color: '#1a1a1a'
-      }
-    },
-    title: {
-      display: true,
-      text: 'Monthly Performance',
-      align: 'start',
-      font: {
-        size: 18,
-        family: "'Inter', sans-serif",
-        weight: '600'
       },
-      padding: {
-        top: 0,
-        bottom: 20
-      },
-      color: '#1a1a1a'
-    },
-    tooltip: {
-      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-      titleColor: '#1a1a1a',
-      bodyColor: '#1a1a1a',
-      borderColor: 'rgba(0, 0, 0, 0.1)',
-      borderWidth: 1,
-      padding: 12,
-      boxPadding: 6,
-      usePointStyle: true,
-      callbacks: {
-        label: function(context) {
-          return `${context.dataset.label}: ${context.parsed.y}`;
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#1a1a1a',
+        bodyColor: '#1a1a1a',
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 1,
+        padding: 12,
+        boxPadding: 6,
+        usePointStyle: true,
+        callbacks: {
+          label: function(context) {
+            return `${context.dataset.label}: ${context.parsed.y}`;
+          }
         }
       }
-    }
-  },
-  interaction: {
-    intersect: false,
-    mode: 'index',
-  },
-  elements: {
-    line: {
-      tension: 0.4,
-      borderWidth: 2,
     },
-    point: {
-      radius: 4,
-      hoverRadius: 6,
-      borderWidth: 2,
-    }
-  },
-  scales: {
-    y: {
-      beginAtZero: true,
-      grid: {
-        color: 'rgba(215, 215, 215, 0.2)',
-        drawBorder: false,
+    interaction: {
+      intersect: false,
+      mode: 'index',
+    },
+    elements: {
+      line: {
+        tension: 0.4,
+        borderWidth: 2,
       },
-      ticks: {
-        padding: 10,
-        font: {
-          size: 11,
-          family: "'Inter', sans-serif"
-        },
-        color: '#6b7280'
+      point: {
+        radius: 4,
+        hoverRadius: 6,
+        borderWidth: 2,
       }
     },
-    x: {
-      grid: {
-        color: 'rgba(204, 204, 204, 0.1)',
-        drawBorder: false,
-      },
-      ticks: {
-        padding: 10,
-        font: {
-          size: 11,
-          family: "'Inter', sans-serif"
+    scales: {
+      y: {
+        beginAtZero: false,
+        grid: {
+          color: 'rgba(215, 215, 215, 0.2)',
+          drawBorder: false,
         },
-        color: '#6b7280'
-      }
+        ticks: {
+          padding: 10,
+          font: {
+            size: 11,
+            family: "'Inter', sans-serif"
+          },
+          color: '#6b7280'
+        }
+      },
+      x: {
+         type: 'time',          // <-- important
+        time: {
+          unit: 'month',
+          tooltipFormat: 'MMM yyyy',
+          displayFormats: {
+            month: 'MMM yyyy'
+          }
+        },
+        grid: {
+          color: 'rgba(204, 204, 204, 0.1)',
+          drawBorder: false,
+        },
+        ticks: {
+          padding: 10,
+          font: {
+            size: 11,
+            family: "'Inter', sans-serif"
+          },
+          color: '#6b7280'
+        }
+      },
     },
-  },
-  maintainAspectRatio: false,
-  animations: {
-    tension: {
-      duration: 1000,
-      easing: 'linear'
+    maintainAspectRatio: false,
+    animations: {
+      tension: {
+        duration: 3000,
+        easing: 'linear'
+      }
     }
-  }
-};
+  };
 
   const barChartOptions = {
     responsive: true,
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 12,
+            family: "'Inter', sans-serif",
+            weight: '500'
+          },
+          color: '#1a1a1a'
+        }
       },
       title: {
         display: true,
         text: 'Hotels vs Agencies by Country',
+        align: 'start',
+        font: {
+          size: 18,
+          family: "'Inter', sans-serif",
+          weight: '600'
+        },
+        padding: {
+          top: 0,
+          bottom: 20
+        },
+        color: '#1a1a1a'
       },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#1a1a1a',
+        bodyColor: '#1a1a1a',
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 1,
+        padding: 12,
+        boxPadding: 6,
+        usePointStyle: true,
+        callbacks: {
+          label: function(context) {
+            return `${context.dataset.label}: ${context.parsed.y}`;
+          }
+        }
+      }
+    },
+    interaction: {
+      intersect: false,
+      mode: 'index',
     },
     scales: {
       y: {
         beginAtZero: true,
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)',
+          color: 'rgba(215, 215, 215, 0.2)',
+          drawBorder: false,
         },
+        ticks: {
+          padding: 10,
+          font: {
+            size: 11,
+            family: "'Inter', sans-serif"
+          },
+          color: '#6b7280'
+        }
       },
       x: {
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)',
+          color: 'rgba(204, 204, 204, 0.1)',
+          drawBorder: false,
         },
+        ticks: {
+          padding: 10,
+          font: {
+            size: 11,
+            family: "'Inter', sans-serif"
+          },
+          color: '#6b7280'
+        }
       },
     },
     maintainAspectRatio: false,
+    datasets: {
+      bar: {
+        borderRadius: 6,
+        borderSkipped: false,
+        categoryPercentage: 0.8,
+        barPercentage: 0.9,
+      }
+    },
+    animations: {
+      numbers: {
+        duration: 1000,
+        easing: 'easeOutQuart'
+      }
+    }
   };
 
   const doughnutOptions = {
@@ -198,9 +282,306 @@ const lineChartOptions = {
     plugins: {
       legend: {
         position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 12,
+            family: "'Inter', sans-serif",
+            weight: '500'
+          },
+          color: '#1a1a1a'
+        }
       },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#1a1a1a',
+        bodyColor: '#1a1a1a',
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 1,
+        padding: 12,
+        boxPadding: 6,
+        usePointStyle: true,
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.parsed || 0;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${label}: ${value} (${percentage}%)`;
+          }
+        }
+      }
+    },
+    cutout: '65%',
+    radius: '90%',
+    animation: {
+      animateScale: true,
+      animateRotate: true,
+      duration: 1000,
+      easing: 'easeOutQuart'
     },
     maintainAspectRatio: false,
+  };
+
+  const pieData = {
+    labels: ['Hotels', 'Agencies', 'Pending'],
+    datasets: [
+      {
+        label: 'Distribution',
+        data: [stats.totalHotels, stats.totalAgencies, stats.pendingApprovals],
+        backgroundColor: [
+          'rgba(79, 70, 229, 0.85)',
+          'rgba(217, 70, 239, 0.85)',
+          'rgba(234, 179, 8, 0.85)',
+        ],
+        borderColor: [
+          'rgba(79, 70, 229, 1)',
+          'rgba(220, 38, 38, 1)',
+          'rgba(245, 158, 11, 1)',
+        ],
+        borderWidth: 2,
+        borderJoinStyle: 'round',
+        hoverBackgroundColor: [
+          'rgba(67, 56, 202, 0.9)',
+          'rgba(185, 28, 28, 0.9)',
+          'rgba(217, 119, 6, 0.9)',
+        ],
+        hoverBorderColor: [
+          'rgba(79, 70, 229, 1)',
+          'rgba(220, 38, 38, 1)',
+          'rgba(245, 158, 11, 1)',
+        ],
+        hoverBorderWidth: 3,
+        hoverOffset: 8,
+      },
+    ],
+  };
+
+  const pieOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 12,
+            family: "'Inter', sans-serif",
+            weight: '500'
+          },
+          color: '#1a1a1a'
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        titleColor: '#1a1a1a',
+        bodyColor: '#1a1a1a',
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 1,
+        padding: 12,
+        boxPadding: 6,
+        usePointStyle: true,
+        callbacks: {
+          label: function(context) {
+            const label = context.label || '';
+            const value = context.parsed || 0;
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${label}: ${value} (${percentage}%)`;
+          }
+        }
+      }
+    },
+    radius: '90%',
+    animation: {
+      animateScale: true,
+      animateRotate: true,
+      duration: 1000,
+      easing: 'easeOutQuart'
+    },
+    maintainAspectRatio: false,
+  };
+
+  const doughnutData = {
+    labels: ['Hotels', 'Agencies', 'Pending'],
+    datasets: [
+      {
+        label: 'Distribution',
+        data: [stats.totalHotels, stats.totalAgencies, stats.pendingApprovals],
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.9)',
+          'rgba(139, 92, 246, 0.9)',
+          'rgba(245, 158, 11, 0.9)',
+        ],
+        borderColor: [
+          'rgba(59, 130, 246, 1)',
+          'rgba(139, 92, 246, 1)',
+          'rgba(245, 158, 11, 1)',
+        ],
+        borderWidth: 0,
+        hoverBackgroundColor: [
+          'rgba(37, 99, 235, 0.95)',
+          'rgba(124, 58, 237, 0.95)',
+          'rgba(217, 119, 6, 0.95)',
+        ],
+        hoverBorderColor: [
+          'rgba(59, 130, 246, 1)',
+          'rgba(139, 92, 246, 1)',
+          'rgba(245, 158, 11, 1)',
+        ],
+        hoverBorderWidth: 2,
+        hoverOffset: 5,
+      },
+    ],
+  };
+
+  // Custom plugin to display percentages inside doughnut segments
+  const doughnutSegmentLabels = {
+    id: 'doughnutSegmentLabels',
+    afterDraw(chart) {
+      const { ctx, chartArea: { width, height } } = chart;
+      
+      chart.data.datasets.forEach((dataset, i) => {
+        const meta = chart.getDatasetMeta(i);
+        
+        meta.data.forEach((element, index) => {
+          const total = dataset.data.reduce((a, b) => a + b, 0);
+          const percentage = Math.round((dataset.data[index] / total) * 100);
+          
+          const { x, y } = element.tooltipPosition();
+          
+          ctx.save();
+          ctx.font = 'bold 14px Inter';
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${percentage}%`, x, y);
+          ctx.restore();
+        });
+      });
+    }
+  };
+  const monthMap = {
+  Jan: "Jan", January: "Jan",
+  Feb: "Feb", February: "Feb",
+  Mar: "Mar", March: "Mar",
+  Apr: "Apr", April: "Apr",
+  May: "May",
+  Jun: "Jun", June: "Jun",
+  Jul: "Jul", July: "Jul",
+  Aug: "Aug", August: "Aug",
+  Sep: "Sep", Sept: "Sep", September: "Sep",   // <-- Fix here
+  Oct: "Oct", October: "Oct",
+  Nov: "Nov", November: "Nov",
+  Dec: "Dec", December: "Dec",
+};
+  
+  const lineChartData = {
+  labels: monthlyStats.map(stat => {
+    const [rawMonth, year] = stat.month.split(" "); // e.g. "Sept", "2025"
+    const shortMonth = monthMap[rawMonth] || rawMonth.substring(0, 3);
+    return new Date(`${shortMonth} 01, ${year}`);
+  }),
+    datasets: [
+      {
+        label: 'Hotels',
+        data: monthlyStats.map(stat => stat.hotels),
+         pointRadius: monthlyStats.map(stat => stat.hotels === 0 ? 3 : 6),
+        borderColor: 'rgba(79, 70, 229, 1)',
+        backgroundColor: (context) => {
+          const chart = context.chart;
+          const {ctx, chartArea} = chart;
+          if (!chartArea) return null;
+          
+          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+          gradient.addColorStop(0, 'rgba(79, 70, 229, 0.1)');
+          gradient.addColorStop(0.7, 'rgba(79, 70, 229, 0.3)');
+          gradient.addColorStop(1, 'rgba(79, 70, 229, 0.5)');
+          return gradient;
+        },
+        pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 7,
+        fill: true,
+        
+        borderWidth: 3,
+      },
+      {
+        label: 'Agencies',
+        data: monthlyStats.map(stat => stat.agencies),
+         pointRadius: monthlyStats.map(stat => stat.agencies === 0 ? 3 : 6),
+        borderColor: 'rgba(220, 38, 38, 1)',
+        backgroundColor: (context) => {
+          const chart = context.chart;
+          const {ctx, chartArea} = chart;
+          if (!chartArea) return null;
+          
+          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+          gradient.addColorStop(0, 'rgba(220, 38, 38, 0.1)');
+          gradient.addColorStop(0.7, 'rgba(220, 38, 38, 0.3)');
+          gradient.addColorStop(1, 'rgba(220, 38, 38, 0.5)');
+          return gradient;
+        },
+        pointBackgroundColor: 'rgba(220, 38, 38, 1)',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 6,
+        tension: 0.4,
+        spanGaps:true,
+        fill: true,
+        borderWidth: 3,
+      },
+    ],
+  };
+
+  const barChartData = {
+    labels: topCountries.slice(0, 5).map(country => country.countryName),
+    datasets: [
+      {
+        label: 'Hotels',
+        data: topCountries.slice(0, 5).map(country => country.hotelCount),
+        backgroundColor: (context) => {
+          const chart = context.chart;
+          const {ctx, chartArea} = chart;
+          if (!chartArea) return 'rgba(79, 70, 229, 0.8)';
+          
+          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+          gradient.addColorStop(0, 'rgba(79, 70, 229, 0.8)');
+          gradient.addColorStop(1, 'rgba(67, 56, 202, 0.9)');
+          return gradient;
+        },
+        borderColor: 'rgba(79, 70, 229, 1)',
+        borderWidth: 0,
+        borderRadius: 6,
+        borderSkipped: false,
+        hoverBackgroundColor: 'rgba(67, 56, 202, 0.9)',
+      },
+      {
+        label: 'Agencies',
+        data: topCountries.slice(0, 5).map(country => country.agencyCount),
+        backgroundColor: (context) => {
+          const chart = context.chart;
+          const {ctx, chartArea} = chart;
+          if (!chartArea) return 'rgba(220, 38, 38, 0.8)';
+          
+          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+          gradient.addColorStop(0, 'rgba(220, 38, 38, 0.8)');
+          gradient.addColorStop(1, 'rgba(185, 28, 28, 0.9)');
+          return gradient;
+        },
+        borderColor: 'rgba(220, 38, 38, 1)',
+        borderWidth: 0,
+        borderRadius: 6,
+        borderSkipped: false,
+        hoverBackgroundColor: 'rgba(185, 28, 28, 0.9)',
+      },
+    ],
   };
 
   const fetchDashboardData = async () => {
@@ -251,6 +632,7 @@ const lineChartOptions = {
 
       if (monthlyStatsRes.status === 'fulfilled' && monthlyStatsRes.value.ok) {
         const monthlyStatsData = await monthlyStatsRes.value.json();
+          console.log("Raw API response:", monthlyStatsData);  
         setMonthlyStats(monthlyStatsData);
       }
 
@@ -269,101 +651,6 @@ const lineChartOptions = {
   useEffect(() => {
     fetchDashboardData();
   }, []);
-
-  // Prepare chart data
-const lineChartData = {
-  labels: monthlyStats.map(stat => stat.month),
-  datasets: [
-    {
-      label: 'Hotels',
-      data: monthlyStats.map(stat => stat.hotels),
-      borderColor: 'rgba(79, 70, 229, 1)', // Modern indigo
-      backgroundColor: (context) => {
-        const chart = context.chart;
-        const {ctx, chartArea} = chart;
-        if (!chartArea) return null;
-        
-        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-        gradient.addColorStop(0, 'rgba(79, 70, 229, 0.1)');
-        gradient.addColorStop(0.7, 'rgba(79, 70, 229, 0.3)');
-        gradient.addColorStop(1, 'rgba(79, 70, 229, 0.5)');
-        return gradient;
-      },
-      pointBackgroundColor: 'rgba(79, 70, 229, 1)',
-      pointBorderColor: '#ffffff',
-      pointBorderWidth: 2,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      tension: 0.4,
-      fill: true,
-      borderWidth: 3,
-    },
-    {
-      label: 'Agencies',
-      data: monthlyStats.map(stat => stat.agencies),
-      borderColor: 'rgba(220, 38, 38, 1)', // Modern red
-      backgroundColor: (context) => {
-        const chart = context.chart;
-        const {ctx, chartArea} = chart;
-        if (!chartArea) return null;
-        
-        const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-        gradient.addColorStop(0, 'rgba(220, 38, 38, 0.1)');
-        gradient.addColorStop(0.7, 'rgba(220, 38, 38, 0.3)');
-        gradient.addColorStop(1, 'rgba(220, 38, 38, 0.5)');
-        return gradient;
-      },
-      pointBackgroundColor: 'rgba(220, 38, 38, 1)',
-      pointBorderColor: '#ffffff',
-      pointBorderWidth: 2,
-      pointRadius: 4,
-      pointHoverRadius: 6,
-      tension: 0.4,
-      fill: true,
-      borderWidth: 3,
-    },
-  ],
-};
-
-  const barChartData = {
-    labels: topCountries.slice(0, 5).map(country => country.countryName),
-    datasets: [
-      {
-        label: 'Hotels',
-        data: topCountries.slice(0, 5).map(country => country.hotelCount),
-        backgroundColor: 'rgba(13, 13, 110, 1)',
-        borderRadius: 5,
-      },
-      {
-        label: 'Agencies',
-        data: topCountries.slice(0, 5).map(country => country.agencyCount),
-        backgroundColor: 'rgba(208, 26, 26, 0.8)',
-        borderRadius: 5,
-
-      },
-    ],
-  };
-
-  const doughnutData = {
-    labels: ['Hotels', 'Agencies', 'Pending'],
-    datasets: [
-      {
-        label: 'Distribution',
-        data: [stats.totalHotels, stats.totalAgencies, stats.pendingApprovals],
-        backgroundColor: [
-          'rgba(36, 36, 124, 1)',
-          'rgba(207, 25, 25, 0.8)',
-          'rgba(255, 206, 86, 0.8)',
-        ],
-        borderColor: [
-          'rgba(54, 162, 235, 1)',
-          'rgba(207, 25, 25, 0.8)',
-          'rgba(255, 206, 86, 1)',
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
 
   const StatCard = ({ title, value, icon, color, trend, subtitle }) => (
     <div className={`dashboard-stat-card ${color}`}>
@@ -429,9 +716,10 @@ const lineChartData = {
       </button>
     </div>
   );
+// console.log("Monthly stats:", monthlyStats);
+// console.log("Labels:", lineChartData.labels);
 
   return (
-    
     <div className="dashboard-container ">
       <div className="dashboard-header">
         <div className="header-content">
@@ -495,7 +783,11 @@ const lineChartData = {
               <span className="chart-subtitle">Last 6 months</span>
             </div>
             <div className="chart-container">
+            {monthlyStats.length > 0 ? (
               <Line data={lineChartData} options={lineChartOptions} />
+            ) : (
+              <p>Loading chart...</p>
+            )}
             </div>
           </div>
 
@@ -506,7 +798,7 @@ const lineChartData = {
                 <h3>Distribution Overview</h3>
               </div>
               <div className="chart-container">
-                <Doughnut data={doughnutData} options={doughnutOptions} />
+                <Pie data={pieData} options={pieOptions} />
               </div>
             </div>
 

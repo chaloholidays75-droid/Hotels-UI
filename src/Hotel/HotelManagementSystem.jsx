@@ -72,19 +72,7 @@ const HotelManagementSystem = () => {
         {activeView === 'add' && <AddHotelTab showNotification={showNotification} />}
         {activeView === 'view' && <HotelSalesList showNotification={showNotification} />}
       </main>
-       <Modal isOpen={!!viewHotel} onClose={() => setViewHotel(null)} title="Hotel Details" size="large">
-        <ViewHotelModal hotel={viewHotel} onClose={() => setViewHotel(null)} />
-      </Modal>
-      
-      <Modal isOpen={!!editingHotel} onClose={() => setEditingHotel(null)} title="Edit Hotel" size="large">
-        {editingHotel && (
-          <EditHotelModal
-            hotel={editingHotel}
-            onSave={saveHotel}
-            onCancel={() => setEditingHotel(null)}
-          />
-        )}
-      </Modal>
+
     </div>
   );
 };
