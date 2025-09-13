@@ -8,7 +8,7 @@ import {
   FaCheckCircle, FaExclamationTriangle
 } from 'react-icons/fa';
 
-const API_BASE = "https://hotels-8v0p.onrender.com/api";
+const API_BASE = "https://backend.chaloholidayonline.com/api";
 const API_BASE_HOTEL = `${API_BASE}/hotels`;
 import './addhotel.css'
 
