@@ -813,7 +813,7 @@ const Dashboard = ({ showNotification, onNavigate }) => {
             </div>
           </div>
 
-          {/* Quick Actions */}
+{/*           {/* Quick Actions */}
           <div className="quick-actions-section">
             <h2>Quick Actions</h2>
             <div className="quick-actions-grid">
@@ -842,8 +842,8 @@ const Dashboard = ({ showNotification, onNavigate }) => {
                 onClick={() => showNotification("Analytics feature coming soon!", "info")}
               />
             </div>
-          </div>
-        </div>
+          </div>*/}
+        </div> 
 
         {/* Right Column - Sidebar */}
         <div className="dashboard-sidebar">
