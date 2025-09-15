@@ -10,9 +10,9 @@ import {
 } from 'react-icons/fa';
 import './viewhotel.css';
 
-const API_BASE_HOTEL = "https://hotels-8v0p.onrender.com/api/hotels";
-const API_BASE_COUNTRIES = "https://hotels-8v0p.onrender.com/api/countries";
-const API_BASE_CITIES = "https://hotels-8v0p.onrender.com/api/cities/by-country";
+const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+const API_BASE_COUNTRIES = "https://backend.chaloholidayonline.com/api/countries";
+const API_BASE_CITIES = "https://backend.chaloholidayonline.com/api/cities/by-country";
 
 const HotelSalesList = ({ showNotification }) => {
   const [hotels, setHotels] = useState([]);
@@ -31,8 +31,8 @@ const HotelSalesList = ({ showNotification }) => {
 
   const itemsPerPage = 10;
 
-const API_BASE_HOTEL = "https://hotels-8v0p.onrender.com/api/hotels";
-const API_BASE_CITIES = "https://hotels-8v0p.onrender.com/api/cities/by-country";
+const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+const API_BASE_CITIES = "https://backend.chaloholidayonline.com/api/cities/by-country";
 
 
 
