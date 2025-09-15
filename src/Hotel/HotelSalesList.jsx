@@ -1,20 +1,28 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import ViewHotelModal from './ViewHotelModal';
 import EditHotelModal from './EditHotelModal';
 import HotelListSkeleton from '../components/HotelListSkeleton';
-import { FixedSizeList} from 'react-window';
+import { FixedSizeList as List } from 'react-window';
 import { 
   FaSearch, FaSortUp, FaSortDown, FaEye, FaEdit, FaTrash, FaTimes, FaCheckCircle 
 } from 'react-icons/fa';
 import './viewhotel.css';
 
-const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
-const API_BASE_COUNTRIES = "https://backend.chaloholidayonline.com/api/countries";
-const API_BASE_CITIES = "https://backend.chaloholidayonline.com/api/cities/by-country";
+const manualHotels = [
+  { id: 1, hotelName: "Sunrise Resort", country: "India", city: "Delhi", salesPersons: [{ name: "John" }] },
+  { id: 2, hotelName: "Ocean View", country: "India", city: "Mumbai", salesPersons: [{ name: "Alice" }] },
+  { id: 3, hotelName: "Mountain Retreat", country: "Nepal", city: "Kathmandu", salesPersons: [{ name: "Bob" }] },
+  { id: 4, hotelName: "City Lodge", country: "USA", city: "New York", salesPersons: [{ name: "Charlie" }] },
+  { id: 5, hotelName: "Lakeside Inn", country: "Canada", city: "Toronto", salesPersons: [{ name: "Eve" }] },
+  { id: 6, hotelName: "Desert Oasis", country: "UAE", city: "Dubai", salesPersons: [{ name: "Zara" }] },
+  { id: 7, hotelName: "Forest Haven", country: "Brazil", city: "Rio", salesPersons: [{ name: "Marco" }] },
+  { id: 8, hotelName: "Skyline Hotel", country: "Japan", city: "Tokyo", salesPersons: [{ name: "Yuki" }] },
+  { id: 9, hotelName: "Harbor View", country: "Australia", city: "Sydney", salesPersons: [{ name: "Olivia" }] },
+  { id: 10, hotelName: "Seaside Retreat", country: "Spain", city: "Barcelona", salesPersons: [{ name: "Luis" }] }
+];
 
 const HotelSalesList = ({ showNotification }) => {
-  const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [hotels, setHotels] = useState(manualHotels);
   const [editingHotel, setEditingHotel] = useState(null);
   const [viewHotel, setViewHotel] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -25,103 +33,31 @@ const HotelSalesList = ({ showNotification }) => {
   const [selectedHotels, setSelectedHotels] = useState([]);
   const [bulkAction, setBulkAction] = useState('');
 
-  // Fetch hotels and associated country/city names
-  const fetchHotels = async () => {
-    setLoading(true);
-    try {
-      const [hotelRes, countryRes] = await Promise.all([
-        fetch(API_BASE_HOTEL),
-        fetch(API_BASE_COUNTRIES)
-      ]);
-      if (!hotelRes.ok || !countryRes.ok) throw new Error("Failed to fetch data");
-      const [hotelData, countryData] = await Promise.all([hotelRes.json(), countryRes.json()]);
-
-      // Fetch cities per country
-      const uniqueCountryIds = [...new Set(hotelData.map(h => h.countryId))];
-      const cityPromises = uniqueCountryIds.map(id =>
-        fetch(`${API_BASE_CITIES}/${id}`).then(res => res.json())
-      );
-      const citiesData = (await Promise.all(cityPromises)).flat();
-
-      const countryMap = new Map(countryData.map(c => [c.id, c.name]));
-      const cityMap = new Map(citiesData.map(c => [c.id, c.name]));
-
-      const adjustedData = hotelData.map(hotel => ({
-        ...hotel,
-        country: countryMap.get(hotel.countryId) || "Unknown",
-        city: cityMap.get(hotel.cityId) || "Unknown",
-        salesPersons: hotel.salesPersons?.length ? hotel.salesPersons : hotel.salesPersonName ? [{ name: hotel.salesPersonName }] : [],
-        reservationPersons: hotel.reservationPersons?.length ? hotel.reservationPersons : hotel.reservationPersonName ? [{ name: hotel.reservationPersonName }] : [],
-      }));
-
-      setHotels(adjustedData);
-    } catch (err) {
-      console.error(err);
-      showNotification(`Error fetching hotels: ${err.message}`, "error");
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchHotels();
-  }, []);
-
-  // Delete functions
-  const deleteHotel = async (id) => {
+  const deleteHotel = (id) => {
     if (!window.confirm("Are you sure you want to delete this hotel?")) return;
-    try {
-      await fetch(`${API_BASE_HOTEL}/${id}`, { method: "DELETE" });
-      setHotels(prev => prev.filter(h => h.id !== id));
-      showNotification("Hotel deleted successfully!", "success");
-    } catch (err) {
-      console.error(err);
-      showNotification("Error deleting hotel", "error");
-    }
+    setHotels(prev => prev.filter(h => h.id !== id));
+    showNotification && showNotification("Hotel deleted successfully!", "success");
   };
 
-  const deleteMultipleHotels = async () => {
+  const deleteMultipleHotels = () => {
     if (!selectedHotels.length || !window.confirm(`Delete ${selectedHotels.length} hotels?`)) return;
-    try {
-      await Promise.all(selectedHotels.map(id => fetch(`${API_BASE_HOTEL}/${id}`, { method: "DELETE" })));
-      setHotels(prev => prev.filter(h => !selectedHotels.includes(h.id)));
-      setSelectedHotels([]);
-      setBulkAction('');
-      showNotification(`${selectedHotels.length} hotels deleted successfully!`, "success");
-    } catch (err) {
-      console.error(err);
-      showNotification("Error deleting hotels", "error");
-    }
+    setHotels(prev => prev.filter(h => !selectedHotels.includes(h.id)));
+    setSelectedHotels([]);
+    setBulkAction('');
+    showNotification && showNotification(`${selectedHotels.length} hotels deleted successfully!`, "success");
   };
 
-  const saveHotel = async (hotel) => {
-    try {
-      await fetch(`${API_BASE_HOTEL}/${hotel.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(hotel),
-      });
-      setEditingHotel(null);
-      fetchHotels();
-      showNotification("Hotel updated successfully!", "success");
-    } catch (err) {
-      console.error(err);
-      showNotification("Error updating hotel", "error");
-    }
-  };
-
-  // Sorting
   const handleSort = (field) => {
     if (sortField === field) setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     else { setSortField(field); setSortDirection('asc'); }
   };
 
-  // Memoized filtered & sorted hotels for performance
   const filteredHotels = useMemo(() => {
     return [...hotels]
       .filter(h => 
-        (h.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        h.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        h.country?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        (h.hotelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        h.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        h.country.toLowerCase().includes(searchTerm.toLowerCase())) &&
         (filterCountry ? h.country === filterCountry : true) &&
         (filterCity ? h.city === filterCity : true)
       )
@@ -134,8 +70,8 @@ const HotelSalesList = ({ showNotification }) => {
       });
   }, [hotels, searchTerm, filterCountry, filterCity, sortField, sortDirection]);
 
-  const countries = useMemo(() => [...new Set(hotels.map(h => h.country).filter(Boolean))], [hotels]);
-  const cities = useMemo(() => [...new Set(hotels.map(h => h.city).filter(Boolean))], [hotels]);
+  const countries = useMemo(() => [...new Set(hotels.map(h => h.country))], [hotels]);
+  const cities = useMemo(() => [...new Set(hotels.map(h => h.city))], [hotels]);
 
   const toggleSelectHotel = (id) => {
     setSelectedHotels(prev => prev.includes(id) ? prev.filter(h => h !== id) : [...prev, id]);
@@ -144,8 +80,6 @@ const HotelSalesList = ({ showNotification }) => {
     if (selectedHotels.length === filteredHotels.length) setSelectedHotels([]);
     else setSelectedHotels(filteredHotels.map(h => h.id));
   };
-
-  if (loading) return <HotelListSkeleton rowCount={5} />;
 
   // Virtualized Row
   const Row = ({ index, style }) => {
@@ -228,7 +162,7 @@ const HotelSalesList = ({ showNotification }) => {
       </div>
 
       {viewHotel && <ViewHotelModal hotel={viewHotel} onClose={() => setViewHotel(null)} />}
-      {editingHotel && <EditHotelModal hotel={editingHotel} onSave={saveHotel} onCancel={() => setEditingHotel(null)} />}
+      {editingHotel && <EditHotelModal hotel={editingHotel} onSave={(h) => { setHotels(prev => prev.map(p => p.id === h.id ? h : p)); setEditingHotel(null); }} onCancel={() => setEditingHotel(null)} />}
     </div>
   );
 };
