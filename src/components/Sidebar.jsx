@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './sidebar.css';
 
-const Sidebar = ({ userName = "User Name",role= "admin", onLogout }) => {
+const Sidebar = ({ userName = "user.firstName",role= "admin", onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('sidebarCollapsed') === 'true';
   });
@@ -90,7 +90,7 @@ const Sidebar = ({ userName = "User Name",role= "admin", onLogout }) => {
           </div>
           {!isCollapsed && (
             <div className="sb-user-info">
-              <h4>{userName}</h4>
+              <h4>{FirstName}</h4>
               <p>{role}</p>
             </div>
           )}
