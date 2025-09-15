@@ -9,6 +9,7 @@ import AgencyManagement from './Agent/AgencyManagement';
 import Dashboard from './Pages/dashboard';
 import { checkAuth } from './api';
 import Loader from './components/loader';
+import HotelSalesList from './Hotel/HotelSalesList';
 import Sidebar from './components/Sidebar';
 import './App.css';
 
