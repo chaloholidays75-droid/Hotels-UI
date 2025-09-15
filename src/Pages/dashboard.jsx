@@ -813,8 +813,8 @@ const Dashboard = ({ showNotification, onNavigate }) => {
             </div>
           </div>
 
-{/*           {/* Quick Actions */}
-          <div className="quick-actions-section">
+           {/* Quick Actions */}
+{/*          <div className="quick-actions-section">
             <h2>Quick Actions</h2>
             <div className="quick-actions-grid">
               <QuickAction
