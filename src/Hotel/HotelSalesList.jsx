@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import ViewHotelModal from './ViewHotelModal';
 import EditHotelModal from './EditHotelModal';
 import HotelListSkeleton from '../components/HotelListSkeleton';
-import { FixedSizeList as List } from 'react-window';
+import { FixedSizeList} from 'react-window';
 import { 
   FaSearch, FaSortUp, FaSortDown, FaEye, FaEdit, FaTrash, FaTimes, FaCheckCircle 
 } from 'react-icons/fa';
