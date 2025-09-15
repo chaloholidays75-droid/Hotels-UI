@@ -6,7 +6,6 @@ import ForgotPassword from './Login/ForgotPassword';
 import ResetPassword from './Login/ResetPassword';
 import HotelManagementSystem from './Hotel/HotelManagementSystem';
 import AgencyManagement from './Agent/AgencyManagement';
-import HotelSalesList from './Hotelextra/HotelSalesList';
 import Dashboard from './Pages/dashboard';
 import { checkAuth } from './api';
 import Loader from './components/loader';
