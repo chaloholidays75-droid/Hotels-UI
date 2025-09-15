@@ -5,6 +5,7 @@ import {
   FaGlobe, FaExclamationCircle, FaArrowUp, FaArrowDown
 } from 'react-icons/fa';
 import { Pie, Line, Bar, Doughnut } from 'react-chartjs-2';
+import { useNavigate } from 'react-router-dom';
 import 'chartjs-adapter-date-fns';
 
 import {
@@ -49,7 +50,7 @@ const API_TOP_COUNTRIES = `${API_BASE}/dashboard/top-countries`;
 const API_MONTHLY_STATS = `${API_BASE}/dashboard/monthly-stats`;
 
 const Dashboard = ({ showNotification, onNavigate }) => {
-  
+    const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalHotels: 0,
     totalAgencies: 0,
@@ -820,19 +821,19 @@ const Dashboard = ({ showNotification, onNavigate }) => {
                 title="Manage Hotels"
                 icon={<fml-icon name="business-outline"></fml-icon>}
                 description="View and manage all hotel properties"
-                onClick={() => onNavigate('./hotel')}
+                onClick={() => onNavigate('/backend/product/list')}
               />
               <QuickAction
                 title="Manage Agencies"
                 icon={<FaBuilding />}
                 description="View and manage agency partners"
-                onClick={() => onNavigate('./agencies')}
+                onClick={() => onNavigate('/backend/product/agency')}
               />
               <QuickAction
                 title="Add New Property"
                 icon={<fml-icon name="add-outline"></fml-icon>}
                 description="Register a new hotel property"
-                onClick={() => onNavigate('add-hotel')}
+                onClick={() => onNavigate('/backend/product/list')}
               />
               <QuickAction
                 title="Analytics Report"
