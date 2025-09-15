@@ -1,8 +1,9 @@
+i want to show first name is this able to show firstname
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './sidebar.css';
 
-const Sidebar = ({ userName = "user.firstName",role= "admin", onLogout }) => {
+const Sidebar = ({ userName = "User Name",role= "admin", onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('sidebarCollapsed') === 'true';
   });
