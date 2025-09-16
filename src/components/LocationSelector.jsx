@@ -227,7 +227,7 @@ const LocationSelector = ({ onCountrySelect, onCitySelect, errors = {} }) => {
               citySearch
             )
           }
-          placeholder="Search city..."
+          placeholder="Search city.."
           disabled={!selectedCountry}
           className={errors.city ? "form-input error" : "form-input"}
         />
