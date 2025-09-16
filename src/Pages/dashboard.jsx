@@ -531,7 +531,7 @@ const Dashboard = ({ showNotification, onNavigate }) => {
         pointBackgroundColor: 'rgba(220, 38, 38, 1)',
         pointBorderColor: '#ffffff',
         pointBorderWidth: 2,
-        pointRadius: 3,
+        
         pointHoverRadius: 6,
         tension: 0.4,
         spanGaps:true,
