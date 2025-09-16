@@ -1,24 +1,353 @@
-import React, { useState } from 'react';
-import AgencyAdd from './AgencyAdd';
-import AgencyList from './AgencyList';
-import AgencyViewModal from './AgencyViewModal';
-import AgencyEditModal from './AgencyEditModal';
+import React, { useState , useEffect } from 'react';
+import * as XLSX from 'xlsx';
+import LocationSelector from '../components/LocationSelector';
 import './AgencyManagement.css';
+import AgencyListSkeleton from '../components/AgencyListSkeleton';
 
 const AgencyManagement = () => {
-  const [activeTab, setActiveTab] = useState('add');
+  const [activeTab, setActiveTab] = useState('view');
+  const [currentPage, setCurrentPage] = useState('agency'); // 'agency' or 'user'
   const [agencies, setAgencies] = useState([]);
   const [viewModal, setViewModal] = useState({ isOpen: false, agency: null });
   const [editModal, setEditModal] = useState({ isOpen: false, agency: null });
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    agencyName: '',
+    country: '',
+    city: '',
+    postCode: '',
+    address: '',
+    website: '',
+    phoneNo: '',
+    emailId: '',
+    businessCurrency: 'USD',
+    title: '',
+    firstName: '',
+    lastName: '',
+    userEmailId: '',
+    designation: '',
+    mobileNo: '',
+    userName: '',
+    password: '',
+    confirmPassword: '',
+    acceptTerms: false
+  });
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
+  const [errors, setErrors] = useState({});
+  const [passwordStrength, setPasswordStrength] = useState('');
+  const [showNotification, setShowNotification] = useState('');
+
+const handleTabChange = (tab) => {
+  setActiveTab(tab);
+  if (tab === 'add') {
+    setCurrentPage('agency'); // Reset to first page of form when switching to add tab
+  }
+};
+
+useEffect(() => {
+  if (activeTab === 'view') {
+    const fetchAgencies = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("https://backend.chaloholidayonline.com/api/agency", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" }
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+          // Transform the data to match frontend expectations
+          const transformedAgencies = data.map(agency => ({
+            ...agency,
+            status: agency.isActive ? 'Active' : 'Inactive'
+          }));
+          setAgencies(transformedAgencies);
+        } else {
+          console.error("Failed to fetch agencies:", data);
+          alert("Failed to fetch agencies");
+        }
+      } catch (error) {
+        console.error("Error fetching agencies:", error);
+        alert("An error occurred while fetching agencies");
+      } finally{
+        setLoading(false);
+      }
+    };
+    fetchAgencies();
+  }
+}, [activeTab]);
+
+  
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value
+    });
+
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: ''
+      });
+    }
+
+    if (name === 'password') {
+      checkPasswordStrength(value);
+    }
   };
+  useEffect(() => {
+    if (activeTab === 'view') {
+      const fetchAgencies = async () => {
+        try {
+          const response = await fetch("https://backend.chaloholidayonline.com/api/agency", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+          });
+          const data = await response.json();
+          console.log("Fetched agencies:", data);
+          if (response.ok) {
+            setAgencies(data); // Assuming data is an array of agencies
+          } else {
+            console.error("Failed to fetch agencies:", data);
+            alert("Failed to fetch agencies");
+          }
+        } catch (error) {
+          console.error("Error fetching agencies:", error);
+          alert("An error occurred while fetching agencies");
+        }
+      };
+      fetchAgencies();
+    }
+  }, [activeTab]);
+  const handleEditChange = (e) => {
+    const { name, value, type, checked } = e.target;
+
+  console.log("Editing field:", name, "Value:", value);
+    setEditModal({
+      ...editModal,
+      agency: {
+        ...editModal.agency,
+        [name]: type === 'checkbox' ? checked : value
+      }
+    });
+  };
+
+  const checkPasswordStrength = (password) => {
+    let strength = '';
+    if (password.length === 0) {
+      strength = '';
+    } else if (password.length < 8) {
+      strength = 'Weak (min 8 characters)';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(password)) {
+      strength = 'Medium (add uppercase, lowercase, and numbers)';
+    } else {
+      strength = 'Strong';
+    }
+    setPasswordStrength(strength);
+  };
+
+  const handleLocationChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const validateEmail = (email) => {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+  };
+
+  const validateEmails = (emails) => {
+    if (!emails) return true;
+    const emailList = emails.split(',');
+    for (let email of emailList) {
+      if (email.trim() && !validateEmail(email.trim())) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const validatePhone = (phone) => {
+    const re = /^[+]?[0-9]{8,15}$/;
+    return re.test(phone);
+  };
+
+  const validateAgencyForm = () => {
+    let formErrors = {};
+
+    // Agency Details validation
+    if (!formData.agencyName) formErrors.agencyName = 'Agency name is required';
+    if (!formData.countryId) formErrors.country = 'Country is required';
+    if (!formData.cityId) formErrors.city = 'City is required';
+    if (!formData.postCode) formErrors.postCode = 'Post code is required';
+    if (!formData.emailId) formErrors.postCode = 'emailID is required';
+    if (!formData.address) formErrors.address = 'Address is required';
+    if (!formData.phoneNo) {
+      formErrors.phoneNo = 'Phone number is required';
+    } else if (!validatePhone(formData.phoneNo)) {
+      formErrors.phoneNo = 'Please enter a valid phone number';
+    }
+    
+    if (!formData.emailId) {
+      formErrors.emailId = 'Email ID is required';
+    } else if (!validateEmails(formData.emailId)) {
+      formErrors.emailId = 'Please enter valid email addresses separated by commas';
+    }
+
+
+    setErrors(formErrors);
+    return Object.keys(formErrors).length === 0;
+  };
+
+  const validateUserForm = () => {
+    let formErrors = {};
+
+    // Main User Details validation
+    if (!formData.firstName) formErrors.firstName = 'First name is required';
+    if (!formData.lastName) formErrors.lastName = 'Last name is required';
+    
+    if (!formData.userEmailId) {
+      formErrors.userEmailId = 'Email is required';
+    } else if (!validateEmail(formData.userEmailId)) {
+      formErrors.userEmailId = 'Please enter a valid email address';
+    }
+    
+    if (!formData.designation) formErrors.designation = 'Designation is required';
+    
+    if (!formData.mobileNo) {
+      formErrors.mobileNo = 'Mobile number is required';
+    } else if (!validatePhone(formData.mobileNo)) {
+      formErrors.mobileNo = 'Please enter a valid mobile number';
+    }
+    
+    if (!formData.userName) formErrors.userName = 'Username is required';
+    
+    if (!formData.password) {
+      formErrors.password = 'Password is required';
+    } else if (formData.password.length < 8) {
+      formErrors.password = 'Password must be at least 8 characters';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(formData.password)) {
+      formErrors.password = 'Password must contain uppercase, lowercase, and numbers';
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      formErrors.confirmPassword = 'Passwords do not match';
+    }
+    
+    if (!formData.acceptTerms) formErrors.acceptTerms = 'You must accept the terms and conditions';
+
+    setErrors(formErrors);
+    return Object.keys(formErrors).length === 0;
+  };
+const handleAgencyNext = (e) => {
+  e.preventDefault();
+  console.log('Submitting user form with data:', formData);
+
+  if (validateAgencyForm()) {
+    setCurrentPage('user');
+  }
+};
+
+const handleUserSubmit = async (e) => {
+  e.preventDefault();
+  console.log('Submitting user form with data:', formData);
+
+  if (!validateUserForm()) return;
+
+  const newAgency = {
+    agencyName: formData.agencyName,
+    countryId: formData.countryId,
+    cityId: formData.cityId,
+    postCode: formData.postCode,
+    address: formData.address,
+    website: formData.website,
+    phoneNo: formData.phoneNo,
+    emailId: formData.emailId,
+    businessCurrency: formData.businessCurrency,
+    title: formData.title,
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    userEmailId: formData.userEmailId,
+    designation: formData.designation,
+    mobileNo: formData.mobileNo,
+    userName: formData.userName,
+    password: formData.password,
+    acceptTerms: formData.acceptTerms
+  };
+
+  console.log("Sending to backend:", newAgency);
+
+  try {
+    const response = await fetch("https://backend.chaloholidayonline.com/api/agency", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newAgency)
+    });
+
+    const data = await response.json();
+    console.log("Response from backend:", data);
+
+    if (!response.ok) {
+      if (data.errors) {
+        console.error("Validation Errors:", data.errors);
+
+        // Optional: set frontend errors state
+        // setErrors(data.errors);
+      }
+
+      alert(data.title || "Failed to register agency");
+      return;
+    }
+
+    // Success
+    setAgencies([...agencies, data]);  // safer than mixing formData
+    setPasswordStrength('');
+    setCurrentPage('agency');
+    setActiveTab('view');
+    alert('Agency registered successfully!');
+
+    // Reset form
+    setFormData({
+      agencyName: '',
+      countryId: '',
+      cityId: '',
+      postCode: '',
+      address: '',
+      website: '',
+      phoneNo: '',
+      emailId: '',
+      businessCurrency: 'USD',
+      title: '',
+      firstName: '',
+      lastName: '',
+      userEmailId: '',
+      designation: '',
+      mobileNo: '',
+      userName: '',
+      password: '',
+      acceptTerms: false
+    });
+
+  } catch (error) {
+    console.error("Error submitting to backend:", error);
+    alert("An error occurred while registering the agency");
+  }
+};
+
 
   const toggleAgencyStatus = (id) => {
     setAgencies(agencies.map(agency => 
       agency.id === id 
-        ? {...agency, status: agency.status === 'Active' ? 'Inactive' : 'Active'} 
+        ? {...agency,isActive: !agency.isActive ,  status: agency.isActive ? 'Inactive' : 'Active'} 
         : agency
     ));
   };
@@ -31,23 +360,226 @@ const AgencyManagement = () => {
     setViewModal({ isOpen: false, agency: null });
   };
 
-  const openEditModal = (agency) => {
-    setEditModal({ isOpen: true, agency: { ...agency } });
+const openEditModal = (agency) => {
+  console.log("Agency country:", agency.country);
+  console.log("Agency city:", agency.city);
+  console.log("Country ID:", agency.country?.id);
+  console.log("City ID:", agency.city?.id);
+    const editAgency = {
+    ...agency,
+    countryId: agency.country?.id || null,
+    cityId: agency.city?.id || null
   };
+  
+  console.log("Edit agency with IDs:", editAgency);
+  console.log("Edit agency countryId:", editAgency.countryId);
+  console.log("Edit agency cityId:", editAgency.cityId);
+  setEditModal({
+    isOpen: true,
+    agency: editAgency
+    
+  });
+};
+  if (loading) {
+    return <AgencyListSkeleton rowCount={5} mode={activeTab === 'view' ? 'table' : 'form'} />;
+  }
 
   const closeEditModal = () => {
     setEditModal({ isOpen: false, agency: null });
   };
+  // Add this function to parse errors more effectively
+const parseErrorMessage = (error) => {
+  if (error.response?.data) {
+    return error.response.data.message || JSON.stringify(error.response.data);
+  }
+  return error.message || "An unknown error occurred";
+};
+// Add validation for IDs before making the request
 
-  const handleEditSubmit = (updatedAgency) => {
-    setAgencies(agencies.map(agency => 
-      agency.id === updatedAgency.id ? updatedAgency : agency
-    ));
-    closeEditModal();
+
+const handleEditSubmit = async (e) => {
+  e.preventDefault();
+  if (!editModal.agency) return;
+
+  if (!editModal.agency.id || isNaN(editModal.agency.id)) {
+    alert("Invalid agency ID");
+    return;
+  }
+  
+  console.log("Agency before submit:", editModal.agency);
+  
+  const countryId = editModal.agency.countryId || editModal.agency.country?.id || 0;
+  const cityId = editModal.agency.cityId || editModal.agency.city?.id || 0;
+  
+  console.log("Final countryId:", countryId);
+  console.log("Final cityId:", cityId);
+  console.log("Parsed countryId:", countryId);
+  console.log("Parsed cityId:", cityId);
+  
+  // Ensure IDs are numbers, not strings
+  const payload = {
+    ...editModal.agency,
+    countryId: parseInt(countryId), // Convert to integer
+    cityId: parseInt(cityId)        // Convert to integer
+  };
+  
+  delete payload.country;
+  delete payload.city;
+
+  console.log("Final payload:", payload);
+
+  // Remove any undefined or null values that might cause issues
+  Object.keys(payload).forEach(key => {
+    if (payload[key] === undefined || payload[key] === null) {
+      delete payload[key];
+    }
+  });
+  
+  console.log("Final payload being sent:", payload);
+  
+  try {
+    const res = await fetch(
+      `https://backend.chaloholidayonline.com/api/agency/${editModal.agency.id}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (res.ok) {
+      // Handle empty response (common with 204 No Content)
+      const contentLength = res.headers.get('content-length');
+      let updated;
+      
+      if (contentLength && parseInt(contentLength) > 0) {
+        updated = await res.json();
+      } else {
+        // If empty response, use the payload we sent
+        updated = {
+          ...payload,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      
+      // Update UI
+      setAgencies(prev =>
+        prev.map(a =>
+          a.id === updated.id
+            ? { ...updated, country: editModal.agency.country, city: editModal.agency.city }
+            : a
+        )
+      );
+
+      alert("Agency updated successfully!");
+      closeEditModal();
+    } else {
+      // Handle error response
+      let errorData;
+      try {
+        errorData = await res.json();
+      } catch {
+        errorData = { message: await res.text() || 'Unknown error' };
+      }
+      
+      console.error("Update failed:", errorData);
+      alert(`Failed to update agency: ${errorData.message || 'Unknown error'}`);
+    }
+  } catch (error) {
+    const message = parseErrorMessage(error);
+    console.error("Error details:", error);
+    console.error("Update payload:", payload);
+    alert(`Error: ${message}`);
+  }
+};
+
+
+
+
+
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(agencies.map(agency => ({
+      'Agency Name': agency.agencyName,
+      'Country': agency.country?.name || 'N/A',
+      'City': agency.city?.name || 'N/A',
+      'Post Code': agency.postCode,
+      'Address': agency.address,
+      'Phone': agency.phoneNo,
+      'Email': agency.emailId,
+      'Currency': agency.businessCurrency,
+      'Contact Person': `${agency.firstName} ${agency.lastName}`,
+      'Designation': agency.designation,
+      'User Email': agency.userEmailId,
+      'Mobile': agency.mobileNo,
+      'Status': agency.status,
+      'Registered On': agency.createdAt
+    })));
+    
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Agencies');
+    XLSX.writeFile(workbook, 'agencies.xlsx');
+  };
+
+  const printAgencies = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Agencies List</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .status-active { color: green; font-weight: bold; }
+            .status-inactive { color: red; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h1>Agencies List</h1>
+          <table>
+            <thead>
+              <tr>
+                <th>Agency Name</th>
+                <th>Country</th>
+                <th>City</th>
+                <th>Contact Person</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${agencies.map(agency => `
+                <tr>
+                  <td>${agency.agencyName}</td>
+                  <td>${agency.country}</td>
+                  <td>${agency.city}</td>
+                  <td>${agency.firstName} ${agency.lastName}</td>
+                  <td>${agency.phoneNo}</td>
+                  <td>${agency.emailId}</td>
+                  <td class="status-${agency.status.toLowerCase()}">${agency.status}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <p style="margin-top: 20px; text-align: center;">
+            Generated on ${new Date().toLocaleDateString()}
+          </p>
+        </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
   };
 
   return (
-    <div className="agency-management-container">
+    <div className="agency-management-container ">
       <div className="ag-head">
         <div className="header">
           <h1>Agency Management System</h1>
@@ -72,31 +604,785 @@ const AgencyManagement = () => {
       
       <div className="tab-content">
         {activeTab === 'add' ? (
-          <AgencyAdd 
-            setAgencies={setAgencies}
-            agencies={agencies}
-            setActiveTab={setActiveTab}
-          />
+          <div>
+            {/* Progress indicator */}
+            <div className="form-progress">
+              <div className={`progress-step ${currentPage === 'agency' ? 'active' : 'completed'}`}>
+                <span className="step-number">1</span>
+                {/* <span className="step-label">Agency Details</span> */}
+              </div>
+              <div className={`progress-step ${currentPage === 'user' ? 'active' : ''}`}>
+                <span className="step-number">2</span>
+                {/* <span className="step-label">User Details</span> */}
+              </div>
+            </div>
+
+            {currentPage === 'agency' ? (
+              <form onSubmit={handleAgencyNext} className="agency-form">
+                {/* Agency Details Section */}
+                <div className="form-section">
+                  <h2 className="section-title">Agency Details</h2>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="agencyName" className="form-label required">Agency Name</label>
+                      <input
+                        type="text"
+                        id="agencyName"
+                        name="agencyName"
+                        value={formData.agencyName}
+                        onChange={handleChange}
+                        className={errors.agencyName ? 'form-input error' : 'form-input'}
+                        placeholder="Enter agency name"
+                      />
+                      {errors.agencyName && <span className="error-message">{errors.agencyName}</span>}
+                    </div>
+                    
+                    <div className="form-group ">
+<LocationSelector
+  countryId={formData.countryId}
+  cityId={formData.cityId}
+  onCountrySelect={({ name, id }) => setFormData({ ...formData, countryId: id, country: name })}
+  onCitySelect={({ name, id }) => setFormData({ ...formData, cityId: id, city: name })}
+  errors={errors}
+  showNotification={showNotification}
+/>
+
+       
+                      
+                    </div>
+                  
+                    <div className="form-group">
+                      <label htmlFor="postCode" className="form-label required">Post Code</label>
+                      <input
+                        type="text"
+                        id="postCode"
+                        name="postCode"
+                        value={formData.postCode}
+                        onChange={handleChange}
+                        className={errors.postCode ? 'form-input error' : 'form-input'}
+                        placeholder="Enter post code"
+                      />
+                      {errors.postCode && <span className="error-message">{errors.postCode}</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group full-width">
+                      <label htmlFor="address" className="form-label required">Address</label>
+                      <input
+                        type="text"
+                        id="address"
+                        name="address"
+                        value={formData.address}
+                        onChange={handleChange}
+                        className={errors.address ? 'form-input error' : 'form-input'}
+                        placeholder="Enter full address"
+                      />
+                      {errors.address && <span className="error-message">{errors.address}</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="website" className="form-label">Website</label>
+                      <input
+                        type="url"
+                        id="website"
+                        name="website"
+                        value={formData.website}
+                        onChange={handleChange}
+                        className="form-input"
+                        placeholder="https://example.com"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="phoneNo" className="form-label required">Phone No</label>
+                      <input
+                        type="tel"
+                        id="phoneNo"
+                        name="phoneNo"
+                        value={formData.phoneNo}
+                        onChange={handleChange}
+                        className={errors.phoneNo ? 'form-input error' : 'form-input'}
+                        placeholder="Enter phone number"
+                      />
+                      {errors.phoneNo && <span className="error-message">{errors.phoneNo}</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="emailId" className="form-label required">Email ID</label>
+                      <input
+                        type="text"
+                        id="emailId"
+                        name="emailId"
+                        value={formData.emailId}
+                        onChange={handleChange}
+                        className={errors.emailId ? 'form-input error' : 'form-input'}
+                        placeholder="email@example.com, email2@example.com"
+                      />
+                      {errors.emailId && <span className="error-message">{errors.emailId}</span>}
+                      <div className="input-hint">(Please use ' , ' for multiple Email IDs)</div>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="businessCurrency" className="form-label required">Business Currency</label>
+                      <select
+                        id="businessCurrency"
+                        name="businessCurrency"
+                        value={formData.businessCurrency}
+                        onChange={handleChange}
+                        className="form-select"
+                      >
+                        
+                          <option value="USD">USD</option>
+                          <option value="EUR">EUR</option>
+                          <option value="GBP">GBP</option>
+                          <option value="CAD">CAD</option>
+                          <option value="AUD">AUD</option>
+                        
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="form-actions">
+                  <button type="submit" className="submit-button">Next: User Details</button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleUserSubmit} className="agency-form">
+                {/* Main User Details Section */}
+                <div className="form-section">
+                  <h2 className="section-title">Main User Details</h2>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="title" className="form-label">Title</label>
+                      <select
+                        id="title"
+                        name="title"
+                        value={formData.title}
+                        onChange={handleChange}
+                        className="form-select"
+                      >
+                        <option value="">Select Title</option>
+                        <option value="Mr">Mr</option>
+                        <option value="Mrs">Mrs</option>
+                        <option value="Ms">Ms</option>
+                        <option value="Dr">Dr</option>
+                      </select>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="firstName" className="form-label required">First Name</label>
+                      <input
+                        type="text"
+                        id="firstName"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        className={errors.firstName ? 'form-input error' : 'form-input'}
+                        placeholder="Enter first name"
+                      />
+                      {errors.firstName && <span className="error-message">{errors.firstName}</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="lastName" className="form-label required">Last Name</label>
+                      <input
+                        type="text"
+                        id="lastName"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        className={errors.lastName ? 'form-input error' : 'form-input'}
+                        placeholder="Enter last name"
+                      />
+                      {errors.lastName && <span className="error-message">{errors.lastName}</span>}
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="userEmailId" className="form-label required">Email ID</label>
+                      <input
+                        type="email"
+                        id="userEmailId"
+                        name="userEmailId"
+                        value={formData.userEmailId}
+                        onChange={handleChange}
+                        className={errors.userEmailId ? 'form-input error' : 'form-input'}
+                        placeholder="email@example.com"
+                      />
+                      {errors.userEmailId && <span className="error-message">{errors.userEmailId}</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="designation" className="form-label required">Designation</label>
+                      <input
+                        type="text"
+                        id="designation"
+                        name="designation"
+                        value={formData.designation}
+                        onChange={handleChange}
+                        className={errors.designation ? 'form-input error' : 'form-input'}
+                        placeholder="Enter designation"
+                      />
+                      {errors.designation && <span className="error-message">{errors.designation}</span>}
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="mobileNo" className="form-label required">Mobile No</label>
+                      <input
+                        type="tel"
+                        id="mobileNo"
+                        name="mobileNo"
+                        value={formData.mobileNo}
+                        onChange={handleChange}
+                        className={errors.mobileNo ? 'form-input error' : 'form-input'}
+                        placeholder="Enter mobile number"
+                      />
+                      {errors.mobileNo && <span className="error-message">{errors.mobileNo}</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="userName" className="form-label required">User Name</label>
+                      <input
+                        type="text"
+                        id="userName"
+                        name="userName"
+                        value={formData.userName}
+                        onChange={handleChange}
+                        className={errors.userName ? 'form-input error' : 'form-input'}
+                        placeholder="Enter username"
+                      />
+                      {errors.userName && <span className="error-message">{errors.userName}</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group">
+
+                      <label htmlFor="password" className="form-label required">Password</label>
+                      <div className="input-with-icon">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        id="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        className={errors.password ? 'form-input error' : 'form-input'}
+                        placeholder="Create a strong password"
+                      />
+                          <span
+                              className="password-toggle"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              {showPassword ? <fml-icon name="eye-outline"></fml-icon> : <fml-icon name="eye-off-outline"></fml-icon>}
+                            </span>
+                            </div>
+                      {errors.password && <span className="error-message">{errors.password}</span>}
+                      {passwordStrength && (
+                        <div className={`password-strength ${passwordStrength.includes('Weak') ? 'weak' : passwordStrength.includes('Medium') ? 'medium' : 'strong'}`}>
+                          Password strength: {passwordStrength}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="form-group">
+                      <label htmlFor="confirmPassword" className="form-label required">Confirm Password</label>
+                      <div className="input-with-icon">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        className={errors.confirmPassword ? 'form-input error' : 'form-input'}
+                        placeholder="Confirm your password"
+                      />
+                          <span
+                              className="password-toggle"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            >
+                              {showConfirmPassword ? <fml-icon name="eye-outline"></fml-icon> : <fml-icon name="eye-off-outline"></fml-icon>}
+                            </span>
+                        </div>
+                      {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+                    </div>
+                  </div>
+                  
+                  <div className="form-row">
+                    <div className="form-group full-width">
+                      <div className="terms-container">
+                        <input
+                          type="checkbox"
+                          id="acceptTerms"
+                          name="acceptTerms"
+                          checked={formData.acceptTerms}
+                          onChange={handleChange}
+                          className="terms-checkbox"
+                        />
+                        <label htmlFor="acceptTerms" className="terms-text">
+                          I Accept <a href="#terms" className="terms-link">Terms and Conditions</a>
+                        </label>
+                      </div>
+                      {errors.acceptTerms && <span className="error-message">{errors.acceptTerms}</span>}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="form-actions">
+                  <button 
+                    type="button" 
+                    className="secondary-button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      console.log("Back button clicked");
+                      setCurrentPage('agency');
+                    }}
+                  >
+                    Back to Agency Details
+                  </button>
+                  <button type="submit" className="submit-button">Register Agency</button>
+                </div>
+              </form>
+            )}
+          </div>
         ) : (
-          <AgencyList 
-            agencies={agencies}
-            openViewModal={openViewModal}
-            openEditModal={openEditModal}
-            toggleAgencyStatus={toggleAgencyStatus}
-          />
+          <div className="agencies-list">
+            <div className="list-header">
+              <h2 className="section-title">Registered Agencies</h2>
+              <div className="action-buttons">
+                <button className="action-btn export" onClick={exportToExcel}>
+                  Export to Excel
+                </button>
+                <button className="action-btn print" onClick={printAgencies}>
+                  Print
+                </button>
+              </div>
+            </div>
+            
+{agencies.length === 0 ? (
+  <div className="empty-state">
+    <p>No agencies registered yet.</p>
+    <button 
+      className="secondary-button"
+      onClick={() => handleTabChange('add')}
+    >
+      Add Your First Agency
+    </button>
+  </div>
+) : (
+  <div className="agencies-table-container">
+    <table className="agencies-table">
+      <thead>
+        <tr>
+          <th>Agency Name</th>
+          <th>Country</th>
+          <th>City</th>
+          <th>Contact Person</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {agencies.map(agency => (
+          <tr key={agency.id} className={agency.status === 'Inactive' ? 'inactive' : 'Active'}>
+            <td>{agency.agencyName}</td>
+            <td>{agency.country?.name || 'N/A'}</td>
+            <td>{agency.city?.name || 'N/A'}</td>
+            <td>{agency.firstName} {agency.lastName}</td>
+            <td>{agency.phoneNo}</td>
+            <td>{agency.emailId}</td>
+            <td>
+              <span className={`status-indicator ${agency.isActive === 'Active' ? 'active' : 'inactive'}`}>
+                 {agency.isActive ? 'Active' : 'Inactive'}
+              </span>
+            </td>
+            <td>
+              <div className="table-actions">
+                <button 
+                  className="action-btn view"
+                  onClick={() => openViewModal(agency)}
+                  title="View Details"
+                >
+                  View
+                </button>
+                <button 
+                  className="action-btn edit"
+                  onClick={() => openEditModal(agency)}
+                  title="Edit Agency"
+                >
+                  Edit
+                </button>
+              <button 
+                className={`toggle-btn ${agency.isActive ? 'active' : 'inactive'}`}
+                onClick={() => toggleAgencyStatus(agency.id)}
+                title={`Mark as ${agency.isActive ? 'Inactive' : 'Active'}`}
+              >
+                {agency.isActive ? 'Deactivate' : 'Activate'}
+              </button>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
+          </div>
         )}
       </div>
 
-      <AgencyViewModal 
-        viewModal={viewModal}
-        closeViewModal={closeViewModal}
-      />
+      {/* View Modal */}
+      {viewModal.isOpen && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <div className="modal-header">
+              <h2>Agency Details</h2>
+              <button className="close-btn" onClick={closeViewModal}>×</button>
+            </div>
+            <div className="modal-content">
+              {viewModal.agency && (
+                <div className="agency-details-modal">
+                  <div className="detail-section">
+                    <h3>Agency Information</h3>
+                    <div className="detail-row">
+                      <span className="detail-label">Agency Name:</span>
+                      <span className="detail-value">{viewModal.agency.agencyName}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Address:</span>
+                      <span className="detail-value">{viewModal.agency.address}, {viewModal.agency.city?.name || ''}, {viewModal.agency.country?.name || ''} {viewModal.agency.postCode}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Phone:</span>
+                      <span className="detail-value">{viewModal.agency.phoneNo}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Email:</span>
+                      <span className="detail-value">{viewModal.agency.emailId}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Website:</span>
+                      <span className="detail-value">{viewModal.agency.website || 'N/A'}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Business Currency:</span>
+                      <span className="detail-value">{viewModal.agency.businessCurrency}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="detail-section">
+                    <h3>Main User Information</h3>
+                    <div className="detail-row">
+                      <span className="detail-label">Name:</span>
+                      <span className="detail-value">{viewModal.agency.title} {viewModal.agency.firstName} {viewModal.agency.lastName}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Designation:</span>
+                      <span className="detail-value">{viewModal.agency.designation}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Email:</span>
+                      <span className="detail-value">{viewModal.agency.userEmailId}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Mobile:</span>
+                      <span className="detail-value">{viewModal.agency.mobileNo}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Username:</span>
+                      <span className="detail-value">{viewModal.agency.userName}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="detail-section">
+                    <h3>Additional Information</h3>
+                    <div className="detail-row">
+                      <span className="detail-label">Status:</span>
+                      <span className={`detail-value status ${viewModal.agency.status?.toLowerCase() || ''}`}>
+                        {viewModal.agency.status || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="detail-label">Registered On:</span>
+                      <span className="detail-value">{viewModal.agency.createdAt}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn secondary" onClick={closeViewModal}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      <AgencyEditModal 
-        editModal={editModal}
-        closeEditModal={closeEditModal}
-        handleEditSubmit={handleEditSubmit}
-      />
+
+{/* Edit Modal */}
+{editModal.isOpen && (
+  <div className="modal-overlay">
+    <div className="modal">
+      <div className="modal-header">
+        <h2>Edit Agency Details</h2>
+        <button className="close-btn" onClick={closeEditModal}>×</button>
+      </div>
+      <div className="modal-content">
+        {editModal.agency && (
+          <form onSubmit={handleEditSubmit}>
+            <div className="form-section">
+              <h3 className="section-title">Agency Details</h3>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label required">Agency Name</label>
+                  <input
+                    type="text"
+                    name="agencyName"
+                    value={editModal.agency.agencyName}
+                    onChange={handleEditChange}
+                    className="form-input"
+                  />
+                </div>
+
+                {/* Country + City Selector */}
+                <div className="form-group full-width">
+                  <LocationSelector
+                    countryId={editModal.agency.countryId}
+                    cityId={editModal.agency.cityId}
+                    onCountrySelect={(name, id) =>
+                      setEditModal(prev => ({
+                        ...prev,
+                        agency: { ...prev.agency, countryId: id, country: name }
+                      }))
+                    }
+                    onCitySelect={(name, id) =>
+                      setEditModal(prev => ({
+                        ...prev,
+                        agency: { ...prev.agency, cityId: id, city: name }
+                      }))
+                    }
+                  />
+
+
+
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label required">Post Code</label>
+                  <input
+                    type="text"
+                    name="postCode"
+                    value={editModal.agency.postCode}
+                    onChange={handleEditChange}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group full-width">
+                  <label className="form-label required">Address</label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={editModal.agency.address}
+                    onChange={handleEditChange}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Website</label>
+                  <input
+                    type="url"
+                    name="website"
+                    value={editModal.agency.website}
+                    onChange={handleEditChange}
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label required">Phone No</label>
+                  <input
+                    type="tel"
+                    name="phoneNo"
+                    value={editModal.agency.phoneNo}
+                    onChange={handleEditChange}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Email ID</label>
+                  <input
+                    type="text"
+                    name="emailId"
+                    value={editModal.agency.emailId}
+                    onChange={handleEditChange}
+                    className="form-input"
+                    placeholder="email@example.com, email2@example.com"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label required">Business Currency</label>
+                  <select
+                    name="businessCurrency"
+                    value={editModal.agency.businessCurrency}
+                    onChange={handleEditChange}
+                    className="form-select"
+                  >
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                    <option value="CAD">CAD</option>
+                    <option value="AUD">AUD</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Main User Info */}
+            <div className="form-section">
+              <h3 className="section-title">Main User Details</h3>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Title</label>
+                  <select
+                    name="title"
+                    value={editModal.agency.title}
+                    onChange={handleEditChange}
+                    className="form-select"
+                  >
+                    <option value="">Select Title</option>
+                    <option value="Mr">Mr</option>
+                    <option value="Mrs">Mrs</option>
+                    <option value="Ms">Ms</option>
+                    <option value="Dr">Dr</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label required">First Name</label>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={editModal.agency.firstName}
+                    onChange={handleEditChange}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label required">Last Name</label>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={editModal.agency.lastName}
+                    onChange={handleEditChange}
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label required">Email ID</label>
+                  <input
+                    type="email"
+                    name="userEmailId"
+                    value={editModal.agency.userEmailId}
+                    onChange={handleEditChange}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label required">Designation</label>
+                  <input
+                    type="text"
+                    name="designation"
+                    value={editModal.agency.designation}
+                    onChange={handleEditChange}
+                    className="form-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label required">Mobile No</label>
+                  <input
+                    type="tel"
+                    name="mobileNo"
+                    value={editModal.agency.mobileNo}
+                    onChange={handleEditChange}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label required">User Name</label>
+                  <input
+                    type="text"
+                    name="userName"
+                    value={editModal.agency.userName}
+                    onChange={handleEditChange}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group full-width">
+                  <label className="form-label">Status</label>
+                  <select
+                    name="status"
+                    value={editModal.agency.status}
+                    onChange={handleEditChange}
+                    className="form-select"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="form-actions">
+              <button type="submit" className="submit-button">Save Changes</button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

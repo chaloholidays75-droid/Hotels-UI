@@ -1,8 +1,6 @@
 import React from 'react';
 
 const AgencyViewModal = ({ viewModal, closeViewModal }) => {
-  if (!viewModal.isOpen) return null;
-
   return (
     <div className="modal-overlay">
       <div className="modal">
@@ -21,7 +19,7 @@ const AgencyViewModal = ({ viewModal, closeViewModal }) => {
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Address:</span>
-                  <span className="detail-value">{viewModal.agency.address}, {viewModal.agency.city}, {viewModal.agency.country} {viewModal.agency.postCode}</span>
+                  <span className="detail-value">{viewModal.agency.address}, {viewModal.agency.city?.name || ''}, {viewModal.agency.country?.name || ''} {viewModal.agency.postCode}</span>
                 </div>
                 <div className="detail-row">
                   <span className="detail-label">Phone:</span>
@@ -69,8 +67,8 @@ const AgencyViewModal = ({ viewModal, closeViewModal }) => {
                 <h3>Additional Information</h3>
                 <div className="detail-row">
                   <span className="detail-label">Status:</span>
-                  <span className={`detail-value status ${viewModal.agency.status.toLowerCase()}`}>
-                    {viewModal.agency.status}
+                  <span className={`detail-value status ${viewModal.agency.status?.toLowerCase() || ''}`}>
+                    {viewModal.agency.status || 'N/A'}
                   </span>
                 </div>
                 <div className="detail-row">
