@@ -1,6 +1,6 @@
 import React from 'react';
 import * as XLSX from 'xlsx';
-import AgencyListSkeleton from '../AgencyListSkeleton';
+import AgencyListSkeleton from '../components/AgencyListSkeleton';
 
 const AgencyList = ({ agencies, loading, openViewModal, openEditModal, toggleAgencyStatus }) => {
   const exportToExcel = () => {
