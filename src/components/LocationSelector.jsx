@@ -4,6 +4,8 @@ import { FaChevronDown } from "react-icons/fa";
 const API_BASE = "https://backend.chaloholidayonline.com/api";
 
 const LocationSelector = ({ onCountrySelect, onCitySelect, errors = {} }) => {
+  console.log("Rendering LocationSelector");
+  
   const [countries, setCountries] = useState([]);
   const [citiesByCountry, setCitiesByCountry] = useState({});
   const [countrySearch, setCountrySearch] = useState("");
