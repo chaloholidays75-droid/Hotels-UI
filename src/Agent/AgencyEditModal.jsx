@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import LocationSelector from '../LocationSelector';
 
 const AgencyEditModal = ({ editModal, closeEditModal, setAgencies, agencies }) => {
   const [showNotification, setShowNotification] = useState('');
@@ -49,8 +48,8 @@ const AgencyEditModal = ({ editModal, closeEditModal, setAgencies, agencies }) =
 
     // Agency Details validation
     if (!editModal.agency.agencyName) formErrors.agencyName = 'Agency name is required';
-    if (!editModal.agency.countryId) formErrors.country = 'Country is required';
-    if (!editModal.agency.cityId) formErrors.city = 'City is required';
+    if (!editModal.agency.country) formErrors.country = 'Country is required';
+    if (!editModal.agency.city) formErrors.city = 'City is required';
     if (!editModal.agency.postCode) formErrors.postCode = 'Post code is required';
     if (!editModal.agency.address) formErrors.address = 'Address is required';
     
@@ -108,18 +107,16 @@ const AgencyEditModal = ({ editModal, closeEditModal, setAgencies, agencies }) =
 
     if (!validateEditForm()) return;
     
-    const countryId = editModal.agency.countryId || editModal.agency.country?.id || 0;
-    const cityId = editModal.agency.cityId || editModal.agency.city?.id || 0;
-    
+    // For this implementation, we'll use the text values directly
+    // In a real application, you might want to convert these to IDs
+    // by looking them up in your backend
     const payload = {
       ...editModal.agency,
-      countryId: parseInt(countryId),
-      cityId: parseInt(cityId)
+      country: editModal.agency.country,
+      city: editModal.agency.city
     };
     
-    delete payload.country;
-    delete payload.city;
-
+    // Remove any undefined or null values
     Object.keys(payload).forEach(key => {
       if (payload[key] === undefined || payload[key] === null) {
         delete payload[key];
@@ -202,26 +199,31 @@ const AgencyEditModal = ({ editModal, closeEditModal, setAgencies, agencies }) =
                     />
                     {errors.agencyName && <span className="error-message">{errors.agencyName}</span>}
                   </div>
+                </div>
 
-                  <div className="form-group full-width">
-                    <LocationSelector
-                      countryId={editModal.agency.countryId}
-                      cityId={editModal.agency.cityId}
-                      onCountrySelect={({ name, id }) =>
-                        setEditModal(prev => ({
-                          ...prev,
-                          agency: { ...prev.agency, countryId: id, country: name }
-                        }))
-                      }
-                      onCitySelect={({ name, id }) =>
-                        setEditModal(prev => ({
-                          ...prev,
-                          agency: { ...prev.agency, cityId: id, city: name }
-                        }))
-                      }
-                      errors={errors}
-                      showNotification={showNotification}
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label required">Country</label>
+                    <input
+                      type="text"
+                      name="country"
+                      value={editModal.agency.country}
+                      onChange={handleEditChange}
+                      className={errors.country ? 'form-input error' : 'form-input'}
                     />
+                    {errors.country && <span className="error-message">{errors.country}</span>}
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label required">City</label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={editModal.agency.city}
+                      onChange={handleEditChange}
+                      className={errors.city ? 'form-input error' : 'form-input'}
+                    />
+                    {errors.city && <span className="error-message">{errors.city}</span>}
                   </div>
                 </div>
 
