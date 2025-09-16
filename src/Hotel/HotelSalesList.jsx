@@ -8,7 +8,7 @@ import {
   FaEdit, FaTrash, FaPlus, FaEllipsisV, FaTimes,
   FaCheckCircle, FaExclamationTriangle, FaSync
 } from 'react-icons/fa';
-import { FixedSizeList as List } from 'react-window';
+
 import './viewhotel.css';
 
 const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
