@@ -194,7 +194,16 @@ const AgencyDetailsForm = ({ formData, setFormData, errors, setErrors, handleCha
           </div>
         </div>
       </div>
-      
+      <div className="form-group full-width">
+        <label className="form-label">Special Remarks</label>
+        <textarea
+            name="specialRemarks"
+            value={formData.specialRemarks}
+            onChange={handleChange}
+            className="form-input"
+            rows="3"
+        />
+        </div>
       <div className="form-actions">
         <button type="submit" className="submit-button">Next: User Details</button>
       </div>
