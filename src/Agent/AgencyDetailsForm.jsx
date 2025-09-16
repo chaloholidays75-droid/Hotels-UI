@@ -1,5 +1,5 @@
 import React from 'react';
-import LocationSelector from '../LocationSelector';
+import LocationSelector from '../components/LocationSelector';
 
 const AgencyDetailsForm = ({ formData, setFormData, errors, setErrors, handleChange, setCurrentPage }) => {
   const [showNotification, setShowNotification] = React.useState('');
