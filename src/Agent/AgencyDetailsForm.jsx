@@ -135,7 +135,7 @@ const AgencyDetailsForm = ({ formData, setFormData, errors, setErrors, handleCha
           <div className="form-group">
             <label htmlFor="website" className="form-label">Website</label>
             <input
-              type="url"
+              type="text"
               id="website"
               name="website"
               value={formData.website}
