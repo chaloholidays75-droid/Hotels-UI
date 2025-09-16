@@ -88,6 +88,8 @@ const LocationSelector = ({ onCountrySelect, onCitySelect, errors = {} }) => {
 
   // ================= Manual Add =================
   const handleManualCountry = async () => {
+    console.log("Adding country:", countrySearch);
+    
     if (!countrySearch.trim()) return;
     try {
       const res = await fetch(`${API_BASE}/countries`, {
@@ -109,6 +111,7 @@ const LocationSelector = ({ onCountrySelect, onCitySelect, errors = {} }) => {
   };
 
   const handleManualCity = async () => {
+    console.log("Adding city:", citySearch, "to country:", selectedCountry);
     if (!citySearch.trim() || !selectedCountry?.id) return;
     try {
       const res = await fetch(`${API_BASE}/cities`, {
