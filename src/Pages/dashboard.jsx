@@ -601,6 +601,13 @@ const fetchDashboardData = async () => {
   setError(null);
 
   try {
+    // Get the JWT token from localStorage (or wherever you store it)
+    const token = localStorage.getItem("token"); // adjust key if different
+
+    const headers = token
+      ? { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
+      : { "Content-Type": "application/json" };
+
     const [
       statsRes,
       activitiesRes,
@@ -609,12 +616,12 @@ const fetchDashboardData = async () => {
       topCountriesRes,
       monthlyStatsRes
     ] = await Promise.allSettled([
-      fetchWithToken(API_STATS),
-      fetchWithToken(API_RECENT_ACTIVITIES),
-      fetchWithToken(API_HOTELS_BY_COUNTRY),
-      fetchWithToken(API_AGENCIES_BY_COUNTRY),
-      fetchWithToken(API_TOP_COUNTRIES),
-      fetchWithToken(API_MONTHLY_STATS)
+      fetch(API_STATS, { headers }),
+      fetch(API_RECENT_ACTIVITIES, { headers }),
+      fetch(API_HOTELS_BY_COUNTRY, { headers }),
+      fetch(API_AGENCIES_BY_COUNTRY, { headers }),
+      fetch(API_TOP_COUNTRIES, { headers }),
+      fetch(API_MONTHLY_STATS, { headers })
     ]);
 
     if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
@@ -644,6 +651,7 @@ const fetchDashboardData = async () => {
 
     if (monthlyStatsRes.status === 'fulfilled' && monthlyStatsRes.value.ok) {
       const monthlyStatsData = await monthlyStatsRes.value.json();
+      console.log("Raw API response:", monthlyStatsData);
       setMonthlyStats(monthlyStatsData);
     }
 
