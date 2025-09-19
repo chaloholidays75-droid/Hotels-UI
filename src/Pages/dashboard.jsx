@@ -67,6 +67,17 @@ const Dashboard = ({ showNotification, onNavigate }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const fetchWithToken = async (url, options = {}) => {
+  const token = localStorage.getItem('accessToken'); // get token
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+    'Authorization': `Bearer ${token}`  // attach token
+  };
+
+  const response = await fetch(url, { ...options, headers });
+  return response;
+};
 
   // Chart options and data
   const lineChartOptions = {
@@ -585,69 +596,69 @@ const Dashboard = ({ showNotification, onNavigate }) => {
     ],
   };
 
-  const fetchDashboardData = async () => {
-    setRefreshing(true);
-    setError(null);
-    
-    try {
-      const [
-        statsRes,
-        activitiesRes,
-        hotelsByCountryRes,
-        agenciesByCountryRes,
-        topCountriesRes,
-        monthlyStatsRes
-      ] = await Promise.allSettled([
-        fetch(API_STATS),
-        fetch(API_RECENT_ACTIVITIES),
-        fetch(API_HOTELS_BY_COUNTRY),
-        fetch(API_AGENCIES_BY_COUNTRY),
-        fetch(API_TOP_COUNTRIES),
-        fetch(API_MONTHLY_STATS)
-      ]);
+ const fetchDashboardData = async () => {
+  setRefreshing(true);
+  setError(null);
 
-      if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
-        const statsData = await statsRes.value.json();
-        setStats(statsData);
-      }
+  try {
+    const [
+      statsRes,
+      activitiesRes,
+      hotelsByCountryRes,
+      agenciesByCountryRes,
+      topCountriesRes,
+      monthlyStatsRes
+    ] = await Promise.allSettled([
+      fetchWithToken(API_STATS),
+      fetchWithToken(API_RECENT_ACTIVITIES),
+      fetchWithToken(API_HOTELS_BY_COUNTRY),
+      fetchWithToken(API_AGENCIES_BY_COUNTRY),
+      fetchWithToken(API_TOP_COUNTRIES),
+      fetchWithToken(API_MONTHLY_STATS)
+    ]);
 
-      if (activitiesRes.status === 'fulfilled' && activitiesRes.value.ok) {
-        const activitiesData = await activitiesRes.value.json();
-        setRecentActivities(activitiesData);
-      }
-
-      if (hotelsByCountryRes.status === 'fulfilled' && hotelsByCountryRes.value.ok) {
-        const hotelsByCountryData = await hotelsByCountryRes.value.json();
-        setHotelsByCountry(hotelsByCountryData);
-      }
-
-      if (agenciesByCountryRes.status === 'fulfilled' && agenciesByCountryRes.value.ok) {
-        const agenciesByCountryData = await agenciesByCountryRes.value.json();
-        setAgenciesByCountry(agenciesByCountryData);
-      }
-
-      if (topCountriesRes.status === 'fulfilled' && topCountriesRes.value.ok) {
-        const topCountriesData = await topCountriesRes.value.json();
-        setTopCountries(topCountriesData);
-      }
-
-      if (monthlyStatsRes.status === 'fulfilled' && monthlyStatsRes.value.ok) {
-        const monthlyStatsData = await monthlyStatsRes.value.json();
-          console.log("Raw API response:", monthlyStatsData);  
-        setMonthlyStats(monthlyStatsData);
-      }
-
-    } catch (err) {
-      console.error("Error fetching dashboard data:", err);
-      setError(err.message);
-      if (showNotification) {
-        showNotification(`Error loading dashboard: ${err.message}`, "error");
-      }
-    } finally {
-      setRefreshing(false);
-      setLoading(false);
+    if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
+      const statsData = await statsRes.value.json();
+      setStats(statsData);
     }
-  };
+
+    if (activitiesRes.status === 'fulfilled' && activitiesRes.value.ok) {
+      const activitiesData = await activitiesRes.value.json();
+      setRecentActivities(activitiesData);
+    }
+
+    if (hotelsByCountryRes.status === 'fulfilled' && hotelsByCountryRes.value.ok) {
+      const hotelsByCountryData = await hotelsByCountryRes.value.json();
+      setHotelsByCountry(hotelsByCountryData);
+    }
+
+    if (agenciesByCountryRes.status === 'fulfilled' && agenciesByCountryRes.value.ok) {
+      const agenciesByCountryData = await agenciesByCountryRes.value.json();
+      setAgenciesByCountry(agenciesByCountryData);
+    }
+
+    if (topCountriesRes.status === 'fulfilled' && topCountriesRes.value.ok) {
+      const topCountriesData = await topCountriesRes.value.json();
+      setTopCountries(topCountriesData);
+    }
+
+    if (monthlyStatsRes.status === 'fulfilled' && monthlyStatsRes.value.ok) {
+      const monthlyStatsData = await monthlyStatsRes.value.json();
+      setMonthlyStats(monthlyStatsData);
+    }
+
+  } catch (err) {
+    console.error("Error fetching dashboard data:", err);
+    setError(err.message);
+    if (showNotification) {
+      showNotification(`Error loading dashboard: ${err.message}`, "error");
+    }
+  } finally {
+    setRefreshing(false);
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchDashboardData();
