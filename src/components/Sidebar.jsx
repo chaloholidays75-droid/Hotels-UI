@@ -85,12 +85,12 @@ const Sidebar = ({ userName = "User Name",role= "admin", onLogout }) => {
           <div className="sb-avatar">
             <img
               src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userName)}&background=7269ef&color=fff`}
-              alt={userName}
+              alt={UserName}
             />
           </div>
           {!isCollapsed && (
             <div className="sb-user-info">
-              <h4>{FirstName}</h4>
+              <h4>{UserName}</h4>
               <p>{role}</p>
             </div>
           )}
