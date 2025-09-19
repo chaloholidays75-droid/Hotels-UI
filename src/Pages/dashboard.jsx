@@ -857,22 +857,17 @@ const Dashboard = ({ showNotification, onNavigate }) => {
             {recentActivities.slice(0, 6).map((activity) => (
               <div key={activity.id} className="activity-item">
                 <div className="activity-icon">
-                  {activity.entity?.toLowerCase() === 'hotel' && <FaHotel />}
-                  {activity.entity?.toLowerCase() === 'agency' && <FaBuilding />}
-                   {!activity.entity && <FaExclamationTriangle />}
-                  {/* Add more icons if needed */}
+                  {activity.type === 'hotel' && <FaHotel />}
+                  {activity.type === 'agency' && <FaBuilding />}
+                  {!activity.type && <FaExclamationTriangle />}
                 </div>
                 <div className="activity-content">
-                  <p className="activity-text">{activity.description}</p>
+                  <p className="activity-text">
+                    {activity.user} {activity.action} {activity.type} "{activity.entityName}"
+                  </p>
                   <div className="activity-meta">
-                    <span className="activity-user">{activity.username}</span>
                     <span className="activity-time">
-                      <span>
-                        {activity.timestamp && !isNaN(new Date(activity.timestamp).getTime())
-                          ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })
-                          : "Unknown time"}
-                      </span>
-
+                      {activity.timeAgo || "Unknown time"}
                     </span>
                   </div>
                 </div>
