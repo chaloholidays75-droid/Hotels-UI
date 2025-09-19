@@ -8,7 +8,7 @@ import { Pie, Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import 'chartjs-adapter-date-fns';
-
+import './Dashboard.css';
 import {
   Chart as ChartJS,
   CategoryScale,
