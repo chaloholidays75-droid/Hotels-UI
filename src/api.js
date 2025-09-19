@@ -202,4 +202,14 @@ export async function getHotelsByCity(cityId) {
   return await safeAxios(`${API_BASE}/hotels/by-city/${cityId}`);
 }
 
+export const getRecentActivities = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/dashboard/recent-activities`);
+    return response.data; // Returns an array of recent activity objects
+  } catch (error) {
+    console.error("Error fetching recent activities:", error);
+    return []; // Return empty array on failure
+  }
+};
+
 export default api;
