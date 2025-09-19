@@ -1,586 +1,297 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  forwardRef,
-  useImperativeHandle,
-  useCallback,
-  useMemo
-} from "react";
-import { FaChevronDown, FaPlus, FaSpinner } from "react-icons/fa";
-import Fuse from "fuse.js";
-import debounce from "lodash/debounce";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { FaChevronDown } from "react-icons/fa";
+import "./LocationSelector.css";
+import { getCode } from "country-list";
+import { getCountryCallingCode } from "libphonenumber-js";
 
 const API_BASE = "https://backend.chaloholidayonline.com/api";
 
-const LocationSelector = forwardRef(
-  (
-    {
-      countryId,
-      cityId,
-      onCountrySelect,
-      onCitySelect,
-      onNotify,
-      errors = {},
-      className = "",
-      showLabels = true,
-      required = true
-    },
-    ref
-  ) => {
-    const [countries, setCountries] = useState([]);
-    const [citiesByCountry, setCitiesByCountry] = useState({});
-    const [countrySearch, setCountrySearch] = useState("");
-    const [citySearch, setCitySearch] = useState("");
-    const [showCountryDropdown, setShowCountryDropdown] = useState(false);
-    const [showCityDropdown, setShowCityDropdown] = useState(false);
-    const [highlightedIndex, setHighlightedIndex] = useState({
-      country: 0,
-      city: 0
-    });
-    const [selectedCountry, setSelectedCountry] = useState(null);
-    const [selectedCity, setSelectedCity] = useState(null);
-    const [loading, setLoading] = useState({ countries: false, cities: false });
-    const [saving, setSaving] = useState({ country: false, city: false });
-    const [notice, setNotice] = useState("");
-    const [abortController, setAbortController] = useState(new AbortController());
+const LocationSelector = forwardRef(({ countryId, cityId, onCountrySelect, onCitySelect, onNotify, errors = {} }, ref) => {
+  const [countries, setCountries] = useState([]);
+  const [citiesByCountry, setCitiesByCountry] = useState({});
+  const [countrySearch, setCountrySearch] = useState("");
+  const [citySearch, setCitySearch] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState({ country: 0, city: 0 });
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState({ country: false, city: false });
+  const [notice, setNotice] = useState("");
 
-    const countryRef = useRef(null);
-    const cityRef = useRef(null);
-    const countryInputRef = useRef(null);
-    const cityInputRef = useRef(null);
+  const countryRef = useRef(null);
+  const cityRef = useRef(null);
+  const countryInputRef = useRef(null);
+  const cityInputRef = useRef(null);
 
-    useImperativeHandle(ref, () => ({
-      isValid: () =>
-        !!(selectedCountry && selectedCountry.id && selectedCity && selectedCity.id),
-      getSelected: () => ({ country: selectedCountry, city: selectedCity }),
-      reset: () => {
-        setSelectedCountry(null);
-        setSelectedCity(null);
-        setCountrySearch("");
-        setCitySearch("");
-      }
-    }));
+  // expose validation
+  useImperativeHandle(ref, () => ({
+    isValid: () => !!(selectedCountry && selectedCity),
+    getSelected: () => ({ country: selectedCountry, city: selectedCity })
+  }));
 
-    // Memoized API calls with abort controller
-    const fetchData = useCallback(async (url, options = {}) => {
+  // click outside closes dropdown
+  useEffect(() => {
+    const handler = (e) => {
+      if (countryRef.current && !countryRef.current.contains(e.target)) setShowCountryDropdown(false);
+      if (cityRef.current && !cityRef.current.contains(e.target)) setShowCityDropdown(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // fetch countries
+  useEffect(() => {
+    const fetchCountries = async () => {
+      setLoading(true);
       try {
-        const signal = abortController.signal;
-        const response = await fetch(url, { ...options, signal });
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        return await response.json();
-      } catch (error) {
-        if (error.name === 'AbortError') {
-          console.log('Fetch aborted');
-          return null;
-        }
-        throw error;
-      }
-    }, [abortController]);
-
-    // Close dropdowns when clicking outside
-    useEffect(() => {
-      const onDocClick = (e) => {
-        if (countryRef.current && !countryRef.current.contains(e.target)) {
-          setShowCountryDropdown(false);
-        }
-        if (cityRef.current && !cityRef.current.contains(e.target)) {
-          setShowCityDropdown(false);
-        }
-      };
-      document.addEventListener("mousedown", onDocClick);
-      return () => document.removeEventListener("mousedown", onDocClick);
-    }, []);
-
-    // Fetch countries on mount
-    useEffect(() => {
-      const fetchCountries = async () => {
-        setLoading(prev => ({ ...prev, countries: true }));
-        try {
-          const data = await fetchData(`${API_BASE}/countries`);
-          setCountries(data || []);
-          
-          // Create cities mapping
-          const mapping = {};
-          (data || []).forEach((c) => {
-            if (Array.isArray(c.cities)) {
-              mapping[c.id] = c.cities.map((ct) => ({ 
-                id: ct.id, 
-                name: ct.name 
-              }));
-            }
-          });
-          
-          setCitiesByCountry((prev) => ({ ...prev, ...mapping }));
-          
-          // Pre-select country if countryId provided
-          if (countryId) {
-            const country = (data || []).find((x) => x.id === countryId);
-            if (country) {
-              setSelectedCountry(country);
-              setCountrySearch(country.name);
-              if (!mapping[country.id]) {
-                await fetchCitiesForCountry(country.id);
-              }
-            }
-          }
-        } catch (err) {
-          console.error("Failed to fetch countries:", err);
-          if (onNotify) {
-            onNotify({ 
-              type: "error", 
-              message: "Failed to load countries" 
-            });
-          }
-        } finally {
-          setLoading(prev => ({ ...prev, countries: false }));
-        }
-      };
-      
-      fetchCountries();
-      
-      return () => {
-        abortController.abort();
-      };
-    }, [countryId, onNotify, fetchData, abortController]);
-
-    // Set city if cityId provided
-    useEffect(() => {
-      if (!cityId || !selectedCountry) return;
-      
-      const found = Object.values(citiesByCountry)
-        .flat()
-        .find((ct) => ct.id === cityId);
-        
-      if (found) {
-        setSelectedCity(found);
-        setCitySearch(found.name);
-      }
-    }, [cityId, citiesByCountry, selectedCountry]);
-
-    // Fetch cities for a country
-    const fetchCitiesForCountry = useCallback(async (countryIdToFetch) => {
-      if (!countryIdToFetch) return;
-      
-      setLoading(prev => ({ ...prev, cities: true }));
-      try {
-        let data;
-        try {
-          data = await fetchData(`${API_BASE}/countries/${countryIdToFetch}/cities`);
-        } catch (e) {
-          // Fallback to alternative endpoint
-          data = await fetchData(`${API_BASE}/cities?countryId=${countryIdToFetch}`);
-        }
-        
-        setCitiesByCountry((prev) => ({ 
-          ...prev, 
-          [countryIdToFetch]: data || [] 
-        }));
-      } catch (err) {
-        console.error("Failed to fetch cities:", err);
-        if (onNotify) {
-          onNotify({ 
-            type: "error", 
-            message: "Failed to load cities" 
-          });
-        }
-      } finally {
-        setLoading(prev => ({ ...prev, cities: false }));
-      }
-    }, [fetchData, onNotify]);
-
-    // Memoized Fuse instances for better performance
-    const fuseCountries = useMemo(
-      () => new Fuse(countries, { keys: ["name"], threshold: 0.3 }),
-      [countries]
-    );
-
-    const fuseCities = useMemo(
-      () => {
-        if (!selectedCountry) return null;
-        return new Fuse(citiesByCountry[selectedCountry.id] || [], { 
-          keys: ["name"], 
-          threshold: 0.3 
+        const res = await fetch(`${API_BASE}/countries`);
+        if (!res.ok) throw new Error("Failed to fetch countries");
+        const data = await res.json();
+        setCountries(data || []);
+        const mapping = {};
+        (data || []).forEach(c => {
+          if (Array.isArray(c.cities)) mapping[c.id] = c.cities.map(ct => ({ id: ct.id, name: ct.name }));
         });
-      },
-      [selectedCountry, citiesByCountry]
-    );
+        setCitiesByCountry(mapping);
 
-    // Memoized filtered results
-    const filteredCountries = useMemo(
-      () => countrySearch.trim() 
-        ? fuseCountries.search(countrySearch).map(x => x.item) 
-        : countries,
-      [countrySearch, fuseCountries, countries]
-    );
-
-    const filteredCities = useMemo(
-      () => {
-        if (!selectedCountry) return [];
-        return citySearch.trim() && fuseCities 
-          ? fuseCities.search(citySearch).map(x => x.item) 
-          : citiesByCountry[selectedCountry.id] || [];
-      },
-      [citySearch, fuseCities, selectedCountry, citiesByCountry]
-    );
-
-    // Debounced search handlers
-    const handleCountrySearchChange = useCallback(
-      debounce((value) => {
-        setCountrySearch(value);
-        setShowCountryDropdown(true);
-        setSelectedCountry(null);
-      }, 300),
-      []
-    );
-
-    const handleCitySearchChange = useCallback(
-      debounce((value) => {
-        setCitySearch(value);
-        setShowCityDropdown(true);
-        setSelectedCity(null);
-      }, 300),
-      []
-    );
-
-    const handleCountrySelect = useCallback((country) => {
-      setSelectedCountry(country);
-      setCountrySearch(country.name || "");
-      setShowCountryDropdown(false);
-      setHighlightedIndex((prev) => ({ ...prev, country: 0 }));
-      setSelectedCity(null);
-      setCitySearch("");
-      
-      if (!citiesByCountry[country.id]) {
-        fetchCitiesForCountry(country.id);
-      }
-      
-      if (onCountrySelect) onCountrySelect(country);
-      
-      setTimeout(() => {
-        if (cityInputRef.current) {
-          cityInputRef.current.focus();
-        }
-      }, 0);
-    }, [citiesByCountry, fetchCitiesForCountry, onCountrySelect]);
-
-    const handleCitySelect = useCallback((city) => {
-      setSelectedCity(city);
-      setCitySearch(city.name || "");
-      setShowCityDropdown(false);
-      setHighlightedIndex((prev) => ({ ...prev, city: 0 }));
-      if (onCitySelect) onCitySelect(city);
-    }, [onCitySelect]);
-
-    const handleManualCountry = useCallback(async () => {
-      const name = countrySearch.trim();
-      if (!name) return;
-      
-      if (fuseCountries.search(name).length > 0) {
-        setNotice("Country already exists.");
-        setTimeout(() => setNotice(""), 3000);
-        return;
-      }
-      
-      setSaving((prev) => ({ ...prev, country: true }));
-      try {
-        const newCountry = await fetchData(`${API_BASE}/countries`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            name, 
-            code: name.slice(0, 2).toUpperCase(), 
-            phoneCode: "+1" 
-          })
-        });
-        
-        setCountries((prev) => [...prev, newCountry]);
-        setCitiesByCountry((prev) => ({ ...prev, [newCountry.id]: [] }));
-        handleCountrySelect(newCountry);
-        
-        if (onNotify) {
-          onNotify({ 
-            type: "success", 
-            message: `Country "${name}" added` 
-          });
+        if (countryId) {
+          const c = (data || []).find(x => x.id === countryId);
+          if (c) handleCountrySelect(c);
         }
       } catch (err) {
-        console.error("Failed to add country:", err);
-        setNotice("Failed to add country");
-        setTimeout(() => setNotice(""), 3000);
+        console.error("fetch countries:", err);
       } finally {
-        setSaving((prev) => ({ ...prev, country: false }));
+        setLoading(false);
       }
-    }, [countrySearch, fuseCountries, handleCountrySelect, onNotify, fetchData]);
+    };
+    fetchCountries();
+  }, [countryId]);
 
-    const handleManualCity = useCallback(async () => {
-      const name = citySearch.trim();
-      if (!name || !selectedCountry) return;
-      
-      if (fuseCities && fuseCities.search(name).length > 0) {
-        setNotice("City already exists.");
-        setTimeout(() => setNotice(""), 3000);
-        return;
+  // fetch cities
+  const fetchCitiesForCountry = async (countryIdToFetch) => {
+    if (!countryIdToFetch) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/countries/${countryIdToFetch}/cities`);
+      let data;
+      if (!res.ok) {
+        const res2 = await fetch(`${API_BASE}/cities?countryId=${countryIdToFetch}`);
+        if (!res2.ok) throw new Error("Failed to fetch cities");
+        data = await res2.json();
+      } else {
+        data = await res.json();
       }
-      
-      setSaving((prev) => ({ ...prev, city: true }));
-      try {
-        const newCity = await fetchData(`${API_BASE}/cities`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            name, 
-            countryId: selectedCountry.id 
-          })
-        });
-        
-        setCitiesByCountry((prev) => ({
-          ...prev,
-          [selectedCountry.id]: [...(prev[selectedCountry.id] || []), newCity]
-        }));
-        
-        handleCitySelect(newCity);
-        
-        if (onNotify) {
-          onNotify({ 
-            type: "success", 
-            message: `City "${name}" added` 
-          });
-        }
-      } catch (err) {
-        console.error("Failed to add city:", err);
-        setNotice("Failed to add city");
-        setTimeout(() => setNotice(""), 3000);
-      } finally {
-        setSaving((prev) => ({ ...prev, city: false }));
-      }
-    }, [citySearch, selectedCountry, fuseCities, handleCitySelect, onNotify, fetchData]);
+      setCitiesByCountry(prev => ({ ...prev, [countryIdToFetch]: data }));
+    } catch (err) {
+      console.error("fetch cities:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleKeyDown = useCallback((e, type, items, onSelect, manualAdd) => {
-      if (!["ArrowDown", "ArrowUp", "Enter", "Escape"].includes(e.key)) return;
-      
-      e.preventDefault();
-      
-      if (e.key === "Escape") {
-        if (type === "country") setShowCountryDropdown(false);
-        if (type === "city") setShowCityDropdown(false);
-        return;
-      }
-      
-      const length = items.length;
-      let idx = highlightedIndex[type] ?? 0;
-      
-      if (e.key === "ArrowDown") {
-        idx = (idx + 1) % length;
-      } else if (e.key === "ArrowUp") {
-        idx = (idx - 1 + length) % length;
-      } else if (e.key === "Enter") {
-        if (length > 0 && idx >= 0 && idx < length) {
-          onSelect(items[idx]);
-        } else if (manualAdd) {
-          manualAdd();
-        }
-        return;
-      }
-      
-      setHighlightedIndex((prev) => ({ ...prev, [type]: idx }));
-    }, [highlightedIndex]);
+  // initial city selection
+  useEffect(() => {
+    if (!cityId) return;
+    const found = Object.values(citiesByCountry).flat().find(ct => ct.id === cityId);
+    if (found) {
+      setSelectedCity(found);
+      setCitySearch(found.name);
+    }
+  }, [cityId, citiesByCountry]);
 
-    // Reset highlighted index when dropdown closes
-    useEffect(() => {
-      if (!showCountryDropdown) {
-        setHighlightedIndex(prev => ({ ...prev, country: 0 }));
-      }
-    }, [showCountryDropdown]);
+  const highlightText = (text, search) => {
+    if (!search) return text;
+    const regex = new RegExp(`(${search})`, "ig");
+    const parts = String(text).split(regex);
+    return parts.map((p, i) => (regex.test(p) ? <b key={i}>{p}</b> : <span key={i}>{p}</span>));
+  };
 
-    useEffect(() => {
-      if (!showCityDropdown) {
-        setHighlightedIndex(prev => ({ ...prev, city: 0 }));
-      }
-    }, [showCityDropdown]);
+  const filteredCountries = countries.filter(c => (c.name || "").toLowerCase().includes(countrySearch.toLowerCase()));
+  const filteredCities = selectedCountry && citiesByCountry[selectedCountry.id]
+    ? citiesByCountry[selectedCountry.id].filter(ct => (ct.name || "").toLowerCase().includes(citySearch.toLowerCase()))
+    : [];
 
-    return (
-      <div className={`location-selector ${className}`}>
-        {notice && (
-          <div className="ls-notice">
-            {notice}
-          </div>
-        )}
+  const clearCitySelection = () => {
+    setSelectedCity(null);
+    setCitySearch("");
+    onCitySelect?.({ name: "", id: null });
+  };
 
-        <div 
-          className={`form-group ls-country ${errors.country ? "error" : ""}`} 
-          ref={countryRef}
-        >
-          {showLabels && (
-            <label className="form-label">
-              Country {required && <span className="required">*</span>}
-            </label>
-          )}
-          <div className="ls-input-wrap">
-            <input
-              ref={countryInputRef}
-              type="text"
-              value={countrySearch}
-              onChange={(e) => handleCountrySearchChange(e.target.value)}
-              onFocus={() => setShowCountryDropdown(true)}
-              onKeyDown={(e) => 
-                handleKeyDown(
-                  e, 
-                  "country", 
-                  filteredCountries, 
-                  handleCountrySelect, 
-                  handleManualCountry
-                )
-              }
-              placeholder="Search country..."
-              className="form-input"
-              aria-label="Select country"
-              aria-expanded={showCountryDropdown}
-              aria-haspopup="listbox"
-            />
-            <button 
-              type="button" 
-              className="ls-chevron" 
-              onClick={() => setShowCountryDropdown((prev) => !prev)}
-              aria-label="Toggle country dropdown"
-            >
-              <FaChevronDown />
-            </button>
-          </div>
-          {showCountryDropdown && (
-            <ul className="ls-dropdown" role="listbox">
-              {filteredCountries.length > 0 ? (
-                filteredCountries.map((country, index) => (
-                  <li
-                    key={country.id}
-                    className={highlightedIndex.country === index ? "highlighted" : ""}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleCountrySelect(country);
-                    }}
-                    role="option"
-                    aria-selected={selectedCountry?.id === country.id}
-                  >
-                    {country.name}
-                  </li>
-                ))
-              ) : (
-                <li className="ls-no-results">No countries found</li>
-              )}
-              {countrySearch && (
-                <li
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleManualCountry();
-                  }}
-                  role="option"
-                  className="ls-add-option"
-                >
-                  <FaPlus /> Add "{countrySearch}"
-                </li>
-              )}
-            </ul>
-          )}
+  const handleCountrySelect = (country) => {
+    const code = country.code || getCode(country.name) || country.name.slice(0, 2).toUpperCase();
+    const phoneCode = code ? `+${getCountryCallingCode(code)}` : "+0";
+    const flag = code ? String.fromCodePoint(...[...code].map(c => 0x1F1E6 - 65 + c.charCodeAt(0))) : "";
+
+    const enrichedCountry = { ...country, code, phoneCode, flag };
+    setSelectedCountry(enrichedCountry);
+    setCountrySearch(enrichedCountry.name);
+    setShowCountryDropdown(false);
+    clearCitySelection();
+    fetchCitiesForCountry(enrichedCountry.id);
+    onCountrySelect?.(enrichedCountry);
+    setTimeout(() => cityInputRef.current?.focus(), 0);
+  };
+
+  const handleCitySelect = (city) => {
+    setSelectedCity(city);
+    setCitySearch(city.name);
+    setShowCityDropdown(false);
+    onCitySelect?.(city);
+  };
+
+  const handleManualCountry = async () => {
+    const name = countrySearch.trim();
+    if (!name) return;
+    if (countries.some(c => c.name.toLowerCase() === name.toLowerCase())) {
+      setNotice("Country already exists.");
+      setTimeout(() => setNotice(""), 2000);
+      return;
+    }
+    setSaving(prev => ({ ...prev, country: true }));
+
+    const code = getCode(name) || name.slice(0, 2).toUpperCase();
+    const phoneCode = code ? `+${getCountryCallingCode(code)}` : "+0";
+    const flag = code ? String.fromCodePoint(...[...code].map(c => 0x1F1E6 - 65 + c.charCodeAt(0))) : "";
+
+    try {
+      const res = await fetch(`${API_BASE}/countries`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, code, phoneCode, flag })
+      });
+      const newCountry = await res.json();
+      setCountries(prev => [...prev, newCountry]);
+      handleCountrySelect(newCountry);
+      onNotify?.({ type: "success", message: `Country "${name}" added` });
+    } catch (err) {
+      console.error(err);
+      setNotice("Failed to add country");
+      onNotify?.({ type: "error", message: "Failed to add country" });
+    } finally {
+      setSaving(prev => ({ ...prev, country: false }));
+      setTimeout(() => setNotice(""), 3000);
+    }
+  };
+
+  const handleManualCity = async () => {
+    const name = citySearch.trim();
+    if (!name || !selectedCountry?.id) {
+      setNotice("Select a country first");
+      setTimeout(() => setNotice(""), 2000);
+      return;
+    }
+    const exists = (citiesByCountry[selectedCountry.id] || []).some(c => c.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+      setNotice("City already exists.");
+      setTimeout(() => setNotice(""), 2000);
+      return;
+    }
+    setSaving(prev => ({ ...prev, city: true }));
+    try {
+      const res = await fetch(`${API_BASE}/cities`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, countryId: selectedCountry.id })
+      });
+      const newCity = await res.json();
+      setCitiesByCountry(prev => ({
+        ...prev,
+        [selectedCountry.id]: [...(prev[selectedCountry.id] || []), newCity]
+      }));
+      handleCitySelect(newCity);
+      onNotify?.({ type: "success", message: `City "${name}" added` });
+    } catch (err) {
+      console.error(err);
+      setNotice("Failed to add city");
+      onNotify?.({ type: "error", message: "Failed to add city" });
+    } finally {
+      setSaving(prev => ({ ...prev, city: false }));
+      setTimeout(() => setNotice(""), 3000);
+    }
+  };
+
+  const handleDropdownKeys = (e, type, items, onSelect) => {
+    if (!["ArrowDown", "ArrowUp", "Enter", "Escape"].includes(e.key)) return;
+    if (e.key === "Enter") e.preventDefault();
+    if (e.key === "Escape") { if (type === "country") setShowCountryDropdown(false); else setShowCityDropdown(false); return; }
+    if (!items.length) { if (e.key === "Enter") { setNotice('No match. Click Add.'); setTimeout(() => setNotice(""), 2000); } return; }
+    let idx = highlightedIndex[type] ?? 0;
+    if (e.key === "ArrowDown") idx = (idx + 1) % items.length;
+    if (e.key === "ArrowUp") idx = (idx - 1 + items.length) % items.length;
+    if (e.key === "Enter") { onSelect(items[idx]); return; }
+    setHighlightedIndex(prev => ({ ...prev, [type]: idx }));
+  };
+
+  return (
+    <div className="location-selector">
+      {notice && <div className="ls-notice">{notice}</div>}
+
+      {/* Country */}
+      <div className={`form-group ${errors.country ? "error" : ""}`} ref={countryRef}>
+        <label className="form-label required">Country</label>
+        <div className="ls-input-wrap">
+          <input
+            ref={countryInputRef}
+            type="text"
+            value={countrySearch}
+            onChange={e => { setCountrySearch(e.target.value); setShowCountryDropdown(true); setSelectedCountry(null); }}
+            onFocus={() => setShowCountryDropdown(true)}
+            onKeyDown={e => handleDropdownKeys(e, "country", filteredCountries, handleCountrySelect)}
+            placeholder="Search country..."
+            className="form-input"
+          />
+          <button type="button" className="ls-chevron" onClick={() => setShowCountryDropdown(s => !s)}>
+            <FaChevronDown />
+          </button>
         </div>
-
-        <div 
-          className={`form-group ls-city ${errors.city ? "error" : ""}`} 
-          ref={cityRef}
-        >
-          {showLabels && (
-            <label className="form-label">
-              City {required && <span className="required">*</span>}
-            </label>
-          )}
-          <div className="ls-input-wrap">
-            <input
-              ref={cityInputRef}
-              disabled={!selectedCountry}
-              type="text"
-              value={citySearch}
-              onChange={(e) => handleCitySearchChange(e.target.value)}
-              onFocus={() => selectedCountry && setShowCityDropdown(true)}
-              onKeyDown={(e) =>
-                handleKeyDown(
-                  e,
-                  "city",
-                  filteredCities,
-                  handleCitySelect,
-                  handleManualCity
-                )
-              }
-              placeholder={selectedCountry ? "Search city..." : "Select country first"}
-              className="form-input"
-              aria-label="Select city"
-              aria-expanded={showCityDropdown}
-              aria-haspopup="listbox"
-              aria-disabled={!selectedCountry}
-            />
-            <button
-              type="button"
-              className="ls-chevron"
-              disabled={!selectedCountry}
-              onClick={() => selectedCountry && setShowCityDropdown((prev) => !prev)}
-              aria-label="Toggle city dropdown"
-            >
-              <FaChevronDown />
-            </button>
-          </div>
-          {showCityDropdown && selectedCountry && (
-            <ul className="ls-dropdown" role="listbox">
-              {filteredCities.length > 0 ? (
-                filteredCities.map((city, index) => (
-                  <li
-                    key={city.id}
-                    className={highlightedIndex.city === index ? "highlighted" : ""}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleCitySelect(city);
-                    }}
-                    role="option"
-                    aria-selected={selectedCity?.id === city.id}
-                  >
-                    {city.name}
-                  </li>
-                ))
-              ) : (
-                <li className="ls-no-results">No cities found</li>
-              )}
-              {citySearch && (
-                <li
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    handleManualCity();
-                  }}
-                  role="option"
-                  className="ls-add-option"
-                >
-                  <FaPlus /> Add "{citySearch}"
-                </li>
-              )}
-            </ul>
-          )}
-        </div>
-
-        {(loading.countries || loading.cities || saving.country || saving.city) && (
-          <div className="ls-status">
-            {loading.countries && (
-              <span><FaSpinner className="spinner" /> Loading countries...</span>
-            )}
-            {loading.cities && (
-              <span><FaSpinner className="spinner" /> Loading cities...</span>
-            )}
-            {saving.country && (
-              <span><FaSpinner className="spinner" /> Saving country...</span>
-            )}
-            {saving.city && (
-              <span><FaSpinner className="spinner" /> Saving city...</span>
-            )}
-          </div>
+        {showCountryDropdown && (
+          <ul className="ls-dropdown">
+            {filteredCountries.map((c, i) => (
+              <li key={c.id} className={highlightedIndex.country === i ? "highlighted" : ""} onMouseDown={e => { e.preventDefault(); handleCountrySelect(c); }}>
+                {highlightText(c.name, countrySearch)}
+              </li>
+            ))}
+            {countrySearch && <li className="ls-manual" onMouseDown={e => { e.preventDefault(); handleManualCountry(); }}>➕ Add "{countrySearch}"</li>}
+          </ul>
         )}
       </div>
-    );
-  }
-);
+
+      {/* City */}
+      <div className={`form-group ${errors.city ? "error" : ""}`} ref={cityRef}>
+        <label className="form-label required">City</label>
+        <div className="ls-input-wrap">
+          <input
+            ref={cityInputRef}
+            disabled={!selectedCountry}
+            type="text"
+            value={citySearch}
+            onChange={e => { setCitySearch(e.target.value); setShowCityDropdown(true); setSelectedCity(null); }}
+            onFocus={() => selectedCountry && setShowCityDropdown(true)}
+            onKeyDown={e => handleDropdownKeys(e, "city", filteredCities, handleCitySelect)}
+            placeholder={selectedCountry ? "Search city..." : "Select country first"}
+            className="form-input"
+          />
+          <button type="button" className="ls-chevron" disabled={!selectedCountry} onClick={() => selectedCountry && setShowCityDropdown(s => !s)}>
+            <FaChevronDown />
+          </button>
+        </div>
+        {showCityDropdown && selectedCountry && (
+          <ul className="ls-dropdown">
+            {filteredCities.map((ct, i) => (
+              <li key={ct.id} className={highlightedIndex.city === i ? "highlighted" : ""} onMouseDown={e => { e.preventDefault(); handleCitySelect(ct); }}>
+                {highlightText(ct.name, citySearch)}
+              </li>
+            ))}
+            {citySearch && <li className="ls-manual" onMouseDown={e => { e.preventDefault(); handleManualCity(); }}>➕ Add "{citySearch}"</li>}
+          </ul>
+        )}
+      </div>
+
+      {(loading || saving.country || saving.city) && <div className="ls-status">{loading && "Loading..."}{saving.country && "Saving country..."}{saving.city && "Saving city..."}</div>}
+    </div>
+  );
+});
 
 export default LocationSelector;
