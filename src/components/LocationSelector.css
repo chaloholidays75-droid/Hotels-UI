@@ -305,7 +305,7 @@
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .location-selector {
     --primary: #60a5fa;
     --primary-hover: #3b82f6;
@@ -343,4 +343,4 @@
     border-color: var(--gray-300);
     color: var(--gray-500);
   }
-}
+} */
