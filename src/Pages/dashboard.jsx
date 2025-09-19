@@ -596,7 +596,7 @@ const Dashboard = ({ showNotification, onNavigate }) => {
     ],
   };
 
- const fetchDashboardData = async () => {
+const fetchDashboardData = async () => {
   setRefreshing(true);
   setError(null);
 
@@ -658,7 +658,6 @@ const Dashboard = ({ showNotification, onNavigate }) => {
     setLoading(false);
   }
 };
-
 
   useEffect(() => {
     fetchDashboardData();
