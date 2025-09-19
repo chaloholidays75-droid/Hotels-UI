@@ -857,8 +857,8 @@ const Dashboard = ({ showNotification, onNavigate }) => {
             {recentActivities.slice(0, 6).map((activity) => (
               <div key={activity.id} className="activity-item">
                 <div className="activity-icon">
-                  {activity.entity.toLowerCase() === 'hotel' && <FaHotel />}
-                  {activity.entity.toLowerCase() === 'agency' && <FaBuilding />}
+                  {activity.entity?.toLowerCase() === 'hotel' && <FaHotel />}
+                  {activity.entity?.toLowerCase() === 'agency' && <FaBuilding />}
                    {!activity.entity && <FaExclamationTriangle />}
                   {/* Add more icons if needed */}
                 </div>
