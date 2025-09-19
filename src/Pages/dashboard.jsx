@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fa';
 import { Pie, Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
+import { formatDistanceToNow } from 'date-fns';
 import 'chartjs-adapter-date-fns';
 
 import {
@@ -854,21 +855,25 @@ const Dashboard = ({ showNotification, onNavigate }) => {
               <Users size={18} />
             </div>
             <div className="activities-list">
-              {recentActivities.slice(0, 6).map((activity, index) => (
-                <div key={index} className="activity-item">
-                  <div className="activity-icon">
-                    {activity.type === 'hotel' && <FaHotel />}
-                    {activity.type === 'agency' && <FaBuilding />}
-                  </div>
-                  <div className="activity-content">
-                    <p className="activity-text">{activity.name}</p>
-                    <div className="activity-meta">
-                      <span className="activity-type">{activity.type}</span>
-                      <span className="activity-time">{activity.timeAgo}</span>
-                    </div>
+            {recentActivities.slice(0, 6).map((activity) => (
+              <div key={activity.id} className="activity-item">
+                <div className="activity-icon">
+                  {activity.entity.toLowerCase() === 'hotel' && <FaHotel />}
+                  {activity.entity.toLowerCase() === 'agency' && <FaBuilding />}
+                  {/* Add more icons if needed */}
+                </div>
+                <div className="activity-content">
+                  <p className="activity-text">{activity.description}</p>
+                  <div className="activity-meta">
+                    <span className="activity-user">{activity.username}</span>
+                    <span className="activity-time">
+                      {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                    </span>
                   </div>
                 </div>
-              ))}
+              </div>
+            ))}
+
             </div>
           </div>
 
