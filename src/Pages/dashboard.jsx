@@ -859,6 +859,7 @@ const Dashboard = ({ showNotification, onNavigate }) => {
                 <div className="activity-icon">
                   {activity.entity.toLowerCase() === 'hotel' && <FaHotel />}
                   {activity.entity.toLowerCase() === 'agency' && <FaBuilding />}
+                   {!activity.entity && <FaExclamationTriangle />}
                   {/* Add more icons if needed */}
                 </div>
                 <div className="activity-content">
