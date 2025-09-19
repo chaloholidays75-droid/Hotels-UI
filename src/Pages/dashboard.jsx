@@ -868,8 +868,8 @@ const Dashboard = ({ showNotification, onNavigate }) => {
                     <span className="activity-user">{activity.username}</span>
                     <span className="activity-time">
                       <span>
-                        {activity.createdAt && !isNaN(new Date(activity.createdAt).getTime())
-                          ? formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })
+                        {activity.timestamp && !isNaN(new Date(activity.timestamp).getTime())
+                          ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })
                           : "Unknown time"}
                       </span>
 
