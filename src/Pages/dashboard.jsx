@@ -271,7 +271,12 @@ const Dashboard = ({ showNotification, onNavigate }) => {
                 </div>
                 <div>
                   <p>{act.description}</p>
-                  <span>{formatDistanceToNow(new Date(act.createdAt), { addSuffix: true })}</span>
+                  <span>
+                    {act.createdAt && !isNaN(new Date(act.createdAt).getTime())
+                      ? formatDistanceToNow(new Date(act.createdAt), { addSuffix: true })
+                      : "Unknown time"}
+                  </span>
+
                 </div>
               </div>
             ))}
