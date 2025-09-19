@@ -863,7 +863,7 @@ const Dashboard = ({ showNotification, onNavigate }) => {
                 </div>
                 <div className="activity-content">
                   <p className="activity-text">
-                    {activity.user} {activity.action} {activity.type} "{activity.entityName}"
+                    {activity.user || "Unknown user"} {activity.action} {activity.type} "{activity.name || 'Unnamed'}"
                   </p>
                   <div className="activity-meta">
                     <span className="activity-time">
