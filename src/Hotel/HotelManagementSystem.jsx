@@ -163,38 +163,48 @@ const HotelManagementSystem = () => {
   
   try {
     const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
-    const endpoint = `${API_BASE_HOTEL}/${id}/status`;
     
-    // Try different HTTP methods
-    const methods = ['PUT', 'POST', 'PATCH'];
-    let response;
+    console.log('Fetching current hotel data...');
     
-    for (const method of methods) {
-      try {
-        console.log(`Trying ${method} for endpoint: ${endpoint}`);
-        response = await fetch(endpoint, {
-          method: method,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newStatus),
-        });
-        
-        if (response.ok) {
-          console.log(`Success with ${method} method`);
-          break;
-        }
-      } catch (error) {
-        console.log(`${method} failed:`, error.message);
-      }
+    // First, get the current hotel data from backend
+    const getResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
+    if (!getResponse.ok) {
+      throw new Error(`Failed to fetch hotel: ${getResponse.status}`);
+    }
+    
+    const hotelData = await getResponse.json();
+    console.log('Current hotel data:', hotelData);
+    
+    // Create updated hotel object with ONLY the changed field
+    const updatedHotel = {
+      ...hotelData,
+      isActive: newStatus
+    };
+    
+    console.log('Sending updated data:', updatedHotel);
+    
+    // Use PUT to update the entire hotel record
+    const putResponse = await fetch(`${API_BASE_HOTEL}/${id}`, {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem('accessToken')}` // Add auth token if needed
+      },
+      body: JSON.stringify(updatedHotel),
+    });
+
+    console.log('PUT response status:', putResponse.status);
+    
+    if (!putResponse.ok) {
+      const errorText = await putResponse.text();
+      console.error('PUT error response:', errorText);
+      throw new Error(`HTTP error! status: ${putResponse.status}, response: ${errorText}`);
     }
 
-    if (!response || !response.ok) {
-      throw new Error(`All methods failed for status endpoint`);
-    }
-
-    const result = await response.json();
-    console.log('Backend response:', result);
+    const result = await putResponse.json();
+    console.log('Backend PUT response:', result);
     
-    // Update local state
+    // Update local state only after successful backend update
     setHotels(prev => prev.map(h => 
       h.id === id ? { ...h, isActive: newStatus } : h
     ));
@@ -202,45 +212,64 @@ const HotelManagementSystem = () => {
     showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
   } catch (err) {
     console.error("Error updating hotel status:", err);
-    showNotification("Error: Status endpoint not working. Using fallback method.", "error");
+    showNotification("Error: Could not update hotel status in database", "error");
     
-    // Fallback to PUT method for entire hotel update
-    try {
-      await updateHotelViaPut(id, newStatus);
-    } catch (fallbackError) {
-      console.error("Fallback also failed:", fallbackError);
-      // Revert UI change
-      setHotels(prev => prev.map(h => 
-        h.id === id ? { ...h, isActive: currentStatus } : h
-      ));
+    // Revert the UI change since backend update failed
+    setHotels(prev => prev.map(h => 
+      h.id === id ? { ...h, isActive: currentStatus } : h
+    ));
+  }
+};
+// Add this temporary debug function
+const debugHotelUpdate = async (id) => {
+  const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+  
+  try {
+    console.log('=== DEBUG: Hotel Update Process ===');
+    
+    // 1. Get current data
+    console.log('1. Getting current hotel data...');
+    const getResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
+    const currentData = await getResponse.json();
+    console.log('Current data:', currentData);
+    
+    // 2. Prepare update
+    const updatedData = { ...currentData, isActive: !currentData.isActive };
+    console.log('2. Prepared update:', updatedData);
+    
+    // 3. Send update
+    console.log('3. Sending PUT request...');
+    const putResponse = await fetch(`${API_BASE_HOTEL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedData),
+    });
+    
+    console.log('PUT response status:', putResponse.status);
+    console.log('PUT response headers:', Object.fromEntries(putResponse.headers.entries()));
+    
+    if (!putResponse.ok) {
+      const errorText = await putResponse.text();
+      console.error('PUT failed:', errorText);
+      return;
     }
+    
+    const result = await putResponse.json();
+    console.log('4. PUT successful:', result);
+    
+    // 4. Verify update
+    console.log('5. Verifying update...');
+    const verifyResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
+    const verifiedData = await verifyResponse.json();
+    console.log('Verified data:', verifiedData);
+    
+  } catch (error) {
+    console.error('Debug error:', error);
   }
 };
 
-// Helper function for PUT fallback
-const updateHotelViaPut = async (id, newStatus) => {
-  const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
-  
-  const getResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
-  if (!getResponse.ok) throw new Error('Failed to fetch hotel');
-  
-  const hotelData = await getResponse.json();
-  const updatedHotel = { ...hotelData, isActive: newStatus };
-  
-  const putResponse = await fetch(`${API_BASE_HOTEL}/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(updatedHotel),
-  });
-
-  if (!putResponse.ok) throw new Error(`PUT failed: ${putResponse.status}`);
-  
-  setHotels(prev => prev.map(h => 
-    h.id === id ? { ...h, isActive: newStatus } : h
-  ));
-  
-  showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
-};
+// Call this to debug a specific hotel
+// debugHotelUpdate(51);
 
   const manualRefresh = () => {
     fetchHotels();
