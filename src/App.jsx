@@ -11,6 +11,7 @@ import { checkAuth } from './api';
 import Loader from './components/loader';
 import HotelSalesList from './Hotel/HotelSalesList';
 import Sidebar from './components/Sidebar';
+import RecentActivityPage from './Pages/RecentActivityPage';
 import './App.css';
 
 // Layout for authenticated pages
@@ -129,6 +130,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/recent-activities" element={<RecentActivityPage />} />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/backend/login" replace />} />
