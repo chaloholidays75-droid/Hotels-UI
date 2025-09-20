@@ -109,7 +109,7 @@ const toggleAgencyStatus = async (id) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ isActive: newStatus })
     });
-    console.log("PATCH body:", { agencyId: id, isActive: newStatus });
+    console.log("PATCH body:", {isActive: newStatus });
 
     if (response.ok) {
       alert(`Agency ${newStatus ? 'activated' : 'deactivated'} successfully!`);
