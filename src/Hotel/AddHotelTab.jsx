@@ -210,6 +210,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       hotelEmail: hotel.hotelEmail || "",
       hotelContactNumber: hotel.hotelContactNumber || "",
       address: hotel.address || "",
+      region: hotel.region || "",
       hotelChain: hotel.hotelChain || "",
       salesPersons: hotel.salesPersons || [{ name: "", email: "", contact: "" }],
       reservationPersons: hotel.reservationPersons || [{ name: "", email: "", contact: "" }],
@@ -231,6 +232,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       hotelEmail: "",
       hotelContactNumber: "",
       address: "",
+      region: "",
       hotelChain: "",
       salesPersons: [{ name: "", email: "", contact: "" }],
       reservationPersons: [{ name: "", email: "", contact: "" }],
@@ -440,6 +442,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       hotelEmail: formData.hotelEmail || "",
       hotelContactNumber: formData.hotelContactNumber || "",
       address: formData.address || "",
+      region: formData.region || "",
       hotelChain: formData.hotelChain || "",
       specialRemarks: formData.specialRemarks || "",
       cityId: formData.cityId,
@@ -627,7 +630,16 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
           />
           {validationErrors.address && <span className="error-text">{validationErrors.address}</span>}
         </div>
-
+        {/* Region */}
+        <div className="form-group">
+          <label><FaMapMarkerAlt /> Region</label>
+          <input
+            type="text"
+            value={formData.region}
+            onChange={e => setFormData({ ...formData, region: e.target.value })}
+            placeholder="Enter your Region"
+          />
+        </div>
         {/* Hotel Contact */}
         <div className="form-group">
           <label><FaPhone /> Hotel Contact Number</label>
