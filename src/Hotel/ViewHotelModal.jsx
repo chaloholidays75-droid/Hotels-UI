@@ -7,8 +7,6 @@ import {
 
 const ViewHotelModal = ({ hotel, onClose }) => {
   if (!hotel) return null;
-  console.log(hotel.specialRemarks, typeof hotel.specialRemarks);
-
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -200,11 +198,7 @@ const ViewHotelModal = ({ hotel, onClose }) => {
                 <h3><FaInfoCircle /> Special Remarks</h3>
                 <p>Additional information about the hotel</p>
               </div>
-              <div className="remarks-content">
-                {hotel.specialRemarks.trim() ? hotel.specialRemarks : 'Not specified'}
-              </div>
-
-
+              <div className="remarks-content">{hotel.specialRemarks || ''}</div>
             </div>
           )}
         </div>
