@@ -164,29 +164,53 @@ const HotelManagementSystem = () => {
   try {
     const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
     
-    console.log('Updating hotel status via PATCH...');
+    console.log('Fetching current hotel data...');
     
-    // Use the dedicated PATCH endpoint for status updates
-    const patchResponse = await fetch(`${API_BASE_HOTEL}/${id}/status`, {
-      method: "PATCH",
+    // First, get the current hotel data from backend
+    const getResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
+    if (!getResponse.ok) {
+      throw new Error(`Failed to fetch hotel: ${getResponse.status}`);
+    }
+    
+    const hotelData = await getResponse.json();
+    console.log('Current hotel data:', hotelData);
+    
+    // Create updated hotel object with ONLY the changed field
+    const updatedHotel = {
+      ...hotelData,
+      isActive: newStatus
+    };
+    
+    console.log('Sending updated data:', updatedHotel);
+    
+    // Use PUT to update the entire hotel record
+    const putResponse = await fetch(`${API_BASE_HOTEL}/${id}`, {
+      method: "PUT",
       headers: { 
         "Content-Type": "application/json",
         "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
       },
-      body: JSON.stringify(newStatus),
+      body: JSON.stringify(updatedHotel),
     });
 
-    console.log('PATCH response status:', patchResponse.status);
+    console.log('PUT response status:', putResponse.status);
     
-    if (!patchResponse.ok) {
-      const errorText = await patchResponse.text();
-      console.error('PATCH error response:', errorText);
-      throw new Error(`HTTP error! status: ${patchResponse.status}, response: ${errorText}`);
+    if (!putResponse.ok) {
+      const errorText = await putResponse.text();
+      console.error('PUT error response:', errorText);
+      throw new Error(`HTTP error! status: ${putResponse.status}, response: ${errorText}`);
     }
 
-    // Parse the JSON response
-    const result = await patchResponse.json();
-    console.log('Backend PATCH response:', result);
+    // Handle both 200 (with content) and 204 (no content) responses
+    let result = null;
+    const contentType = putResponse.headers.get('content-type');
+    
+    if (putResponse.status !== 204 && contentType && contentType.includes('application/json')) {
+      result = await putResponse.json();
+      console.log('Backend PUT response:', result);
+    } else {
+      console.log('PUT successful (204 No Content or non-JSON response)');
+    }
     
     // Update local state only after successful backend update
     setHotels(prev => prev.map(h => 
