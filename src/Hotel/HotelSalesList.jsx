@@ -3,9 +3,8 @@ import HotelListSkeleton from '../components/HotelListSkeleton';
 import { 
   FaSearch, FaFilter, FaSortUp, FaSortDown, FaEye, 
   FaEdit, FaToggleOn, FaToggleOff, FaPlus, FaEllipsisV, FaTimes,
-  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan
+  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan, FaLock
 } from 'react-icons/fa';
-import './viewhotel.css'
 
 const HotelSalesList = ({ 
   hotels, 
@@ -13,7 +12,8 @@ const HotelSalesList = ({
   showNotification, 
   openViewModal, 
   openEditModal, 
-  toggleHotelStatus 
+  toggleHotelStatus,
+  isAdmin 
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
@@ -66,6 +66,9 @@ const HotelSalesList = ({
   const totalPages = Math.ceil(filteredHotels.length / itemsPerPage);
 
   const toggleSelectHotel = (id) => {
+    // Only allow selection for admin users
+    if (!isAdmin) return;
+    
     setSelectedHotels(prev => 
       prev.includes(id) 
         ? prev.filter(hotelId => hotelId !== id)
@@ -74,6 +77,9 @@ const HotelSalesList = ({
   };
 
   const toggleSelectAll = () => {
+    // Only allow selection for admin users
+    if (!isAdmin) return;
+    
     if (selectedHotels.length === currentHotels.length) {
       setSelectedHotels([]);
     } else {
@@ -87,6 +93,11 @@ const HotelSalesList = ({
     <div className="hsl-hotel-sales-list">
       <div className="hsl-card">
         <h2 className="section-title">Registered Hotels</h2>
+        {!isAdmin && (
+          <div className="hsl-view-only-notice">
+            <FaLock /> View Only Mode - You have read-only access
+          </div>
+        )}
 
         <div className="hsl-list-controls">
           <div className="hsl-search-filter-section">
@@ -142,7 +153,7 @@ const HotelSalesList = ({
             </div>
           </div>
 
-          {selectedHotels.length > 0 && (
+          {isAdmin && selectedHotels.length > 0 && (
             <div className="hsl-bulk-actions-card">
               <div className="hsl-bulk-header">
                 <FaCheckCircle />
@@ -246,13 +257,15 @@ const HotelSalesList = ({
               <table className="hsl-hotels-table">
                 <thead>
                   <tr>
-                    <th className="hsl-select-column">
-                      <input
-                        type="checkbox"
-                        checked={selectedHotels.length === currentHotels.length && currentHotels.length > 0}
-                        onChange={toggleSelectAll}
-                      />
-                    </th>
+                    {isAdmin && (
+                      <th className="hsl-select-column">
+                        <input
+                          type="checkbox"
+                          checked={selectedHotels.length === currentHotels.length && currentHotels.length > 0}
+                          onChange={toggleSelectAll}
+                        />
+                      </th>
+                    )}
                     <th onClick={() => handleSort('hotelName')} className="hsl-sortable-header">
                       <div>
                         <span>Hotel Name</span>
@@ -280,14 +293,16 @@ const HotelSalesList = ({
                 <tbody>
                   {currentHotels.map(hotel => (
                     <tr key={hotel.id} className={`${selectedHotels.includes(hotel.id) ? 'hsl-selected' : ''} ${!hotel.isActive ? 'hsl-inactive-row' : ''}`}>
-                      <td className="hsl-select-column">
-                        <input
-                          type="checkbox"
-                          checked={selectedHotels.includes(hotel.id)}
-                          onChange={() => toggleSelectHotel(hotel.id)}
-                          disabled={!hotel.isActive}
-                        />
-                      </td>
+                      {isAdmin && (
+                        <td className="hsl-select-column">
+                          <input
+                            type="checkbox"
+                            checked={selectedHotels.includes(hotel.id)}
+                            onChange={() => toggleSelectHotel(hotel.id)}
+                            disabled={!hotel.isActive}
+                          />
+                        </td>
+                      )}
                       <td>
                         <div className="hsl-hotel-name-cell">
                           <div className="hsl-hotel-name">{hotel.hotelName || 'No Name Provided'}</div>
@@ -351,21 +366,34 @@ const HotelSalesList = ({
                           >
                             <FaEye />
                           </button>
-                          <button 
-                            className={`hsl-btn-icon hsl-edit-btn ${!hotel.isActive ? 'hsl-disabled' : ''}`} 
-                            onClick={() => openEditModal(hotel)} 
-                            title={hotel.isActive ? "Edit" : "Cannot edit inactive hotels"}
-                            disabled={!hotel.isActive}
-                          >
-                            <FaEdit />
-                          </button>
-                          <button 
-                            className={`hsl-btn-icon hsl-status-btn ${hotel.isActive ? 'hsl-active' : 'hsl-inactive'}`} 
-                            onClick={() => toggleHotelStatus(hotel.id, hotel.isActive)} 
-                            title={hotel.isActive ? 'Deactivate' : 'Activate'}
-                          >
-                            {hotel.isActive ? <FaToggleOn /> : <FaToggleOff />}
-                          </button>
+                          
+                          {isAdmin ? (
+                            <>
+                              <button 
+                                className={`hsl-btn-icon hsl-edit-btn ${!hotel.isActive ? 'hsl-disabled' : ''}`} 
+                                onClick={() => openEditModal(hotel)} 
+                                title={hotel.isActive ? "Edit" : "Cannot edit inactive hotels"}
+                                disabled={!hotel.isActive}
+                              >
+                                <FaEdit />
+                              </button>
+                              <button 
+                                className={`hsl-btn-icon hsl-status-btn ${hotel.isActive ? 'hsl-active' : 'hsl-inactive'}`} 
+                                onClick={() => toggleHotelStatus(hotel.id, hotel.isActive)} 
+                                title={hotel.isActive ? 'Deactivate' : 'Activate'}
+                              >
+                                {hotel.isActive ? <FaToggleOn /> : <FaToggleOff />}
+                              </button>
+                            </>
+                          ) : (
+                            <button 
+                              className="hsl-btn-icon hsl-disabled" 
+                              title="Admin permission required"
+                              disabled
+                            >
+                              <FaLock />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

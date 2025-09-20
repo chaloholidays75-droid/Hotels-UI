@@ -15,6 +15,20 @@ const HotelManagementSystem = () => {
   const [viewModal, setViewModal] = useState({ isOpen: false, hotel: null });
   const [editModal, setEditModal] = useState({ isOpen: false, hotel: null });
   const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [userRole, setUserRole] = useState(''); // Will be populated from auth context or API
+
+  // In a real app, you would get this from your authentication context or API
+  useEffect(() => {
+    // Simulate fetching user role (replace with actual implementation)
+    const fetchUserRole = () => {
+      // This would typically come from your auth context or user API
+      const role = localStorage.getItem('userRole') || 'employee'; // Default to employee
+      setUserRole(role);
+    };
+    
+    fetchUserRole();
+  }, []);
 
   const showNotification = useCallback((message, type) => {
     setNotification({ show: true, message, type });
@@ -29,6 +43,7 @@ const HotelManagementSystem = () => {
   }, [activeView]);
 
   const fetchHotels = async () => {
+    setLoading(true);
     try {
       const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
       const API_BASE_COUNTRIES = "https://backend.chaloholidayonline.com/api/countries";
@@ -74,6 +89,8 @@ const HotelManagementSystem = () => {
     } catch (err) {
       console.error("Error fetching hotels:", err);
       showNotification(`Error fetching hotels: ${err.message}`, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -86,6 +103,18 @@ const HotelManagementSystem = () => {
   };
 
   const openEditModal = (hotel) => {
+    // Only allow editing active hotels
+    if (!hotel.isActive) {
+      showNotification("Cannot edit deactivated hotels. Please activate first.", "error");
+      return;
+    }
+    
+    // Check if user has admin role
+    if (userRole !== 'admin') {
+      showNotification("You do not have permission to edit hotels.", "error");
+      return;
+    }
+    
     setEditModal({ isOpen: true, hotel });
   };
 
@@ -111,6 +140,12 @@ const HotelManagementSystem = () => {
   };
 
   const toggleHotelStatus = async (id, currentStatus) => {
+    // Check if user has admin role
+    if (userRole !== 'admin') {
+      showNotification("You do not have permission to change hotel status.", "error");
+      return;
+    }
+    
     const newStatus = !currentStatus;
     
     try {
@@ -132,6 +167,9 @@ const HotelManagementSystem = () => {
       showNotification("Error updating hotel status", "error");
     }
   };
+
+  // Check if user is admin
+  const isAdmin = userRole === 'admin';
 
   return (
     <div className="hms-page-content ">
@@ -160,15 +198,20 @@ const HotelManagementSystem = () => {
           <div className="hms-header-content-title">
             <h1 className="hms-header-title">Hotel Management System</h1>
             <p className="hms-header-subtitle">Manage hotel information, contacts, and facilities</p>
+            <div className="hms-user-role-badge">
+              Logged in as: <span className={`hms-role-${userRole}`}>{userRole}</span>
+            </div>
           </div>
           <div className="hms-nav-buttons">
-            <button 
-              className={`hms-nav-button ${activeView === 'add' ? 'hms-active' : ''}`} 
-              onClick={() => setActiveView('add')}
-            >
-              <fml-icon name="add-outline" size="medium"></fml-icon> 
-              <span>Add Hotel</span>
-            </button>
+            {isAdmin && (
+              <button 
+                className={`hms-nav-button ${activeView === 'add' ? 'hms-active' : ''}`} 
+                onClick={() => setActiveView('add')}
+              >
+                <fml-icon name="add-outline" size="medium"></fml-icon> 
+                <span>Add Hotel</span>
+              </button>
+            )}
             <button 
               className={`hms-nav-button ${activeView === 'view' ? 'hms-active' : ''}`} 
               onClick={() => setActiveView('view')}
@@ -182,14 +225,16 @@ const HotelManagementSystem = () => {
       
       {/* Content Section */}
       <main className="hms-content">
-        {activeView === 'add' && <AddHotelTab showNotification={showNotification} />}
+        {activeView === 'add' && isAdmin && <AddHotelTab showNotification={showNotification} />}
         {activeView === 'view' && (
           <HotelSalesList 
             hotels={hotels}
+            loading={loading}
             showNotification={showNotification}
             openViewModal={openViewModal}
             openEditModal={openEditModal}
             toggleHotelStatus={toggleHotelStatus}
+            isAdmin={isAdmin}
           />
         )}
       </main>

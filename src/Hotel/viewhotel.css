@@ -758,3 +758,15 @@ body {
 .hsl-disabled:hover {
   background-color: transparent !important;
 }
+.hsl-view-only-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f0f8ff;
+  color: #1890ff;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  border-left: 4px solid #1890ff;
+}

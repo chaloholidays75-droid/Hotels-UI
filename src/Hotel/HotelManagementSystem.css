@@ -321,3 +321,18 @@ body.sb-collapsed .hms-nav-button fml-icon {
     gap: 0.5rem;
   }
 }
+.hms-user-role-badge {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+.hms-role-admin {
+  color: #1890ff;
+  font-weight: 600;
+}
+
+.hms-role-employee {
+  color: #52c41a;
+  font-weight: 600;
+}
