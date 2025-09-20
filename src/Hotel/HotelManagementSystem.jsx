@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import StatsBar from '../components/statsbar';
 import AddHotelTab from './AddHotelTab';
 import HotelSalesList from './HotelSalesList';
-import { FaCheckCircle, FaTimesCircle, FaTimes } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaTimes, FaSync } from 'react-icons/fa';
 import ViewHotelModal from './ViewHotelModal';
 import EditHotelModal from './EditHotelModal';
 import Modal from './Modal';
@@ -16,15 +16,13 @@ const HotelManagementSystem = () => {
   const [editModal, setEditModal] = useState({ isOpen: false, hotel: null });
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [userRole, setUserRole] = useState(''); // Will be populated from auth context or API
+  const [userRole, setUserRole] = useState('');
+  const [lastRefresh, setLastRefresh] = useState(null);
 
-  // In a real app, you would get this from your authentication context or API
   useEffect(() => {
-    // Simulate fetching user role (replace with actual implementation)
     const fetchUserRole = () => {
-      // This would typically come from your auth context or user API
-      const role = localStorage.getItem('userRole') || 'employee'; // Default to employee
-      console.log('User role from localStorage:', role); // Debug log
+      const role = localStorage.getItem('userRole') || 'employee';
+      console.log('User role from localStorage:', role);
       setUserRole(role);
     };
     
@@ -35,6 +33,22 @@ const HotelManagementSystem = () => {
     setNotification({ show: true, message, type });
     setTimeout(() => setNotification({ show: false, message: '', type: '' }), 5000);
   }, []);
+
+  // Simple refresh only when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && activeView === 'view') {
+        console.log('Tab visible - refreshing hotels');
+        fetchHotels();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [activeView]);
 
   // Fetch hotels when switching to view tab
   useEffect(() => {
@@ -87,6 +101,7 @@ const HotelManagementSystem = () => {
       }));
 
       setHotels(adjustedData);
+      setLastRefresh(new Date());
     } catch (err) {
       console.error("Error fetching hotels:", err);
       showNotification(`Error fetching hotels: ${err.message}`, "error");
@@ -104,13 +119,11 @@ const HotelManagementSystem = () => {
   };
 
   const openEditModal = (hotel) => {
-    // Only allow editing active hotels
     if (!hotel.isActive) {
       showNotification("Cannot edit deactivated hotels. Please activate first.", "error");
       return;
     }
     
-    // FIXED: Case-insensitive admin check
     if (userRole.toLowerCase() !== 'admin') {
       showNotification("You do not have permission to edit hotels.", "error");
       return;
@@ -141,7 +154,6 @@ const HotelManagementSystem = () => {
   };
 
   const toggleHotelStatus = async (id, currentStatus) => {
-    // FIXED: Case-insensitive admin check
     if (userRole.toLowerCase() !== 'admin') {
       showNotification("You do not have permission to change hotel status.", "error");
       return;
@@ -151,13 +163,21 @@ const HotelManagementSystem = () => {
     
     try {
       const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
-      await fetch(`${API_BASE_HOTEL}/${id}/status`, {
+      const response = await fetch(`${API_BASE_HOTEL}/${id}/status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: newStatus }),
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // DEBUG: Check what the backend actually returned
+      const result = await response.json();
+      console.log('Backend response:', result);
       
-      // Update local state
+      // Update local state with the actual value from backend
       setHotels(prev => prev.map(h => 
         h.id === id ? { ...h, isActive: newStatus } : h
       ));
@@ -166,10 +186,30 @@ const HotelManagementSystem = () => {
     } catch (err) {
       console.error("Error updating hotel status:", err);
       showNotification("Error updating hotel status", "error");
+      
+      // Revert the change in UI since it failed
+      setHotels(prev => prev.map(h => 
+        h.id === id ? { ...h, isActive: currentStatus } : h
+      ));
     }
   };
 
-  // FIXED: Case-insensitive admin check
+  const manualRefresh = () => {
+    fetchHotels();
+    showNotification('Data refreshed', 'info');
+  };
+
+  const formatTimeSinceLastRefresh = () => {
+    if (!lastRefresh) return 'Never';
+    
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - lastRefresh) / 1000);
+    
+    if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    return `${Math.floor(diffInSeconds / 3600)}h ago`;
+  };
+
   const isAdmin = userRole.toLowerCase() === 'admin';
 
   return (
@@ -220,6 +260,17 @@ const HotelManagementSystem = () => {
               <fml-icon name="document-text-outline"></fml-icon>
               <span>View Hotels ({hotels.length})</span>
             </button>
+            
+            {/* Simple Refresh Button */}
+            {activeView === 'view' && (
+              <button 
+                className="hms-refresh-btn"
+                onClick={manualRefresh}
+                title="Refresh data"
+              >
+                <FaSync /> Refresh
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -236,6 +287,7 @@ const HotelManagementSystem = () => {
             openEditModal={openEditModal}
             toggleHotelStatus={toggleHotelStatus}
             isAdmin={isAdmin}
+            refreshHotels={fetchHotels}
           />
         )}
       </main>
