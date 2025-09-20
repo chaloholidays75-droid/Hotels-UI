@@ -864,36 +864,44 @@ const fetchDashboardData = async () => {
         </div> 
 
         {/* Right Column - Sidebar */}
-        <div className="dashboard-sidebar">
-          {/* Recent Activities */}
-          <div className="recent-activities">
-            <div className="section-header">
-              <h3>Recent Activities</h3>
-              <Users size={18} />
-            </div>
-            <div className="activities-list">
-            {recentActivities.slice(0, 6).map((activity) => (
-              <div key={activity.id} className="activity-item">
-                <div className="activity-icon">
-                  {activity.type === 'hotel' && <FaHotel />}
-                  {activity.type === 'agency' && <FaBuilding />}
-                  {!activity.type && <FaExclamationTriangle />}
-                </div>
-                <div className="activity-content">
-                  <p className="activity-text">
-                    {activity.user || "Unknown user"} {activity.action} {activity.type} "{activity.name || 'Unnamed'}"
-                  </p>
-                  <div className="activity-meta">
-                    <span className="activity-time">
-                      {activity.timeAgo || "Unknown time"}
-                    </span>
-                  </div>
+    <div className="dashboard-sidebar">
+      <div className="recent-activities">
+        <div className="section-header">
+          <h3>Recent Activities</h3>
+          <Users size={18} />
+        </div>
+
+        <div className="activities-list">
+          {recentActivities.slice(0, 6).map((activity) => (
+            <div key={activity.id} className="activity-item">
+              <div className="activity-icon">
+                {activity.type === 'hotel' && <FaHotel />}
+                {activity.type === 'agency' && <FaBuilding />}
+                {!activity.type && <FaExclamationTriangle />}
+              </div>
+              <div className="activity-content">
+                <p className="activity-text">
+                  {activity.user || "Unknown user"} {activity.action} {activity.type} "{activity.name || 'Unnamed'}"
+                </p>
+                <div className="activity-meta">
+                  <span className="activity-time">
+                    {activity.timeAgo || "Unknown time"}
+                  </span>
                 </div>
               </div>
-            ))}
-
             </div>
-          </div>
+          ))}
+        </div>
+
+        <div className="see-more-wrapper">
+          <button
+            className="see-more-btn"
+            onClick={() => navigate("/recent-activities")}
+          >
+            See More
+          </button>
+        </div>
+      </div>
 
           {/* Top Countries */}
           <div className="top-countries">

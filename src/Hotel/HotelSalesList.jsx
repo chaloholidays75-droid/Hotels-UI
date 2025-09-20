@@ -3,12 +3,12 @@ import HotelListSkeleton from '../components/HotelListSkeleton';
 import { 
   FaSearch, FaFilter, FaSortUp, FaSortDown, FaEye, 
   FaEdit, FaToggleOn, FaToggleOff, FaPlus, FaEllipsisV, FaTimes,
-  FaCheckCircle, FaExclamationTriangle, FaSync
+  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan
 } from 'react-icons/fa';
-import './viewhotel.css';
 
 const HotelSalesList = ({ 
   hotels, 
+  loading,
   showNotification, 
   openViewModal, 
   openEditModal, 
@@ -80,9 +80,7 @@ const HotelSalesList = ({
     }
   };
 
-  if (!hotels || hotels.length === 0) return (
-    <HotelListSkeleton rowCount={5} />
-  );
+  if (loading) return <HotelListSkeleton rowCount={5} />;
 
   return (
     <div className="hsl-hotel-sales-list">
@@ -164,13 +162,13 @@ const HotelSalesList = ({
                     if (bulkAction === "activate") {
                       selectedHotels.forEach(id => {
                         const hotel = hotels.find(h => h.id === id);
-                        if (hotel) toggleHotelStatus(id, hotel.isActive);
+                        if (hotel && !hotel.isActive) toggleHotelStatus(id, hotel.isActive);
                       });
                     }
                     if (bulkAction === "deactivate") {
                       selectedHotels.forEach(id => {
                         const hotel = hotels.find(h => h.id === id);
-                        if (hotel) toggleHotelStatus(id, hotel.isActive);
+                        if (hotel && hotel.isActive) toggleHotelStatus(id, hotel.isActive);
                       });
                     }
                   }}
@@ -280,18 +278,24 @@ const HotelSalesList = ({
                 </thead>
                 <tbody>
                   {currentHotels.map(hotel => (
-                    <tr key={hotel.id} className={selectedHotels.includes(hotel.id) ? 'hsl-selected' : ''}>
+                    <tr key={hotel.id} className={`${selectedHotels.includes(hotel.id) ? 'hsl-selected' : ''} ${!hotel.isActive ? 'hsl-inactive-row' : ''}`}>
                       <td className="hsl-select-column">
                         <input
                           type="checkbox"
                           checked={selectedHotels.includes(hotel.id)}
                           onChange={() => toggleSelectHotel(hotel.id)}
+                          disabled={!hotel.isActive}
                         />
                       </td>
                       <td>
                         <div className="hsl-hotel-name-cell">
                           <div className="hsl-hotel-name">{hotel.hotelName || 'No Name Provided'}</div>
                           {hotel.hotelChain && <div className="hsl-hotel-chain">{hotel.hotelChain}</div>}
+                          {!hotel.isActive && (
+                            <div className="hsl-inactive-label">
+                              <FaBan /> Inactive
+                            </div>
+                          )}
                         </div>
                       </td>
                       <td>
@@ -339,10 +343,19 @@ const HotelSalesList = ({
                       </td>
                       <td>
                         <div className="hsl-action-buttons">
-                          <button className="hsl-btn-icon hsl-view-btn" onClick={() => openViewModal(hotel)} title="View details">
+                          <button 
+                            className="hsl-btn-icon hsl-view-btn" 
+                            onClick={() => openViewModal(hotel)} 
+                            title="View details"
+                          >
                             <FaEye />
                           </button>
-                          <button className="hsl-btn-icon hsl-edit-btn" onClick={() => openEditModal(hotel)} title="Edit">
+                          <button 
+                            className={`hsl-btn-icon hsl-edit-btn ${!hotel.isActive ? 'hsl-disabled' : ''}`} 
+                            onClick={() => openEditModal(hotel)} 
+                            title={hotel.isActive ? "Edit" : "Cannot edit inactive hotels"}
+                            disabled={!hotel.isActive}
+                          >
                             <FaEdit />
                           </button>
                           <button 
