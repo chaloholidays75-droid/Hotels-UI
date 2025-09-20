@@ -33,6 +33,7 @@ api.interceptors.response.use(
           const { data } = await api.post('/auth/refresh-token', {refreshToken});
           localStorage.setItem('accessToken', data.accessToken);
           localStorage.setItem('refreshToken', data.refreshToken);
+          localStorage.setItem('userRole', data.role);
           originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
           return api(originalRequest);
         } catch (refreshError) {
@@ -127,10 +128,23 @@ async function safeAxios(url, method = 'get', data = null) {
 export async function checkAuth() {
   try {
     const { data } = await api.get('/auth/me');
-    return { isAuthenticated: true, userFullName: data.fullName };
+    
+    // Store role if available
+    if (data.role) {
+      localStorage.setItem('userRole', data.role);
+    }
+    if (data.fullName) {
+      localStorage.setItem('userFullName', data.fullName);
+    }
+    
+    return { 
+      isAuthenticated: true, 
+      userFullName: data.fullName,
+      role: data.role 
+    };
   } catch (error) {
     console.error('Auth check failed:', error.response?.status, error.message);
-    return { isAuthenticated: false, userFullName: null };
+    return { isAuthenticated: false, userFullName: null, role: null };
   }
 }
 
@@ -138,9 +152,22 @@ export async function checkAuth() {
 export async function login(email, password) {
   try {
     const { data } = await api.post('/auth/login', { email, password });
+
+    console.log('Login API Response:', data);
+    console.log('Role from API:', data.role);
+    
+    
+    // Store tokens AND user role
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
-    return { userFullName: data.userFullName, accessToken: data.accessToken };
+    localStorage.setItem('userRole', data.role); // ← ADD THIS LINE
+    localStorage.setItem('userFullName', data.userFullName); // Optional: store name too
+    
+    return { 
+      userFullName: data.userFullName, 
+      accessToken: data.accessToken,
+      role: data.role // ← Also return role
+    };
   } catch (error) {
     console.error('Login failed:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Login failed. Check server.');
