@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import StatsBar from '../components/statsbar';
 import AddHotelTab from './AddHotelTab';
 import HotelSalesList from './HotelSalesList';
-import { FaCheckCircle, FaTimesCircle, FaTimes, FaSync } from 'react-icons/fa';
+import { FaCheckCircle, FaTimesCircle, FaTimes } from 'react-icons/fa';
 import ViewHotelModal from './ViewHotelModal';
 import EditHotelModal from './EditHotelModal';
 import Modal from './Modal';
@@ -16,15 +16,15 @@ const HotelManagementSystem = () => {
   const [editModal, setEditModal] = useState({ isOpen: false, hotel: null });
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [userRole, setUserRole] = useState('');
-  const [lastRefresh, setLastRefresh] = useState(null);
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [userRole, setUserRole] = useState(''); // Will be populated from auth context or API
 
-  // Get user role from localStorage
+  // In a real app, you would get this from your authentication context or API
   useEffect(() => {
+    // Simulate fetching user role (replace with actual implementation)
     const fetchUserRole = () => {
-      const role = localStorage.getItem('userRole') || 'employee';
-      console.log('User role from localStorage:', role);
+      // This would typically come from your auth context or user API
+      const role = localStorage.getItem('userRole') || 'employee'; // Default to employee
+      console.log('User role from localStorage:', role); // Debug log
       setUserRole(role);
     };
     
@@ -35,53 +35,6 @@ const HotelManagementSystem = () => {
     setNotification({ show: true, message, type });
     setTimeout(() => setNotification({ show: false, message: '', type: '' }), 5000);
   }, []);
-
-  // Automatic refresh strategies
-  useEffect(() => {
-    let intervalId;
-    let visibilityTimeout;
-    let focusTimeout;
-
-    const refreshData = () => {
-      if (activeView === 'view' && autoRefreshEnabled) {
-        console.log('Auto-refreshing hotel data...');
-        fetchHotels();
-      }
-    };
-
-    // Strategy 1: Periodic refresh every 60 seconds
-    if (activeView === 'view' && autoRefreshEnabled) {
-      intervalId = setInterval(refreshData, 60000);
-    }
-
-    // Strategy 2: Refresh when tab becomes visible (with debounce)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && activeView === 'view' && autoRefreshEnabled) {
-        clearTimeout(visibilityTimeout);
-        visibilityTimeout = setTimeout(refreshData, 1000); // Wait 1 second after becoming visible
-      }
-    };
-
-    // Strategy 3: Refresh when window gains focus (with debounce)
-    const handleFocus = () => {
-      if (activeView === 'view' && autoRefreshEnabled) {
-        clearTimeout(focusTimeout);
-        focusTimeout = setTimeout(refreshData, 1500); // Wait 1.5 seconds after focus
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
-    // Cleanup
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-      clearTimeout(visibilityTimeout);
-      clearTimeout(focusTimeout);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [activeView, autoRefreshEnabled]);
 
   // Fetch hotels when switching to view tab
   useEffect(() => {
@@ -134,7 +87,6 @@ const HotelManagementSystem = () => {
       }));
 
       setHotels(adjustedData);
-      setLastRefresh(new Date());
     } catch (err) {
       console.error("Error fetching hotels:", err);
       showNotification(`Error fetching hotels: ${err.message}`, "error");
@@ -152,11 +104,13 @@ const HotelManagementSystem = () => {
   };
 
   const openEditModal = (hotel) => {
+    // Only allow editing active hotels
     if (!hotel.isActive) {
       showNotification("Cannot edit deactivated hotels. Please activate first.", "error");
       return;
     }
     
+    // FIXED: Case-insensitive admin check
     if (userRole.toLowerCase() !== 'admin') {
       showNotification("You do not have permission to edit hotels.", "error");
       return;
@@ -187,6 +141,7 @@ const HotelManagementSystem = () => {
   };
 
   const toggleHotelStatus = async (id, currentStatus) => {
+    // FIXED: Case-insensitive admin check
     if (userRole.toLowerCase() !== 'admin') {
       showNotification("You do not have permission to change hotel status.", "error");
       return;
@@ -202,13 +157,10 @@ const HotelManagementSystem = () => {
         body: JSON.stringify({ isActive: newStatus }),
       });
       
-      // Update local state immediately for better UX
+      // Update local state
       setHotels(prev => prev.map(h => 
         h.id === id ? { ...h, isActive: newStatus } : h
       ));
-      
-      // Also refresh the entire list to ensure consistency
-      setTimeout(() => fetchHotels(), 500);
       
       showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
     } catch (err) {
@@ -217,31 +169,8 @@ const HotelManagementSystem = () => {
     }
   };
 
-  const toggleAutoRefresh = () => {
-    setAutoRefreshEnabled(prev => !prev);
-    showNotification(
-      `Auto-refresh ${!autoRefreshEnabled ? 'enabled' : 'disabled'}`,
-      'success'
-    );
-  };
-
-  const manualRefresh = () => {
-    fetchHotels();
-    showNotification('Data refreshed manually', 'success');
-  };
-
+  // FIXED: Case-insensitive admin check
   const isAdmin = userRole.toLowerCase() === 'admin';
-
-  const formatTimeSinceLastRefresh = () => {
-    if (!lastRefresh) return 'Never';
-    
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - lastRefresh) / 1000);
-    
-    if (diffInSeconds < 60) return `${diffInSeconds} seconds ago`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  };
 
   return (
     <div className="hms-page-content ">
@@ -291,29 +220,6 @@ const HotelManagementSystem = () => {
               <fml-icon name="document-text-outline"></fml-icon>
               <span>View Hotels ({hotels.length})</span>
             </button>
-            
-            {/* Refresh Controls */}
-            {activeView === 'view' && (
-              <div className="hms-refresh-controls">
-                <button 
-                  className={`hms-refresh-btn ${autoRefreshEnabled ? 'hms-refresh-active' : 'hms-refresh-inactive'}`}
-                  onClick={toggleAutoRefresh}
-                  title={autoRefreshEnabled ? 'Auto-refresh enabled' : 'Auto-refresh disabled'}
-                >
-                  <FaSync /> Auto
-                </button>
-                <button 
-                  className="hms-refresh-btn hms-refresh-manual"
-                  onClick={manualRefresh}
-                  title="Refresh now"
-                >
-                  <FaSync /> Refresh
-                </button>
-                <span className="hms-last-refresh">
-                  Last: {formatTimeSinceLastRefresh()}
-                </span>
-              </div>
-            )}
           </div>
         </div>
       </header>
@@ -330,7 +236,6 @@ const HotelManagementSystem = () => {
             openEditModal={openEditModal}
             toggleHotelStatus={toggleHotelStatus}
             isAdmin={isAdmin}
-            refreshHotels={fetchHotels}
           />
         )}
       </main>
