@@ -107,7 +107,7 @@ const toggleAgencyStatus = async (id) => {
     const response = await fetch(`https://backend.chaloholidayonline.com/api/agency/${id}/status`, {
       method: 'PATCH',                 // PATCH, not PUT
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newStatus),  // raw boolean
+      body: JSON.stringify({ agencyId: id, isActive: newStatus })
     });
 
     if (response.ok) {
