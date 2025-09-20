@@ -24,6 +24,7 @@ const HotelManagementSystem = () => {
     const fetchUserRole = () => {
       // This would typically come from your auth context or user API
       const role = localStorage.getItem('userRole') || 'employee'; // Default to employee
+      console.log('User role from localStorage:', role); // Debug log
       setUserRole(role);
     };
     
@@ -109,8 +110,8 @@ const HotelManagementSystem = () => {
       return;
     }
     
-    // Check if user has admin role
-    if (userRole !== 'admin') {
+    // FIXED: Case-insensitive admin check
+    if (userRole.toLowerCase() !== 'admin') {
       showNotification("You do not have permission to edit hotels.", "error");
       return;
     }
@@ -140,8 +141,8 @@ const HotelManagementSystem = () => {
   };
 
   const toggleHotelStatus = async (id, currentStatus) => {
-    // Check if user has admin role
-    if (userRole !== 'admin') {
+    // FIXED: Case-insensitive admin check
+    if (userRole.toLowerCase() !== 'admin') {
       showNotification("You do not have permission to change hotel status.", "error");
       return;
     }
@@ -168,8 +169,8 @@ const HotelManagementSystem = () => {
     }
   };
 
-  // Check if user is admin
-  const isAdmin = userRole === 'admin';
+  // FIXED: Case-insensitive admin check
+  const isAdmin = userRole.toLowerCase() === 'admin';
 
   return (
     <div className="hms-page-content ">
@@ -199,7 +200,7 @@ const HotelManagementSystem = () => {
             <h1 className="hms-header-title">Hotel Management System</h1>
             <p className="hms-header-subtitle">Manage hotel information, contacts, and facilities</p>
             <div className="hms-user-role-badge">
-              Logged in as: <span className={`hms-role-${userRole}`}>{userRole}</span>
+              Logged in as: <span className={`hms-role-${userRole.toLowerCase()}`}>{userRole}</span>
             </div>
           </div>
           <div className="hms-nav-buttons">
