@@ -16,7 +16,7 @@ const AgencyManagement = () => {
   // Get user role from localStorage
   useEffect(() => {
     const role = localStorage.getItem('userRole') || 'employee';
-    console.log('Agency Management - User role:', role); // Debug log
+    console.log('Agency Management - User role:', role);
     setUserRole(role);
   }, []);
 
@@ -66,7 +66,6 @@ const AgencyManagement = () => {
   };
 
   const openEditModal = (agency) => {
-    // Check if user has admin role (case-insensitive)
     if (userRole.toLowerCase() !== 'admin') {
       alert("You do not have permission to edit agencies.");
       return;
@@ -84,21 +83,52 @@ const AgencyManagement = () => {
     setEditModal({ isOpen: false, agency: null });
   };
 
-  const toggleAgencyStatus = (id) => {
-    // Check if user has admin role (case-insensitive)
+  const toggleAgencyStatus = async (id) => {
     if (userRole.toLowerCase() !== 'admin') {
       alert("You do not have permission to change agency status.");
       return;
     }
     
-    setAgencies(agencies.map(agency => 
-      agency.id === id 
-        ? {...agency, isActive: !agency.isActive, status: agency.isActive ? 'Inactive' : 'Active'} 
-        : agency
-    ));
+    try {
+      // Find the agency to get current status
+      const agency = agencies.find(a => a.id === id);
+      if (!agency) return;
+      
+      const newStatus = !agency.isActive;
+      
+      // Update backend first
+      const response = await fetch(`https://backend.chaloholidayonline.com/api/agency/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      });
+      
+      if (response.ok) {
+        // Only update local state if backend update is successful
+        setAgencies(prevAgencies => 
+          prevAgencies.map(agency => 
+            agency.id === id 
+              ? {
+                  ...agency, 
+                  isActive: newStatus, 
+                  status: newStatus ? 'Active' : 'Inactive'
+                } 
+              : agency
+          )
+        );
+        alert(`Agency ${newStatus ? 'activated' : 'deactivated'} successfully!`);
+      } else {
+        const errorData = await response.json();
+        alert(`Failed to update agency status: ${errorData.message || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error updating agency status:', error);
+      alert('An error occurred while updating agency status');
+    }
   };
 
-  // Check if user is admin (case-insensitive)
   const isAdmin = userRole.toLowerCase() === 'admin';
 
   return (
@@ -145,6 +175,7 @@ const AgencyManagement = () => {
             openEditModal={openEditModal}
             toggleAgencyStatus={toggleAgencyStatus}
             isAdmin={isAdmin}
+            refreshAgencies={fetchAgencies} // Add refresh function
           />
         )}
       </div>
@@ -163,6 +194,7 @@ const AgencyManagement = () => {
           closeEditModal={closeEditModal}
           setAgencies={setAgencies}
           agencies={agencies}
+          refreshAgencies={fetchAgencies} // Add refresh function
         />
       )}
     </div>

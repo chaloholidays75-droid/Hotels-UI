@@ -8,7 +8,8 @@ const AgencyList = ({
   openViewModal, 
   openEditModal, 
   toggleAgencyStatus,
-  isAdmin 
+  isAdmin,
+  refreshAgencies // Added refresh function
 }) => {
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(agencies.map(agency => ({
@@ -66,8 +67,8 @@ const AgencyList = ({
               ${agencies.map(agency => `
                 <tr>
                   <td>${agency.agencyName}</td>
-                  <td>${agency.country}</td>
-                  <td>${agency.city}</td>
+                  <td>${agency.country?.name || 'N/A'}</td>
+                  <td>${agency.city?.name || 'N/A'}</td>
                   <td>${agency.firstName} ${agency.lastName}</td>
                   <td>${agency.phoneNo}</td>
                   <td>${agency.emailId}</td>
@@ -105,6 +106,9 @@ const AgencyList = ({
           </div>
         )}
         <div className="action-buttons">
+          <button className="action-btn refresh" onClick={refreshAgencies} title="Refresh data">
+            🔄 Refresh
+          </button>
           <button className="action-btn export" onClick={exportToExcel}>
             Export to Excel
           </button>
@@ -148,7 +152,7 @@ const AgencyList = ({
                   <td>{agency.phoneNo}</td>
                   <td>{agency.emailId}</td>
                   <td>
-                    <span className={`status-indicator ${agency.isActive === 'Active' ? 'active' : 'inactive'}`}>
+                    <span className={`status-indicator ${agency.isActive ? 'active' : 'inactive'}`}>
                       {agency.isActive ? 'Active' : 'Inactive'}
                     </span>
                   </td>
