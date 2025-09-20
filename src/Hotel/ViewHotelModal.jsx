@@ -201,8 +201,9 @@ const ViewHotelModal = ({ hotel, onClose }) => {
                 <p>Additional information about the hotel</p>
               </div>
               <div className="remarks-content">
-                {hotel.specialRemarks?.trim() ? hotel.specialRemarks : 'Not specified'}
+                {hotel.specialRemarks.trim() ? hotel.specialRemarks : 'Not specified'}
               </div>
+
 
             </div>
           )}
