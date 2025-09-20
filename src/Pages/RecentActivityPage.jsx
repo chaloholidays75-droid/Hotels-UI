@@ -1,33 +1,39 @@
 import React, { useEffect, useState } from "react";
-import api from "../api";
-import { format, isToday, isYesterday, parseISO } from "date-fns";
+import { parseISO, format, isToday, isYesterday } from "date-fns";
+import { getRecentActivities } from "../api"; // Your API function
 
 const RecentActivityPage = () => {
   const [activities, setActivities] = useState([]);
   const [filteredActivities, setFilteredActivities] = useState([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await api();
-      setActivities(data);
-      setFilteredActivities(data);
+      const data = await getRecentActivities();
+      const arrData = Array.isArray(data) ? data : [];
+      setActivities(arrData);
+      setFilteredActivities(arrData);
     };
     fetchData();
   }, []);
 
   const handleFilter = () => {
     const filtered = activities.filter((act) => {
+      if (!act.CreatedAt) return false;
       const date = parseISO(act.CreatedAt);
       const afterStart = startDate ? date >= new Date(startDate) : true;
       const beforeEnd = endDate ? date <= new Date(endDate) : true;
       return afterStart && beforeEnd;
     });
     setFilteredActivities(filtered);
+    setShowAll(false);
   };
 
-  const groupedActivities = filteredActivities.reduce((groups, activity) => {
+  // Group activities by day
+  const groupedActivities = (filteredActivities || []).reduce((groups, activity) => {
+    if (!activity.CreatedAt) return groups;
     const date = parseISO(activity.CreatedAt);
     let groupLabel = "";
     if (isToday(date)) groupLabel = "Today";
@@ -90,37 +96,56 @@ const RecentActivityPage = () => {
       )}
 
       {/* Activities */}
-      {Object.entries(groupedActivities).map(([day, acts]) => (
-        <div key={day} style={{ marginBottom: "30px" }}>
-          <h3 style={{ marginBottom: "10px" }}>{day}</h3>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>User</th>
-                <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Action</th>
-                <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Entity</th>
-                <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Entity ID</th>
-                <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Description</th>
-                <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {acts.map((act) => (
-                <tr key={act.Id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                  <td style={{ padding: "8px" }}>{act.Username}</td>
-                  <td style={actionStyles[act.ActionType] || {}}>{act.ActionType}</td>
-                  <td style={{ padding: "8px" }}>{act.Entity}</td>
-                  <td style={{ padding: "8px" }}>{act.EntityId}</td>
-                  <td style={{ padding: "8px" }}>{act.Description}</td>
-                  <td style={{ padding: "8px" }}>
-                    {new Date(act.CreatedAt).toLocaleTimeString()}
-                  </td>
+      {Object.entries(groupedActivities).map(([day, acts]) => {
+        const displayActs = showAll ? acts : acts.slice(0, 5);
+        return (
+          <div key={day} style={{ marginBottom: "30px" }}>
+            <h3 style={{ marginBottom: "10px" }}>{day}</h3>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr>
+                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>User</th>
+                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Action</th>
+                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Entity</th>
+                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Entity ID</th>
+                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Description</th>
+                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Time</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
+              </thead>
+              <tbody>
+                {displayActs.map((act) => (
+                  <tr key={act.Id || act.id} style={{ borderBottom: "1px solid #e5e7eb" }}>
+                    <td style={{ padding: "8px" }}>{act.Username || "Unknown"}</td>
+                    <td style={actionStyles[act.ActionType] || {}}>{act.ActionType || "-"}</td>
+                    <td style={{ padding: "8px" }}>{act.Entity || "-"}</td>
+                    <td style={{ padding: "8px" }}>{act.EntityId || "-"}</td>
+                    <td style={{ padding: "8px" }}>{act.Description || "-"}</td>
+                    <td style={{ padding: "8px" }}>{act.CreatedAt ? new Date(act.CreatedAt).toLocaleTimeString() : "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* See More */}
+            {acts.length > 5 && !showAll && (
+              <button
+                onClick={() => setShowAll(true)}
+                style={{
+                  marginTop: "10px",
+                  padding: "6px 12px",
+                  borderRadius: "4px",
+                  border: "none",
+                  backgroundColor: "#2563eb",
+                  color: "#fff",
+                  cursor: "pointer",
+                }}
+              >
+                See More
+              </button>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
