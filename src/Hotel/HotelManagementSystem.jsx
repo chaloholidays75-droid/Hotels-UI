@@ -164,45 +164,29 @@ const HotelManagementSystem = () => {
   try {
     const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
     
-    console.log('Fetching current hotel data...');
+    console.log('Updating hotel status via PATCH...');
     
-    // First, get the current hotel data from backend
-    const getResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
-    if (!getResponse.ok) {
-      throw new Error(`Failed to fetch hotel: ${getResponse.status}`);
-    }
-    
-    const hotelData = await getResponse.json();
-    console.log('Current hotel data:', hotelData);
-    
-    // Create updated hotel object with ONLY the changed field
-    const updatedHotel = {
-      ...hotelData,
-      isActive: newStatus
-    };
-    
-    console.log('Sending updated data:', updatedHotel);
-    
-    // Use PUT to update the entire hotel record
-    const putResponse = await fetch(`${API_BASE_HOTEL}/${id}`, {
-      method: "PUT",
+    // Use the dedicated PATCH endpoint for status updates
+    const patchResponse = await fetch(`${API_BASE_HOTEL}/${id}/status`, {
+      method: "PATCH",
       headers: { 
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem('accessToken')}` // Add auth token if needed
+        "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
       },
-      body: JSON.stringify(updatedHotel),
+      body: JSON.stringify(newStatus),
     });
 
-    console.log('PUT response status:', putResponse.status);
+    console.log('PATCH response status:', patchResponse.status);
     
-    if (!putResponse.ok) {
-      const errorText = await putResponse.text();
-      console.error('PUT error response:', errorText);
-      throw new Error(`HTTP error! status: ${putResponse.status}, response: ${errorText}`);
+    if (!patchResponse.ok) {
+      const errorText = await patchResponse.text();
+      console.error('PATCH error response:', errorText);
+      throw new Error(`HTTP error! status: ${patchResponse.status}, response: ${errorText}`);
     }
 
-    const result = await putResponse.json();
-    console.log('Backend PUT response:', result);
+    // Parse the JSON response
+    const result = await patchResponse.json();
+    console.log('Backend PATCH response:', result);
     
     // Update local state only after successful backend update
     setHotels(prev => prev.map(h => 
@@ -220,56 +204,6 @@ const HotelManagementSystem = () => {
     ));
   }
 };
-// Add this temporary debug function
-const debugHotelUpdate = async (id) => {
-  const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
-  
-  try {
-    console.log('=== DEBUG: Hotel Update Process ===');
-    
-    // 1. Get current data
-    console.log('1. Getting current hotel data...');
-    const getResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
-    const currentData = await getResponse.json();
-    console.log('Current data:', currentData);
-    
-    // 2. Prepare update
-    const updatedData = { ...currentData, isActive: !currentData.isActive };
-    console.log('2. Prepared update:', updatedData);
-    
-    // 3. Send update
-    console.log('3. Sending PUT request...');
-    const putResponse = await fetch(`${API_BASE_HOTEL}/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedData),
-    });
-    
-    console.log('PUT response status:', putResponse.status);
-    console.log('PUT response headers:', Object.fromEntries(putResponse.headers.entries()));
-    
-    if (!putResponse.ok) {
-      const errorText = await putResponse.text();
-      console.error('PUT failed:', errorText);
-      return;
-    }
-    
-    const result = await putResponse.json();
-    console.log('4. PUT successful:', result);
-    
-    // 4. Verify update
-    console.log('5. Verifying update...');
-    const verifyResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
-    const verifiedData = await verifyResponse.json();
-    console.log('Verified data:', verifiedData);
-    
-  } catch (error) {
-    console.error('Debug error:', error);
-  }
-};
-
-// Call this to debug a specific hotel
-// debugHotelUpdate(51);
 
   const manualRefresh = () => {
     fetchHotels();
