@@ -101,7 +101,20 @@ const AgencyDetailsForm = ({ formData, setFormData, errors, setErrors, handleCha
               showNotification={showNotification}
             />
           </div>
-        
+            <div className="form-group">
+            <label htmlFor="region" className="form-label required">Post Code</label>
+            <input
+              type="text"
+              id="region"
+              name="region"
+              value={formData.postCode}
+              onChange={handleChange}
+              className={errors.postCode ? 'form-input error' : 'form-input'}
+              placeholder="Enter region"
+            />
+            {errors.postCode && <span className="error-message">{errors.postCode}</span>}
+          </div>
+
           <div className="form-group">
             <label htmlFor="postCode" className="form-label required">Post Code</label>
             <input
