@@ -11,6 +11,14 @@ const AgencyManagement = () => {
   const [viewModal, setViewModal] = useState({ isOpen: false, agency: null });
   const [editModal, setEditModal] = useState({ isOpen: false, agency: null });
   const [loading, setLoading] = useState(false);
+  const [userRole, setUserRole] = useState('');
+
+  // Get user role from localStorage
+  useEffect(() => {
+    const role = localStorage.getItem('userRole') || 'employee';
+    console.log('Agency Management - User role:', role); // Debug log
+    setUserRole(role);
+  }, []);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -58,6 +66,12 @@ const AgencyManagement = () => {
   };
 
   const openEditModal = (agency) => {
+    // Check if user has admin role (case-insensitive)
+    if (userRole.toLowerCase() !== 'admin') {
+      alert("You do not have permission to edit agencies.");
+      return;
+    }
+    
     const editAgency = {
       ...agency,
       countryId: agency.country?.id || null,
@@ -71,6 +85,12 @@ const AgencyManagement = () => {
   };
 
   const toggleAgencyStatus = (id) => {
+    // Check if user has admin role (case-insensitive)
+    if (userRole.toLowerCase() !== 'admin') {
+      alert("You do not have permission to change agency status.");
+      return;
+    }
+    
     setAgencies(agencies.map(agency => 
       agency.id === id 
         ? {...agency, isActive: !agency.isActive, status: agency.isActive ? 'Inactive' : 'Active'} 
@@ -78,21 +98,29 @@ const AgencyManagement = () => {
     ));
   };
 
+  // Check if user is admin (case-insensitive)
+  const isAdmin = userRole.toLowerCase() === 'admin';
+
   return (
     <div className="agency-management-container ">
       <div className="ag-head">
         <div className="header">
           <h1>Agency Management System</h1>
           <p>Manage your agency registrations and view all agencies in one place</p>
+          <div className="user-role-badge">
+            Logged in as: <span className={`role-${userRole.toLowerCase()}`}>{userRole}</span>
+          </div>
         </div>
         
         <div className="tabs">
-          <button 
-            className={activeTab === 'add' ? 'tab active' : 'tab'} 
-            onClick={() => handleTabChange('add')}
-          >
-            Add Agency
-          </button>
+          {isAdmin && (
+            <button 
+              className={activeTab === 'add' ? 'tab active' : 'tab'} 
+              onClick={() => handleTabChange('add')}
+            >
+              Add Agency
+            </button>
+          )}
           <button 
             className={activeTab === 'view' ? 'tab active' : 'tab'} 
             onClick={() => handleTabChange('view')}
@@ -116,6 +144,7 @@ const AgencyManagement = () => {
             openViewModal={openViewModal}
             openEditModal={openEditModal}
             toggleAgencyStatus={toggleAgencyStatus}
+            isAdmin={isAdmin}
           />
         )}
       </div>

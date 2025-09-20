@@ -2,7 +2,14 @@ import React from 'react';
 import * as XLSX from 'xlsx';
 import AgencyListSkeleton from '../components/AgencyListSkeleton';
 
-const AgencyList = ({ agencies, loading, openViewModal, openEditModal, toggleAgencyStatus }) => {
+const AgencyList = ({ 
+  agencies, 
+  loading, 
+  openViewModal, 
+  openEditModal, 
+  toggleAgencyStatus,
+  isAdmin 
+}) => {
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(agencies.map(agency => ({
       'Agency Name': agency.agencyName,
@@ -92,6 +99,11 @@ const AgencyList = ({ agencies, loading, openViewModal, openEditModal, toggleAge
     <div className="agencies-list">
       <div className="list-header">
         <h2 className="section-title">Registered Agencies</h2>
+        {!isAdmin && (
+          <div className="view-only-notice">
+            🔒 View Only Mode - Read-only access
+          </div>
+        )}
         <div className="action-buttons">
           <button className="action-btn export" onClick={exportToExcel}>
             Export to Excel
@@ -105,9 +117,11 @@ const AgencyList = ({ agencies, loading, openViewModal, openEditModal, toggleAge
       {agencies.length === 0 ? (
         <div className="empty-state">
           <p>No agencies registered yet.</p>
-          <button className="secondary-button" onClick={() => handleTabChange('add')}>
-            Add Your First Agency
-          </button>
+          {isAdmin && (
+            <button className="secondary-button" onClick={() => handleTabChange('add')}>
+              Add Your First Agency
+            </button>
+          )}
         </div>
       ) : (
         <div className="agencies-table-container">
@@ -143,15 +157,24 @@ const AgencyList = ({ agencies, loading, openViewModal, openEditModal, toggleAge
                       <button className="action-btn view" onClick={() => openViewModal(agency)}>
                         View
                       </button>
-                      <button className="action-btn edit" onClick={() => openEditModal(agency)}>
-                        Edit
-                      </button>
-                      <button 
-                        className={`toggle-btn ${agency.isActive ? 'active' : 'inactive'}`}
-                        onClick={() => toggleAgencyStatus(agency.id)}
-                      >
-                        {agency.isActive ? 'Deactivate' : 'Activate'}
-                      </button>
+                      
+                      {isAdmin ? (
+                        <>
+                          <button className="action-btn edit" onClick={() => openEditModal(agency)}>
+                            Edit
+                          </button>
+                          <button 
+                            className={`toggle-btn ${agency.isActive ? 'active' : 'inactive'}`}
+                            onClick={() => toggleAgencyStatus(agency.id)}
+                          >
+                            {agency.isActive ? 'Deactivate' : 'Activate'}
+                          </button>
+                        </>
+                      ) : (
+                        <button className="action-btn disabled" disabled title="Admin permission required">
+                          🔒
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
