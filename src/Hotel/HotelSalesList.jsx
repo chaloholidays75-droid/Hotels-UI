@@ -3,7 +3,7 @@ import HotelListSkeleton from '../components/HotelListSkeleton';
 import { 
   FaSearch, FaFilter, FaSortUp, FaSortDown, FaEye, 
   FaEdit, FaToggleOn, FaToggleOff, FaPlus, FaEllipsisV, FaTimes,
-  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan, FaLock
+  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan, FaLock, FaRedo
 } from 'react-icons/fa';
 import './viewhotel.css';
 
@@ -14,7 +14,8 @@ const HotelSalesList = ({
   openViewModal, 
   openEditModal, 
   toggleHotelStatus,
-  isAdmin 
+  isAdmin,
+  refreshHotels // Add refresh function prop
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
@@ -67,7 +68,6 @@ const HotelSalesList = ({
   const totalPages = Math.ceil(filteredHotels.length / itemsPerPage);
 
   const toggleSelectHotel = (id) => {
-    // Only allow selection for admin users
     if (!isAdmin) return;
     
     setSelectedHotels(prev => 
@@ -78,7 +78,6 @@ const HotelSalesList = ({
   };
 
   const toggleSelectAll = () => {
-    // Only allow selection for admin users
     if (!isAdmin) return;
     
     if (selectedHotels.length === currentHotels.length) {
@@ -232,6 +231,15 @@ const HotelSalesList = ({
               onClick={() => handleSort('country')}
             >
               Country {sortField === 'country' && (sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />)}
+            </button>
+            
+            {/* Add Refresh Button */}
+            <button 
+              className="hsl-btn hsl-btn-text hsl-refresh-btn"
+              onClick={refreshHotels}
+              title="Refresh hotel data"
+            >
+              <FaRedo /> Refresh
             </button>
           </div>
         </div>
