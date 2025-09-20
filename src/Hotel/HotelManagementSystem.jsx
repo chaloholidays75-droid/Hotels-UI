@@ -153,46 +153,47 @@ const HotelManagementSystem = () => {
     }
   };
 
-  const toggleHotelStatus = async (id, currentStatus) => {
-    if (userRole.toLowerCase() !== 'admin') {
-      showNotification("You do not have permission to change hotel status.", "error");
-      return;
-    }
+ const toggleHotelStatus = async (id, currentStatus) => {
+  if (userRole.toLowerCase() !== 'admin') {
+    showNotification("You do not have permission to change hotel status.", "error");
+    return;
+  }
+  
+  const newStatus = !currentStatus;
+  
+  try {
+    const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
     
-    const newStatus = !currentStatus;
-    
-    try {
-      const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
-      const response = await fetch(`${API_BASE_HOTEL}/${id}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: newStatus }),
-      });
+    // Use the correct PATCH endpoint with boolean value
+    const response = await fetch(`${API_BASE_HOTEL}/${id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newStatus), // Just the boolean value, not an object
+    });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // DEBUG: Check what the backend actually returned
-      const result = await response.json();
-      console.log('Backend response:', result);
-      
-      // Update local state with the actual value from backend
-      setHotels(prev => prev.map(h => 
-        h.id === id ? { ...h, isActive: newStatus } : h
-      ));
-      
-      showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
-    } catch (err) {
-      console.error("Error updating hotel status:", err);
-      showNotification("Error updating hotel status", "error");
-      
-      // Revert the change in UI since it failed
-      setHotels(prev => prev.map(h => 
-        h.id === id ? { ...h, isActive: currentStatus } : h
-      ));
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  };
+
+    const result = await response.json();
+    console.log('Backend response:', result);
+    
+    // Update local state with the new status
+    setHotels(prev => prev.map(h => 
+      h.id === id ? { ...h, isActive: newStatus } : h
+    ));
+    
+    showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
+  } catch (err) {
+    console.error("Error updating hotel status:", err);
+    showNotification("Error updating hotel status. Please try again.", "error");
+    
+    // Revert the change in UI since it failed
+    setHotels(prev => prev.map(h => 
+      h.id === id ? { ...h, isActive: currentStatus } : h
+    ));
+  }
+};
 
   const manualRefresh = () => {
     fetchHotels();
