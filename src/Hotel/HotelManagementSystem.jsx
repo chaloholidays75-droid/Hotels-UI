@@ -164,21 +164,47 @@ const HotelManagementSystem = () => {
   try {
     const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
     
-    // Use the correct PATCH endpoint with boolean value
-    const response = await fetch(`${API_BASE_HOTEL}/${id}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newStatus), // Just the boolean value, not an object
-    });
+    // Try different endpoint patterns - one of these should work:
+    const endpointPatterns = [
+      `${API_BASE_HOTEL}/${id}/status`,      // Original attempt
+      `${API_BASE_HOTEL}/status/${id}`,      // Alternative pattern
+      `${API_BASE_HOTEL}/${id}/active`,      // Common alternative
+      `${API_BASE_HOTEL}/active/${id}`,      // Another pattern
+      `${API_BASE_HOTEL}/${id}/toggle-status`, // Another possibility
+    ];
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    let response;
+    let workingEndpoint = '';
+
+    // Try each endpoint pattern until one works
+    for (const endpoint of endpointPatterns) {
+      try {
+        console.log(`Trying endpoint: ${endpoint}`);
+        response = await fetch(endpoint, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newStatus),
+        });
+        
+        if (response.ok) {
+          workingEndpoint = endpoint;
+          break;
+        }
+      } catch (error) {
+        console.log(`Endpoint ${endpoint} failed:`, error.message);
+        continue;
+      }
     }
 
+    if (!response || !response.ok) {
+      throw new Error(`All endpoint patterns failed. Last status: ${response?.status}`);
+    }
+
+    console.log(`Working endpoint found: ${workingEndpoint}`);
     const result = await response.json();
     console.log('Backend response:', result);
     
-    // Update local state with the new status
+    // Update local state
     setHotels(prev => prev.map(h => 
       h.id === id ? { ...h, isActive: newStatus } : h
     ));
@@ -186,9 +212,9 @@ const HotelManagementSystem = () => {
     showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
   } catch (err) {
     console.error("Error updating hotel status:", err);
-    showNotification("Error updating hotel status. Please try again.", "error");
+    showNotification("Error: Could not update status. Please check API endpoint.", "error");
     
-    // Revert the change in UI since it failed
+    // Revert UI change
     setHotels(prev => prev.map(h => 
       h.id === id ? { ...h, isActive: currentStatus } : h
     ));
