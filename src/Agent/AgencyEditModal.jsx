@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const AgencyEditModal = ({ editModal, closeEditModal, setAgencies, agencies }) => {
+const AgencyEditModal = ({ editModal,setEditModal, closeEditModal, setAgencies, agencies }) => {
   const [showNotification, setShowNotification] = useState('');
   const [errors, setErrors] = useState({});
 
@@ -69,6 +69,7 @@ const AgencyEditModal = ({ editModal, closeEditModal, setAgencies, agencies }) =
     if (!editModal.agency.country) formErrors.country = 'Country is required';
     if (!editModal.agency.city) formErrors.city = 'City is required';
     if (!editModal.agency.postCode) formErrors.postCode = 'Post code is required';
+    if (!editModal.agency.region) formErrors.region = 'Region is required';
     if (!editModal.agency.address) formErrors.address = 'Address is required';
     
     if (!editModal.agency.phoneNo) {
@@ -260,6 +261,19 @@ const handleEditSubmit = async (e) => {
                       className={errors.postCode ? 'form-input error' : 'form-input'}
                     />
                     {errors.postCode && <span className="error-message">{errors.postCode}</span>}
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label required">Region</label>
+                    <input
+                      type="text"
+                      name="region"
+                      value={editModal.agency.region}
+                      onChange={handleEditChange}
+                      className={errors.region ? 'form-input error' : 'form-input'}
+                    />
+                    {errors.region && <span className="error-message">{errors.region}</span>}
                   </div>
                 </div>
 

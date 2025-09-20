@@ -34,6 +34,7 @@ const AgencyDetailsForm = ({ formData, setFormData, errors, setErrors, handleCha
     if (!formData.countryId) formErrors.country = 'Country is required';
     if (!formData.cityId) formErrors.city = 'City is required';
     if (!formData.postCode) formErrors.postCode = 'Post code is required';
+    if (!formData.region) formErrors.region = 'Region is required';
     if (!formData.emailId) formErrors.emailId = 'Email ID is required';
     if (!formData.address) formErrors.address = 'Address is required';
     
@@ -102,17 +103,17 @@ const AgencyDetailsForm = ({ formData, setFormData, errors, setErrors, handleCha
             />
           </div>
             <div className="form-group">
-            <label htmlFor="region" className="form-label required">Post Code</label>
+            <label htmlFor="region" className="form-label required">Region</label>
             <input
               type="text"
               id="region"
               name="region"
-              value={formData.postCode}
+              value={formData.region}
               onChange={handleChange}
-              className={errors.postCode ? 'form-input error' : 'form-input'}
+              className={errors.region ? 'form-input error' : 'form-input'}
               placeholder="Enter region"
             />
-            {errors.postCode && <span className="error-message">{errors.postCode}</span>}
+            {errors.region && <span className="error-message">{errors.region}</span>}
           </div>
 
           <div className="form-group">

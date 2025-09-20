@@ -130,6 +130,7 @@ const AgencyManagement = () => {
       {editModal.isOpen && (
         <AgencyEditModal
           editModal={editModal}
+          setEditModal={setEditModal}  
           closeEditModal={closeEditModal}
           setAgencies={setAgencies}
           agencies={agencies}
