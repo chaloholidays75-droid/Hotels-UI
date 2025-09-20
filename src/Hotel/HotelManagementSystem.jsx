@@ -228,6 +228,126 @@ const HotelManagementSystem = () => {
     ));
   }
 };
+// Add this debug function to see exactly what's being sent and received
+const debugHotelUpdate = async (id, currentStatus) => {
+  const newStatus = !currentStatus;
+  
+  try {
+    const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+    
+    console.log('=== DEBUG: Hotel Update Process ===');
+    
+    // 1. Get current data
+    console.log('1. Getting current hotel data...');
+    const getResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
+    const currentData = await getResponse.json();
+    console.log('Current data IsActive:', currentData.isActive);
+    
+    // 2. Prepare update
+    const updatedHotel = {
+      ...currentData,
+      isActive: newStatus
+    };
+    console.log('2. Prepared update IsActive:', updatedHotel.isActive);
+    
+    // 3. Send update
+    console.log('3. Sending PUT request...');
+    const putResponse = await fetch(`${API_BASE_HOTEL}/${id}`, {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+      },
+      body: JSON.stringify(updatedHotel),
+    });
+    
+    console.log('PUT response status:', putResponse.status);
+    
+    if (!putResponse.ok) {
+      const errorText = await putResponse.text();
+      console.error('PUT failed:', errorText);
+      return;
+    }
+    
+    console.log('4. PUT successful');
+    
+    // 4. Verify update immediately
+    console.log('5. Verifying update...');
+    const verifyResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
+    const verifiedData = await verifyResponse.json();
+    console.log('Verified data IsActive:', verifiedData.isActive);
+    console.log('Expected IsActive:', newStatus);
+    console.log('Match:', verifiedData.isActive === newStatus);
+    
+    if (verifiedData.isActive !== newStatus) {
+      console.error('ERROR: Database was not updated!');
+      console.log('This means the backend PUT endpoint is not saving the IsActive field');
+    }
+    
+  } catch (error) {
+    console.error('Debug error:', error);
+  }
+};
+
+// Modify your toggleHotelStatus to use this debug
+const toggleHotelStatus = async (id, currentStatus) => {
+  if (userRole.toLowerCase() !== 'admin') {
+    showNotification("You do not have permission to change hotel status.", "error");
+    return;
+  }
+  
+  const newStatus = !currentStatus;
+  
+  // First run the debug to see what's happening
+  await debugHotelUpdate(id, currentStatus);
+  
+  try {
+    const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+    
+    // Get current data
+    const getResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
+    if (!getResponse.ok) throw new Error(`Failed to fetch hotel: ${getResponse.status}`);
+    
+    const hotelData = await getResponse.json();
+    
+    // Create updated hotel object
+    const updatedHotel = {
+      ...hotelData,
+      isActive: newStatus
+    };
+    
+    // Send PUT request
+    const putResponse = await fetch(`${API_BASE_HOTEL}/${id}`, {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+      },
+      body: JSON.stringify(updatedHotel),
+    });
+
+    if (!putResponse.ok) {
+      const errorText = await putResponse.text();
+      throw new Error(`HTTP error! status: ${putResponse.status}, response: ${errorText}`);
+    }
+
+    // Update UI optimistically
+    setHotels(prev => prev.map(h => 
+      h.id === id ? { ...h, isActive: newStatus } : h
+    ));
+    
+    showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
+    
+  } catch (err) {
+    console.error("Error updating hotel status:", err);
+    showNotification("Error: Could not update hotel status in database", "error");
+    
+    // Revert UI change
+    setHotels(prev => prev.map(h => 
+      h.id === id ? { ...h, isActive: currentStatus } : h
+    ));
+  }
+};
 
   const manualRefresh = () => {
     fetchHotels();
