@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import StatsBar from '../components/statsbar';
 import AddHotelTab from './AddHotelTab';
 import HotelSalesList from './HotelSalesList';
@@ -12,13 +12,126 @@ import './HotelManagementSystem.css';
 const HotelManagementSystem = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const [activeView, setActiveView] = useState('view');
-    const [editingHotel, setEditingHotel] = useState(null);
-    const [viewHotel, setViewHotel] = useState(null);
+  const [viewModal, setViewModal] = useState({ isOpen: false, hotel: null });
+  const [editModal, setEditModal] = useState({ isOpen: false, hotel: null });
+  const [hotels, setHotels] = useState([]);
 
   const showNotification = useCallback((message, type) => {
     setNotification({ show: true, message, type });
     setTimeout(() => setNotification({ show: false, message: '', type: '' }), 5000);
   }, []);
+
+  // Fetch hotels when switching to view tab
+  useEffect(() => {
+    if (activeView === 'view') {
+      fetchHotels();
+    }
+  }, [activeView]);
+
+  const fetchHotels = async () => {
+    try {
+      const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+      const API_BASE_COUNTRIES = "https://backend.chaloholidayonline.com/api/countries";
+      const API_BASE_CITIES = "https://backend.chaloholidayonline.com/api/cities/by-country";
+      
+      // Fetch hotels
+      const hotelRes = await fetch(API_BASE_HOTEL);
+      if (!hotelRes.ok) throw new Error(`Hotel fetch failed: ${hotelRes.status}`);
+      const hotelData = await hotelRes.json();
+
+      // Fetch countries
+      const countryRes = await fetch(API_BASE_COUNTRIES);
+      if (!countryRes.ok) throw new Error(`Countries fetch failed: ${countryRes.status}`);
+      const countryData = await countryRes.json();
+
+      // Fetch cities for each unique countryId
+      const cityPromises = [...new Set(hotelData.map(h => h.countryId))].map(countryId =>
+        fetch(`${API_BASE_CITIES}/${countryId}`).then(async res => {
+          if (!res.ok) throw new Error(`Cities fetch failed for country ${countryId}: ${res.status}`);
+          return res.json();
+        })
+      );
+      const citiesData = (await Promise.all(cityPromises)).flat();
+
+      // Create lookup maps
+      const countryMap = new Map(countryData.map(c => [c.id, c.name]));
+      const cityMap = new Map(citiesData.map(c => [c.id, c.name]));
+
+      // Map hotel data with country and city names
+      const adjustedData = hotelData.map(hotel => ({
+        ...hotel,
+        country: countryMap.get(hotel.countryId) || "Unknown Country",
+        city: cityMap.get(hotel.cityId) || "Unknown City",
+        salesPersons: Array.isArray(hotel.salesPersons) ? hotel.salesPersons : (hotel.salesPersonName ? [{ name: hotel.salesPersonName, email: hotel.salesPersonEmail, contact: hotel.salesPersonContact }] : []),
+        reservationPersons: Array.isArray(hotel.reservationPersons) ? hotel.reservationPersons : (hotel.reservationPersonName ? [{ name: hotel.reservationPersonName, email: hotel.reservationPersonEmail, contact: hotel.reservationPersonContact }] : []),
+        accountsPersons: Array.isArray(hotel.accountsPersons) ? hotel.accountsPersons : (hotel.accountsPersonName ? [{ name: hotel.accountsPersonName, email: hotel.accountsPersonEmail, contact: hotel.accountsPersonContact }] : []),
+        receptionPersons: Array.isArray(hotel.receptionPersons) ? hotel.receptionPersons : (hotel.receptionPersonName ? [{ name: hotel.receptionPersonName, email: hotel.receptionPersonEmail, contact: hotel.receptionPersonContact }] : []),
+        concierges: Array.isArray(hotel.concierges) ? hotel.concierges : (hotel.conciergeName ? [{ name: hotel.conciergeName, email: hotel.conciergeEmail, contact: hotel.conciergeContact }] : []),
+        isActive: hotel.isActive !== undefined ? hotel.isActive : true
+      }));
+
+      setHotels(adjustedData);
+    } catch (err) {
+      console.error("Error fetching hotels:", err);
+      showNotification(`Error fetching hotels: ${err.message}`, "error");
+    }
+  };
+
+  const openViewModal = (hotel) => {
+    setViewModal({ isOpen: true, hotel });
+  };
+
+  const closeViewModal = () => {
+    setViewModal({ isOpen: false, hotel: null });
+  };
+
+  const openEditModal = (hotel) => {
+    setEditModal({ isOpen: true, hotel });
+  };
+
+  const closeEditModal = () => {
+    setEditModal({ isOpen: false, hotel: null });
+  };
+
+  const saveHotel = async (hotel) => {
+    try {
+      const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+      await fetch(`${API_BASE_HOTEL}/${hotel.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(hotel),
+      });
+      closeEditModal();
+      fetchHotels(); // Refresh the list
+      showNotification("Hotel updated successfully!", "success");
+    } catch (err) {
+      console.error("Error updating hotel:", err);
+      showNotification("Error updating hotel", "error");
+    }
+  };
+
+  const toggleHotelStatus = async (id, currentStatus) => {
+    const newStatus = !currentStatus;
+    
+    try {
+      const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+      await fetch(`${API_BASE_HOTEL}/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: newStatus }),
+      });
+      
+      // Update local state
+      setHotels(prev => prev.map(h => 
+        h.id === id ? { ...h, isActive: newStatus } : h
+      ));
+      
+      showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
+    } catch (err) {
+      console.error("Error updating hotel status:", err);
+      showNotification("Error updating hotel status", "error");
+    }
+  };
 
   return (
     <div className="hms-page-content ">
@@ -61,7 +174,7 @@ const HotelManagementSystem = () => {
               onClick={() => setActiveView('view')}
             >
               <fml-icon name="document-text-outline"></fml-icon>
-              <span>View Hotels</span>
+              <span>View Hotels ({hotels.length})</span>
             </button>
           </div>
         </div>
@@ -70,9 +183,32 @@ const HotelManagementSystem = () => {
       {/* Content Section */}
       <main className="hms-content">
         {activeView === 'add' && <AddHotelTab showNotification={showNotification} />}
-        {activeView === 'view' && <HotelSalesList showNotification={showNotification} />}
+        {activeView === 'view' && (
+          <HotelSalesList 
+            hotels={hotels}
+            showNotification={showNotification}
+            openViewModal={openViewModal}
+            openEditModal={openEditModal}
+            toggleHotelStatus={toggleHotelStatus}
+          />
+        )}
       </main>
 
+      {/* Modals */}
+      {viewModal.isOpen && (
+        <ViewHotelModal
+          hotel={viewModal.hotel}
+          onClose={closeViewModal}
+        />
+      )}
+
+      {editModal.isOpen && (
+        <EditHotelModal
+          hotel={editModal.hotel}
+          onSave={saveHotel}
+          onCancel={closeEditModal}
+        />
+      )}
     </div>
   );
 };

@@ -6,13 +6,31 @@ const AgencyEditModal = ({ editModal, closeEditModal, setAgencies, agencies }) =
 
   const handleEditChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setEditModal({
-      ...editModal,
-      agency: {
-        ...editModal.agency,
-        [name]: type === 'checkbox' ? checked : value
-      }
-    });
+    if (name === "country") {
+      setEditModal({
+        ...editModal,
+        agency: {
+          ...editModal.agency,
+          country: { ...editModal.agency.country, name: value },
+        },
+      });
+    } else if (name === "city") {
+      setEditModal({
+        ...editModal,
+        agency: {
+          ...editModal.agency,
+          city: { ...editModal.agency.city, name: value },
+        },
+      });
+    } else {
+      setEditModal({
+        ...editModal,
+        agency: {
+          ...editModal.agency,
+          [name]: type === "checkbox" ? checked : value,
+        },
+      });
+    }
 
     if (errors[name]) {
       setErrors({
@@ -96,83 +114,87 @@ const AgencyEditModal = ({ editModal, closeEditModal, setAgencies, agencies }) =
     return error.message || "An unknown error occurred";
   };
 
-  const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    if (!editModal.agency) return;
+const handleEditSubmit = async (e) => {
+  e.preventDefault();
+  if (!editModal.agency) return;
 
-    if (!editModal.agency.id || isNaN(editModal.agency.id)) {
-      alert("Invalid agency ID");
-      return;
+  if (!editModal.agency.id || isNaN(editModal.agency.id)) {
+    alert("Invalid agency ID");
+    return;
+  }
+
+  if (!validateEditForm()) return;
+
+  // Prepare payload for backend
+  const payload = {
+    ...editModal.agency,
+    countryId: editModal.agency.country?.id,
+    cityId: editModal.agency.city?.id,
+  };
+
+  // Remove nested objects before sending
+  delete payload.country;
+  delete payload.city;
+
+  // Remove undefined or null values
+  Object.keys(payload).forEach((key) => {
+    if (payload[key] === undefined || payload[key] === null) {
+      delete payload[key];
     }
+  });
 
-    if (!validateEditForm()) return;
-    
-    // For this implementation, we'll use the text values directly
-    // In a real application, you might want to convert these to IDs
-    // by looking them up in your backend
-    const payload = {
-      ...editModal.agency,
-      country: editModal.agency.country,
-      city: editModal.agency.city
-    };
-    
-    // Remove any undefined or null values
-    Object.keys(payload).forEach(key => {
-      if (payload[key] === undefined || payload[key] === null) {
-        delete payload[key];
+  try {
+    const res = await fetch(
+      `https://backend.chaloholidayonline.com/api/agency/${editModal.agency.id}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       }
-    });
-    
-    try {
-      const res = await fetch(
-        `https://backend.chaloholidayonline.com/api/agency/${editModal.agency.id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
+    );
+
+    if (res.ok) {
+      const contentLength = res.headers.get("content-length");
+      let updated;
+
+      if (contentLength && parseInt(contentLength) > 0) {
+        updated = await res.json();
+      } else {
+        updated = {
+          ...payload,
+          updatedAt: new Date().toISOString(),
+        };
+      }
+
+      // Keep country and city objects for UI display
+      setAgencies((prev) =>
+        prev.map((a) =>
+          a.id === updated.id
+            ? { ...updated, country: editModal.agency.country, city: editModal.agency.city }
+            : a
+        )
       );
 
-      if (res.ok) {
-        const contentLength = res.headers.get('content-length');
-        let updated;
-        
-        if (contentLength && parseInt(contentLength) > 0) {
-          updated = await res.json();
-        } else {
-          updated = {
-            ...payload,
-            updatedAt: new Date().toISOString()
-          };
-        }
-        
-        setAgencies(prev =>
-          prev.map(a =>
-            a.id === updated.id
-              ? { ...updated, country: editModal.agency.country, city: editModal.agency.city }
-              : a
-          )
-        );
-
-        alert("Agency updated successfully!");
-        closeEditModal();
-      } else {
-        let errorData;
-        try {
-          errorData = await res.json();
-        } catch {
-          errorData = { message: await res.text() || 'Unknown error' };
-        }
-        
-        console.error("Update failed:", errorData);
-        alert(`Failed to update agency: ${errorData.message || 'Unknown error'}`);
+      alert("Agency updated successfully!");
+      closeEditModal();
+    } else {
+      let errorData;
+      try {
+        errorData = await res.json();
+      } catch {
+        errorData = { message: await res.text() || "Unknown error" };
       }
-    } catch (error) {
-      const message = parseErrorMessage(error);
-      console.error("Error details:", error);
-      alert(`Error: ${message}`);
+
+      console.error("Update failed:", errorData);
+      alert(`Failed to update agency: ${errorData.message || "Unknown error"}`);
     }
-  };
+  } catch (error) {
+    const message = parseErrorMessage(error);
+    console.error("Error details:", error);
+    alert(`Error: ${message}`);
+  }
+};
+
 
   return (
     <div className="modal-overlay">
@@ -207,7 +229,7 @@ const AgencyEditModal = ({ editModal, closeEditModal, setAgencies, agencies }) =
                     <input
                       type="text"
                       name="country"
-                      value={editModal.agency.country}
+                      value={editModal.agency.country?.name || ''}
                       onChange={handleEditChange}
                       className={errors.country ? 'form-input error' : 'form-input'}
                     />
@@ -219,7 +241,7 @@ const AgencyEditModal = ({ editModal, closeEditModal, setAgencies, agencies }) =
                     <input
                       type="text"
                       name="city"
-                      value={editModal.agency.city}
+                      value={editModal.agency.city?.name || ''}
                       onChange={handleEditChange}
                       className={errors.city ? 'form-input error' : 'form-input'}
                     />
