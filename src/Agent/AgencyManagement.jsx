@@ -89,25 +89,25 @@ const toggleAgencyStatus = async (id) => {
     return;
   }
 
-  // Optimistically update the UI first
+  const agency = agencies.find(a => a.id === id);
+  if (!agency) return;
+
+  const newStatus = !agency.isActive;
+
+  // Optimistically update the UI
   setAgencies(prevAgencies =>
-    prevAgencies.map(agency =>
-      agency.id === id
-        ? { ...agency, isActive: !agency.isActive, status: !agency.isActive ? 'Active' : 'Inactive' }
-        : agency
+    prevAgencies.map(a =>
+      a.id === id
+        ? { ...a, isActive: newStatus, status: newStatus ? 'Active' : 'Inactive' }
+        : a
     )
   );
 
   try {
-    const agency = agencies.find(a => a.id === id);
-    if (!agency) return;
-
-    const newStatus = !agency.isActive;
-
     const response = await fetch(`https://backend.chaloholidayonline.com/api/agency/${id}/status`, {
-      method: 'PATCH',
+      method: 'PATCH',                 // PATCH, not PUT
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive: newStatus }),
+      body: JSON.stringify(newStatus),  // raw boolean
     });
 
     if (response.ok) {
@@ -117,17 +117,15 @@ const toggleAgencyStatus = async (id) => {
       try {
         const errorData = await response.json();
         errorMessage = errorData.message || errorMessage;
-      } catch {
-        // response empty — ignore
-      }
+      } catch {}
       alert(`Failed to update agency status: ${errorMessage}`);
 
-      // Rollback the UI if server fails
+      // Rollback UI on failure
       setAgencies(prevAgencies =>
-        prevAgencies.map(agency =>
-          agency.id === id
-            ? { ...agency, isActive: agency.isActive, status: agency.isActive ? 'Active' : 'Inactive' }
-            : agency
+        prevAgencies.map(a =>
+          a.id === id
+            ? { ...a, isActive: agency.isActive, status: agency.isActive ? 'Active' : 'Inactive' }
+            : a
         )
       );
     }
@@ -135,74 +133,17 @@ const toggleAgencyStatus = async (id) => {
     console.error('Error updating agency status:', err);
     alert('An error occurred while updating agency status');
 
-    // Rollback the UI on error
+    // Rollback UI on error
     setAgencies(prevAgencies =>
-      prevAgencies.map(agency =>
-        agency.id === id
-          ? { ...agency, isActive: agency.isActive, status: agency.isActive ? 'Active' : 'Inactive' }
-          : agency
-      )
-    );
-  }
-
-
-
-  // Optimistically update the UI first
-  setAgencies(prevAgencies =>
-    prevAgencies.map(agency =>
-      agency.id === id
-        ? { ...agency, isActive: !agency.isActive, status: !agency.isActive ? 'Active' : 'Inactive' }
-        : agency
-    )
-  );
-
-  try {
-    const agency = agencies.find(a => a.id === id);
-    if (!agency) return;
-
-    const newStatus = !agency.isActive;
-
-    const response = await fetch(`https://backend.chaloholidayonline.com/api/agency/${id}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive: newStatus }),
-    });
-
-    if (response.ok) {
-      alert(`Agency ${newStatus ? 'activated' : 'deactivated'} successfully!`);
-    } else {
-      let errorMessage = 'Unknown error';
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-      } catch {
-        // response empty — ignore
-      }
-      alert(`Failed to update agency status: ${errorMessage}`);
-
-      // Rollback the UI if server fails
-      setAgencies(prevAgencies =>
-        prevAgencies.map(agency =>
-          agency.id === id
-            ? { ...agency, isActive: agency.isActive, status: agency.isActive ? 'Active' : 'Inactive' }
-            : agency
-        )
-      );
-    }
-  } catch (err) {
-    console.error('Error updating agency status:', err);
-    alert('An error occurred while updating agency status');
-
-    // Rollback the UI on error
-    setAgencies(prevAgencies =>
-      prevAgencies.map(agency =>
-        agency.id === id
-          ? { ...agency, isActive: agency.isActive, status: agency.isActive ? 'Active' : 'Inactive' }
-          : agency
+      prevAgencies.map(a =>
+        a.id === id
+          ? { ...a, isActive: agency.isActive, status: agency.isActive ? 'Active' : 'Inactive' }
+          : a
       )
     );
   }
 };
+
 
   const isAdmin = userRole.toLowerCase() === 'admin';
 
