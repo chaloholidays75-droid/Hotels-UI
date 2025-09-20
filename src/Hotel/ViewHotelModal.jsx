@@ -198,7 +198,7 @@ const ViewHotelModal = ({ hotel, onClose }) => {
                 <h3><FaInfoCircle /> Special Remarks</h3>
                 <p>Additional information about the hotel</p>
               </div>
-              <div className="remarks-content">{hotel.specialRemarks}</div>
+              <div className="remarks-content">{hotel.specialRemarks || 'Not specified'}</div>
             </div>
           )}
         </div>
