@@ -164,44 +164,32 @@ const HotelManagementSystem = () => {
   try {
     const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
     
-    // Try different endpoint patterns - one of these should work:
-    const endpointPatterns = [
-      `${API_BASE_HOTEL}/${id}/status`,      // Original attempt
-      `${API_BASE_HOTEL}/status/${id}`,      // Alternative pattern
-      `${API_BASE_HOTEL}/${id}/active`,      // Common alternative
-      `${API_BASE_HOTEL}/active/${id}`,      // Another pattern
-      `${API_BASE_HOTEL}/${id}/toggle-status`, // Another possibility
-    ];
+    // First, get the current hotel data
+    const getResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
+    if (!getResponse.ok) {
+      throw new Error(`Failed to fetch hotel: ${getResponse.status}`);
+    }
+    
+    const hotelData = await getResponse.json();
+    
+    // Update only the isActive field
+    const updatedHotel = {
+      ...hotelData,
+      isActive: newStatus
+    };
+    
+    // Use PUT to update the entire hotel record
+    const putResponse = await fetch(`${API_BASE_HOTEL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedHotel),
+    });
 
-    let response;
-    let workingEndpoint = '';
-
-    // Try each endpoint pattern until one works
-    for (const endpoint of endpointPatterns) {
-      try {
-        console.log(`Trying endpoint: ${endpoint}`);
-        response = await fetch(endpoint, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newStatus),
-        });
-        
-        if (response.ok) {
-          workingEndpoint = endpoint;
-          break;
-        }
-      } catch (error) {
-        console.log(`Endpoint ${endpoint} failed:`, error.message);
-        continue;
-      }
+    if (!putResponse.ok) {
+      throw new Error(`HTTP error! status: ${putResponse.status}`);
     }
 
-    if (!response || !response.ok) {
-      throw new Error(`All endpoint patterns failed. Last status: ${response?.status}`);
-    }
-
-    console.log(`Working endpoint found: ${workingEndpoint}`);
-    const result = await response.json();
+    const result = await putResponse.json();
     console.log('Backend response:', result);
     
     // Update local state
@@ -212,9 +200,9 @@ const HotelManagementSystem = () => {
     showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
   } catch (err) {
     console.error("Error updating hotel status:", err);
-    showNotification("Error: Could not update status. Please check API endpoint.", "error");
+    showNotification("Error updating hotel status. Using PUT method.", "error");
     
-    // Revert UI change
+    // Revert the change in UI
     setHotels(prev => prev.map(h => 
       h.id === id ? { ...h, isActive: currentStatus } : h
     ));
