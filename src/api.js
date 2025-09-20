@@ -204,7 +204,7 @@ export async function getHotelsByCity(cityId) {
 
 export const getRecentActivities = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/api/recent-activities`);
+    const response = await axios.get(`${API_BASE}/RecentActivity/paged`);
     // If your API wraps data in 'data' property
     return Array.isArray(response.data) ? response.data : response.data.data || [];
   } catch (error) {
