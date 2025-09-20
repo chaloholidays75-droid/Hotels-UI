@@ -5,7 +5,7 @@ import {
   FaEdit, FaToggleOn, FaToggleOff, FaPlus, FaEllipsisV, FaTimes,
   FaCheckCircle, FaExclamationTriangle, FaSync
 } from 'react-icons/fa';
-import './HotelSalesList.css';
+import './viewhotel.css';
 
 const HotelSalesList = ({ 
   hotels, 
