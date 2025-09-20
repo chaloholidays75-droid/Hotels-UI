@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getRecentActivities } from "../services/recentActivityService";
+import api from "../api";
 import { format, isToday, isYesterday, parseISO } from "date-fns";
 
 const RecentActivityPage = () => {
@@ -10,7 +10,7 @@ const RecentActivityPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getRecentActivities();
+      const data = await api();
       setActivities(data);
       setFilteredActivities(data);
     };
