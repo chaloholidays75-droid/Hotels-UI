@@ -174,13 +174,13 @@ const HotelSalesList = ({
                     if (bulkAction === "activate") {
                       selectedHotels.forEach(id => {
                         const hotel = hotels.find(h => h.id === id);
-                        if (hotel && !hotel.isActive) toggleHotelStatus(id, hotel.isActive);
+                        if (hotel && !hotel.isActive) toggleHotelStatus(id, true);
                       });
                     }
                     if (bulkAction === "deactivate") {
                       selectedHotels.forEach(id => {
                         const hotel = hotels.find(h => h.id === id);
-                        if (hotel && hotel.isActive) toggleHotelStatus(id, hotel.isActive);
+                        if (hotel && hotel.isActive) toggleHotelStatus(id, false);
                       });
                     }
                   }}
@@ -388,7 +388,7 @@ const HotelSalesList = ({
                               </button>
                               <button 
                                 className={`hsl-btn-icon hsl-status-btn ${hotel.isActive ? 'hsl-active' : 'hsl-inactive'}`} 
-                                onClick={() => toggleHotelStatus(hotel.id, hotel.isActive)} 
+                                onClick={() => toggleHotelStatus(hotel.id, !hotel.isActive)} 
                                 title={hotel.isActive ? 'Deactivate' : 'Activate'}
                               >
                                 {hotel.isActive ? <FaToggleOn /> : <FaToggleOff />}
