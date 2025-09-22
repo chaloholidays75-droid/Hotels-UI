@@ -17,15 +17,52 @@ const HotelManagementSystem = () => {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState(''); // Will be populated from auth context or API
+  const [isRoleLoaded, setIsRoleLoaded] = useState(false);
 
   // Simulate getting user role from authentication context
   useEffect(() => {
-    // In a real app, this would come from your authentication context or API
     const fetchUserRole = () => {
-      // This is a simulation - replace with actual auth logic
-      const role = localStorage.getItem('userRole') || 'employee';
-      console.log("Fetched userRole:", role);
-      setUserRole(role);
+      try {
+        // Check multiple possible storage locations and formats
+        let role = localStorage.getItem('userRole') || 
+                   localStorage.getItem('role') ||
+                   sessionStorage.getItem('userRole') ||
+                   sessionStorage.getItem('role');
+        
+        // If not found in storage, check if there's a user object
+        if (!role) {
+          const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+          if (userData) {
+            try {
+              const user = JSON.parse(userData);
+              role = user.role || user.userRole;
+            } catch (e) {
+              console.error("Error parsing user data:", e);
+            }
+          }
+        }
+        
+        // Default to employee if no role found
+        role = role || 'employee';
+        
+        // Normalize the role (case-insensitive)
+        const normalizedRole = role.toLowerCase().trim();
+        
+        // Map to expected values
+        if (normalizedRole.includes('admin')) {
+          role = 'admin';
+        } else if (normalizedRole.includes('employee')) {
+          role = 'employee';
+        }
+        
+        console.log("Setting user role to:", role);
+        setUserRole(role);
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+        setUserRole('employee');
+      } finally {
+        setIsRoleLoaded(true);
+      }
     };
     
     fetchUserRole();
@@ -103,22 +140,27 @@ const HotelManagementSystem = () => {
     setViewModal({ isOpen: false, hotel: null });
   };
 
-const openEditModal = (hotel) => {
-  // Check if user has admin role first
-  if (userRole.toLowerCase() !== 'admin') {
-    showNotification("You don't have permission to edit hotels. Only admins can perform this action.", "error");
-    return;
-  }
-  
-  // Only allow editing active hotels (for admins too)
-  if (!hotel.isActive) {
-    showNotification("Cannot edit deactivated hotels. Please activate first.", "error");
-    return;
-  }
-  
-  setEditModal({ isOpen: true, hotel });
-};
-
+  const openEditModal = (hotel) => {
+    // Check if user role is loaded
+    if (!isRoleLoaded) {
+      showNotification("Please wait while we verify your permissions.", "info");
+      return;
+    }
+    
+    // Check if user has admin role
+    if (userRole.toLowerCase() !== 'admin') {
+      showNotification("You don't have permission to edit hotels. Only admins can perform this action.", "error");
+      return;
+    }
+    
+    // Only allow editing active hotels
+    if (!hotel.isActive) {
+      showNotification("Cannot edit deactivated hotels. Please activate first.", "error");
+      return;
+    }
+    
+    setEditModal({ isOpen: true, hotel });
+  };
 
   const closeEditModal = () => {
     setEditModal({ isOpen: false, hotel: null });
@@ -142,6 +184,12 @@ const openEditModal = (hotel) => {
   };
 
   const toggleHotelStatus = async (id, currentStatus) => {
+    // Check if user role is loaded
+    if (!isRoleLoaded) {
+      showNotification("Please wait while we verify your permissions.", "info");
+      return;
+    }
+    
     // Check if user has admin role
     if (userRole.toLowerCase() !== 'admin') {
       showNotification("You don't have permission to change hotel status. Only admins can perform this action.", "error");
@@ -171,7 +219,7 @@ const openEditModal = (hotel) => {
   };
 
   // Check if user can add hotels (both admin and employee can add)
-  const canAddHotel = userRole.toLowerCase() === 'admin' || userRole.toLowerCase() === 'employee';
+  const canAddHotel = (userRole.toLowerCase() === 'admin' || userRole.toLowerCase() === 'employee') && isRoleLoaded;
 
   return (
     <div className="hms-page-content ">
@@ -201,7 +249,11 @@ const openEditModal = (hotel) => {
             <h1 className="hms-header-title">Hotel Management System</h1>
             <p className="hms-header-subtitle">Manage hotel information, contacts, and facilities</p>
             <div className="hms-user-role-badge">
-              Logged in as: <span className={`hms-role-${userRole}`}>{userRole}</span>
+              {isRoleLoaded ? (
+                <>Logged in as: <span className={`hms-role-${userRole}`}>{userRole}</span></>
+              ) : (
+                <>Loading permissions...</>
+              )}
             </div>
           </div>
           <div className="hms-nav-buttons">
@@ -209,6 +261,7 @@ const openEditModal = (hotel) => {
               className={`hms-nav-button ${activeView === 'add' ? 'hms-active' : ''} ${!canAddHotel ? 'hms-disabled' : ''}`} 
               onClick={() => canAddHotel && setActiveView('add')}
               title={!canAddHotel ? "You don't have permission to add hotels" : "Add new hotel"}
+              disabled={!canAddHotel}
             >
               <fml-icon name="add-outline" size="medium"></fml-icon> 
               <span>Add Hotel</span>
@@ -236,6 +289,7 @@ const openEditModal = (hotel) => {
             openEditModal={openEditModal}
             toggleHotelStatus={toggleHotelStatus}
             userRole={userRole}
+            isRoleLoaded={isRoleLoaded}
           />
         )}
       </main>
