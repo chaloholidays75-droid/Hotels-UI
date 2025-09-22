@@ -32,11 +32,15 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
 
   useEffect(() => {
     if (hotel) {
+          const countryName = countriesList.find(c => c.id === hotel.CountryId)?.name || '';
+          const cityName = citiesList.find(c => c.id === hotel.CityId)?.name || '';
       setFormData({
         id: hotel.id || '',
         hotelName: hotel.hotelName || '',
-        country: hotel.country || '',
-        city: hotel.city || '',
+        CountryId: hotel.CountryId || '',
+        country: countryName,
+        CityId: hotel.CityId || '',
+        city: cityName,
         address: hotel.address || '',
         hotelEmail: hotel.hotelEmail || '',
         hotelContactNumber: hotel.hotelContactNumber || '',
