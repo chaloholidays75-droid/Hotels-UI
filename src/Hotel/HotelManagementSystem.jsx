@@ -18,12 +18,12 @@ const HotelManagementSystem = () => {
   const [loading, setLoading] = useState(false);
   const [userRole, setUserRole] = useState(''); // Will be populated from auth context or API
 
-  // In a real app, you would get this from your authentication context or API
+  // Simulate getting user role from authentication context
   useEffect(() => {
-    // Simulate fetching user role (replace with actual implementation)
+    // In a real app, this would come from your authentication context or API
     const fetchUserRole = () => {
-      // This would typically come from your auth context or user API
-      const role = localStorage.getItem('userRole') || 'employee'; // Default to employee
+      // This is a simulation - replace with actual auth logic
+      const role = localStorage.getItem('userRole') || 'employee';
       setUserRole(role);
     };
     
@@ -79,7 +79,7 @@ const HotelManagementSystem = () => {
         city: cityMap.get(hotel.cityId) || "Unknown City",
         salesPersons: Array.isArray(hotel.salesPersons) ? hotel.salesPersons : (hotel.salesPersonName ? [{ name: hotel.salesPersonName, email: hotel.salesPersonEmail, contact: hotel.salesPersonContact }] : []),
         reservationPersons: Array.isArray(hotel.reservationPersons) ? hotel.reservationPersons : (hotel.reservationPersonName ? [{ name: hotel.reservationPersonName, email: hotel.reservationPersonEmail, contact: hotel.reservationPersonContact }] : []),
-        accountsPersons: Array.isArray(hotel.accountsPersons) ? hotel.salesPersons : (hotel.accountsPersonName ? [{ name: hotel.accountsPersonName, email: hotel.accountsPersonEmail, contact: hotel.accountsPersonContact }] : []),
+        accountsPersons: Array.isArray(hotel.accountsPersons) ? hotel.accountsPersons : (hotel.accountsPersonName ? [{ name: hotel.accountsPersonName, email: hotel.accountsPersonEmail, contact: hotel.accountsPersonContact }] : []),
         receptionPersons: Array.isArray(hotel.receptionPersons) ? hotel.receptionPersons : (hotel.receptionPersonName ? [{ name: hotel.receptionPersonName, email: hotel.receptionPersonEmail, contact: hotel.receptionPersonContact }] : []),
         concierges: Array.isArray(hotel.concierges) ? hotel.concierges : (hotel.conciergeName ? [{ name: hotel.conciergeName, email: hotel.conciergeEmail, contact: hotel.conciergeContact }] : []),
         isActive: hotel.isActive !== undefined ? hotel.isActive : true
@@ -111,7 +111,7 @@ const HotelManagementSystem = () => {
     
     // Check if user has admin role
     if (userRole !== 'admin') {
-      showNotification("You do not have permission to edit hotels.", "error");
+      showNotification("You don't have permission to edit hotels. Only admins can perform this action.", "error");
       return;
     }
     
@@ -142,7 +142,7 @@ const HotelManagementSystem = () => {
   const toggleHotelStatus = async (id, currentStatus) => {
     // Check if user has admin role
     if (userRole !== 'admin') {
-      showNotification("You do not have permission to change hotel status.", "error");
+      showNotification("You don't have permission to change hotel status. Only admins can perform this action.", "error");
       return;
     }
     
@@ -168,8 +168,8 @@ const HotelManagementSystem = () => {
     }
   };
 
-  // Check if user is admin
-  const isAdmin = userRole === 'admin';
+  // Check if user can add hotels (both admin and employee can add)
+  const canAddHotel = userRole === 'admin' || userRole === 'employee';
 
   return (
     <div className="hms-page-content ">
@@ -204,8 +204,9 @@ const HotelManagementSystem = () => {
           </div>
           <div className="hms-nav-buttons">
             <button 
-              className={`hms-nav-button ${activeView === 'add' ? 'hms-active' : ''}`} 
-              onClick={() => setActiveView('add')}
+              className={`hms-nav-button ${activeView === 'add' ? 'hms-active' : ''} ${!canAddHotel ? 'hms-disabled' : ''}`} 
+              onClick={() => canAddHotel && setActiveView('add')}
+              title={!canAddHotel ? "You don't have permission to add hotels" : "Add new hotel"}
             >
               <fml-icon name="add-outline" size="medium"></fml-icon> 
               <span>Add Hotel</span>
@@ -223,7 +224,7 @@ const HotelManagementSystem = () => {
       
       {/* Content Section */}
       <main className="hms-content">
-        {activeView === 'add' && <AddHotelTab showNotification={showNotification} userRole={userRole} />}
+        {activeView === 'add' && canAddHotel && <AddHotelTab showNotification={showNotification} />}
         {activeView === 'view' && (
           <HotelSalesList 
             hotels={hotels}
@@ -232,7 +233,6 @@ const HotelManagementSystem = () => {
             openViewModal={openViewModal}
             openEditModal={openEditModal}
             toggleHotelStatus={toggleHotelStatus}
-            isAdmin={isAdmin}
             userRole={userRole}
           />
         )}
