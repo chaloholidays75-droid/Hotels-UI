@@ -631,7 +631,8 @@ const fetchDashboardData = async () => {
 
     if (activitiesRes.status === 'fulfilled' && activitiesRes.value.ok) {
       const activitiesData = await activitiesRes.value.json();
-      
+
+       console.log("Raw Recent Activities from API:", activitiesData);
       // Normalize the activities data to handle missing user information
       const normalizedActivities = activitiesData.map(activity => ({
         id: activity.id || Math.random().toString(36).substr(2, 9),
