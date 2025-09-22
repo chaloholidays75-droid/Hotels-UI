@@ -5,12 +5,43 @@ import {
   FaReceipt, FaConciergeBell, FaChevronDown, FaInfoCircle, 
   FaSave, FaPlus, FaArrowLeft, FaArrowRight, FaGlobe, FaCity,
   FaHotel, FaMapMarkerAlt, FaPhone, FaEnvelope, FaLink, FaTrash,
-  FaCheckCircle, FaExclamationTriangle
+  FaCheckCircle, FaExclamationTriangle, FaTimes
 } from 'react-icons/fa';
 
 const API_BASE = "https://backend.chaloholidayonline.com/api";
 const API_BASE_HOTEL = `${API_BASE}/hotels`;
 import './addhotel.css'
+
+// Message Box Component
+const MessageBox = ({ type, message, onClose, isVisible }) => {
+  if (!isVisible) return null;
+  
+  return (
+    <div className={`message-box-overlay ${isVisible ? 'visible' : ''}`}>
+      <div className={`message-box ${type}`}>
+        <div className="message-box-header">
+          {type === 'success' ? (
+            <FaCheckCircle className="message-icon" />
+          ) : (
+            <FaExclamationTriangle className="message-icon" />
+          )}
+          <h3>{type === 'success' ? 'Success!' : 'Error!'}</h3>
+          <button className="close-btn" onClick={onClose}>
+            <FaTimes />
+          </button>
+        </div>
+        <div className="message-box-content">
+          <p>{message}</p>
+        </div>
+        <div className="message-box-footer">
+          <button className="btn btn-primary" onClick={onClose}>
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ContactRoleSection Component
 const ContactRoleSection = ({ title, role, persons, onAdd, onRemove, onChange, phoneCode, icon }) => {
@@ -100,6 +131,11 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
   const [error, setError] = useState("");
   const [hotelSource, setHotelSource] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  
+  // State for message boxes
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [messageBoxContent, setMessageBoxContent] = useState("");
 
   const countryDropdownRef = useRef(null);
   const cityDropdownRef = useRef(null);
@@ -404,6 +440,8 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     setIsSubmitting(true);
     setError("");
     setSuccessMessage("");
+    setShowSuccessMessage(false);
+    setShowErrorMessage(false);
 
     if (!validateForm()) {
       setIsSubmitting(false);
@@ -463,11 +501,13 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
 
       const data = await response.json();
       console.log("Hotel saved:", data);
-      setSuccessMessage("Hotel information saved successfully!");
+      setMessageBoxContent("Hotel information saved successfully!");
+      setShowSuccessMessage(true);
       resetForm();
     } catch (err) {
       console.error(err);
-      setError(`Error: ${err.message}`);
+      setMessageBoxContent(`Error: ${err.message}`);
+      setShowErrorMessage(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -820,6 +860,21 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       <form onSubmit={handleSubmit} className="hotel-form"> 
         {currentPage === 1 ? renderPage1() : renderPage2()}
       </form> 
+      
+      {/* Message Boxes */}
+      <MessageBox 
+        type="success" 
+        message={messageBoxContent} 
+        onClose={() => setShowSuccessMessage(false)} 
+        isVisible={showSuccessMessage} 
+      />
+      
+      <MessageBox 
+        type="error" 
+        message={messageBoxContent} 
+        onClose={() => setShowErrorMessage(false)} 
+        isVisible={showErrorMessage} 
+      />
     </div> 
   );
 };
