@@ -3,15 +3,24 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './sidebar.css';
 import api from '../api';
 
-const Sidebar = ({ userName = "User Name",role= {role}, onLogout }) => {
+const Sidebar = ( {onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('sidebarCollapsed') === 'true';
   });
-    const [userInfo, setUserInfo] = useState({ name: "User", role: "Guest" });
+  
+  const [userInfo, setUserInfo] = useState({
+    name: localStorage.getItem('userFullName') || "User",
+    role: localStorage.getItem('userRole') || "Guest",
+  });
   const [hoveredItem, setHoveredItem] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-
+    useEffect(() => {
+    // If role/name changes in localStorage (like after login), sync them
+    const fullName = localStorage.getItem('userFullName') || "User";
+    const role = localStorage.getItem('userRole') || "Guest";
+    setUserInfo({ name: fullName, role });
+  }, []);
   const menuItems = [
     { id: 1, name: 'Dashboard', icon: <fml-icon name="analytics-outline"></fml-icon>, path: '/backend/product/dashboard' },
     { id: 2, name: 'Hotel', icon: <fml-icon name="pricetag-outline"></fml-icon>, path: '/backend/product/hotel' },
@@ -91,8 +100,8 @@ const Sidebar = ({ userName = "User Name",role= {role}, onLogout }) => {
           </div>
           {!isCollapsed && (
             <div className="sb-user-info">
-              <h4>{userName}</h4>
-              <p>{role}</p>
+              <h4>{userInfo.name}</h4>
+              <p>{userInfo.role}</p>
             </div>
           )}
         </div>
