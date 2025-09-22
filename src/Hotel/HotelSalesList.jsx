@@ -49,19 +49,21 @@ const HotelSalesList = ({
   });
 
   const filteredHotels = sortedHotels.filter(hotel => {
+      const cityName = hotel.city?.name || '';
+      const countryName = hotel.country?.name || '';
     const matchesSearch = hotel.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          hotel.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          hotel.country?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCountry = filterCountry ? hotel.country === filterCountry : true;
-    const matchesCity = filterCity ? hotel.city === filterCity : true;
+                          hotel.cityName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          hotel.countryName?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCountry = filterCountry ? hotel.countryName === filterCountry : true;
+    const matchesCity = filterCity ? hotel.cityName === filterCity : true;
     const matchesStatus = filterStatus === "all" ? true : 
                          filterStatus === "active" ? hotel.isActive : 
                          !hotel.isActive;
     return matchesSearch && matchesCountry && matchesCity && matchesStatus;
   });
 
-  const countries = [...new Set(hotels.map(hotel => hotel.country).filter(Boolean))];
-  const cities = [...new Set(hotels.map(hotel => hotel.city).filter(Boolean))];
+  const countries = [...new Set(hotels.map(hotel => hotel.country?.name).filter(Boolean))];
+  const cities = [...new Set(hotels.map(hotel => hotel.city?.name).filter(Boolean))];
 
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
@@ -317,12 +319,12 @@ const HotelSalesList = ({
                       </td>
                       <td>
                         <div className="hsl-city-cell">
-                          <span className="hsl-city-name">{hotel.city}</span>
+                          <span className="hsl-city-name">{hotel.city?.name || 'Not Defined'}</span>
                         </div>
                       </td>
                       <td>
                         <div className="hsl-country-cell">
-                          <span className="hsl-country-name">{hotel.country}</span>
+                          <span className="hsl-country-name">{hotel.country?.name || "Not Defined"}</span>
                         </div>
                       </td>
                       <td>
