@@ -103,21 +103,18 @@ const HotelManagementSystem = () => {
     setViewModal({ isOpen: false, hotel: null });
   };
 
-  const openEditModal = (hotel) => {
-    // Only allow editing active hotels
+const openEditModal = (hotel) => {
+  if (userRole.toLowerCase() !== 'admin') {
     if (!hotel.isActive) {
       showNotification("Cannot edit deactivated hotels. Please activate first.", "error");
       return;
     }
-    
-    // Check if user has admin role
-    if (userRole.toLowerCase() !== 'admin') {
-      showNotification("You don't have permission to edit hotels. Only admins can perform this action.", "error");
-      return;
-    }
-    
-    setEditModal({ isOpen: true, hotel });
-  };
+    showNotification("You don't have permission to edit hotels.", "error");
+    return;
+  }
+  setEditModal({ isOpen: true, hotel });
+};
+
 
   const closeEditModal = () => {
     setEditModal({ isOpen: false, hotel: null });
