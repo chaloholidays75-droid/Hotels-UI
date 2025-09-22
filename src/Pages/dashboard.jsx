@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { decode as jwt_decode } from 'jwt-decode';
+import jwt_decode from "jwt-decode";
+
 import { formatDistanceToNow } from 'date-fns';
 
 const API_BASE = "https://backend.chaloholidayonline.com/api";
