@@ -928,30 +928,7 @@ const fetchDashboardData = async () => {
             </div>
           </div>
 
-          {/* System Status */}
-          <div className="system-status">
-            <div className="section-header">
-              <h3>System Status</h3>
-              <Activity size={18} />
-            </div>
-            <div className="status-items">
-              <div className="status-item online">
-                <div className="status-dot"></div>
-                <span>API Services</span>
-                <span className="status-badge">Online</span>
-              </div>
-              <div className="status-item online">
-                <div className="status-dot"></div>
-                <span>Database</span>
-                <span className="status-badge">Online</span>
-              </div>
-              <div className="status-item online">
-                <div className="status-dot"></div>
-                <span>Storage</span>
-                <span className="status-badge">Online</span>
-              </div>
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>
