@@ -195,7 +195,7 @@
 }
 
 .ls-dropdown li.ls-manual::before {
-  content: "➕";
+  content: " ";
   font-size: 16px;
 }
 
