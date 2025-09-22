@@ -1,34 +1,136 @@
-// HotelSalesList.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Modal from './Modal';
+import ViewHotelModal from './ViewHotelModal';
+import EditHotelModal from './EditHotelModal';
 import HotelListSkeleton from '../components/HotelListSkeleton';
 import { 
   FaSearch, FaFilter, FaSortUp, FaSortDown, FaEye, 
-  FaEdit, FaToggleOn, FaToggleOff, FaPlus, FaEllipsisV, FaTimes,
-  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan, FaLock,FaInfoCircle
+  FaEdit, FaTrash, FaPlus, FaEllipsisV, FaTimes,
+  FaCheckCircle, FaExclamationTriangle, FaSync
 } from 'react-icons/fa';
+
 import './viewhotel.css';
 
-const HotelSalesList = ({ 
-  hotels, 
-  loading,
-  showNotification, 
-  openViewModal, 
-  openEditModal, 
-  toggleHotelStatus,
-  isAdmin,
-  userRole 
-}) => {
+const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+const API_BASE_COUNTRIES = "https://backend.chaloholidayonline.com/api/countries";
+const API_BASE_CITIES = "https://backend.chaloholidayonline.com/api/cities/by-country";
+
+const HotelSalesList = ({ showNotification }) => {
+  const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editingHotel, setEditingHotel] = useState(null);
+  const [viewHotel, setViewHotel] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
   const [filterCity, setFilterCity] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState('hotelName');
   const [sortDirection, setSortDirection] = useState('asc');
   const [selectedHotels, setSelectedHotels] = useState([]);
   const [bulkAction, setBulkAction] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
 
   const itemsPerPage = 10;
+
+const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+const API_BASE_CITIES = "https://backend.chaloholidayonline.com/api/cities/by-country";
+
+
+
+const fetchHotels = async () => {
+  setRefreshing(true);
+  try {
+    // Fetch hotels
+    const hotelRes = await fetch(API_BASE_HOTEL);
+    if (!hotelRes.ok) throw new Error(`Hotel fetch failed: ${hotelRes.status}`);
+    const hotelData = await hotelRes.json();
+
+    // Fetch countries
+    const countryRes = await fetch(API_BASE_COUNTRIES);
+    if (!countryRes.ok) throw new Error(`Countries fetch failed: ${countryRes.status}`);
+    const countryData = await countryRes.json();
+
+    // Fetch cities for each unique countryId
+    const cityPromises = [...new Set(hotelData.map(h => h.countryId))].map(countryId =>
+      fetch(`${API_BASE_CITIES}/${countryId}`).then(async res => {
+        if (!res.ok) throw new Error(`Cities fetch failed for country ${countryId}: ${res.status}`);
+        return res.json();
+      })
+    );
+    const citiesData = (await Promise.all(cityPromises)).flat();
+
+    // Create lookup maps
+    const countryMap = new Map(countryData.map(c => [c.id, c.name]));
+    const cityMap = new Map(citiesData.map(c => [c.id, c.name]));
+
+    // Map hotel data with country and city names
+    const adjustedData = hotelData.map(hotel => ({
+      ...hotel,
+      country: countryMap.get(hotel.countryId) || "Unknown Country",
+      city: cityMap.get(hotel.cityId) || "Unknown City",
+      salesPersons: Array.isArray(hotel.salesPersons) ? hotel.salesPersons : (hotel.salesPersonName ? [{ name: hotel.salesPersonName, email: hotel.salesPersonEmail, contact: hotel.salesPersonContact }] : []),
+      reservationPersons: Array.isArray(hotel.reservationPersons) ? hotel.reservationPersons : (hotel.reservationPersonName ? [{ name: hotel.reservationPersonName, email: hotel.reservationPersonEmail, contact: hotel.reservationPersonContact }] : []),
+      accountsPersons: Array.isArray(hotel.accountsPersons) ? hotel.accountsPersons : (hotel.accountsPersonName ? [{ name: hotel.accountsPersonName, email: hotel.accountsPersonEmail, contact: hotel.accountsPersonContact }] : []),
+      receptionPersons: Array.isArray(hotel.receptionPersons) ? hotel.receptionPersons : (hotel.receptionPersonName ? [{ name: hotel.receptionPersonName, email: hotel.receptionPersonEmail, contact: hotel.receptionPersonContact }] : []),
+      concierges: Array.isArray(hotel.concierges) ? hotel.concierges : (hotel.conciergeName ? [{ name: hotel.conciergeName, email: hotel.conciergeEmail, contact: hotel.conciergeContact }] : []),
+    }));
+
+    setHotels(adjustedData);
+    console.log("Adjusted Hotels:", adjustedData);
+  } catch (err) {
+    console.error("Error fetching hotels:", err);
+    showNotification(`Error fetching hotels: ${err.message}`, "error");
+  }
+  setRefreshing(false);
+  setLoading(false);
+};
+  useEffect(() => {
+    fetchHotels();
+  }, []);
+
+  const deleteHotel = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this hotel?")) return;
+    try {
+      await fetch(`${API_BASE_HOTEL}/${id}`, { method: "DELETE" });
+      setHotels(prev => prev.filter(h => h.id !== id));
+      showNotification("Hotel deleted successfully!", "success");
+    } catch (err) {
+      console.error("Error deleting hotel:", err);
+      showNotification("Error deleting hotel", "error");
+    }
+  };
+
+  const deleteMultipleHotels = async () => {
+    if (!selectedHotels.length || !window.confirm(`Are you sure you want to delete ${selectedHotels.length} hotels?`)) return;
+    try {
+      await Promise.all(selectedHotels.map(id => 
+        fetch(`${API_BASE_HOTEL}/${id}`, { method: "DELETE" })
+      ));
+      setHotels(prev => prev.filter(h => !selectedHotels.includes(h.id)));
+      setSelectedHotels([]);
+      setBulkAction('');
+      showNotification(`${selectedHotels.length} hotels deleted successfully!`, "success");
+    } catch (err) {
+      console.error("Error deleting hotels:", err);
+      showNotification("Error deleting hotels", "error");
+    }
+  };
+  
+  const saveHotel = async (hotel) => {
+    try {
+      await fetch(`${API_BASE_HOTEL}/${hotel.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(hotel),
+      });
+      setEditingHotel(null);
+      fetchHotels();
+      showNotification("Hotel updated successfully!", "success");
+    } catch (err) {
+      console.error("Error updating hotel:", err);
+      showNotification("Error updating hotel", "error");
+    }
+  };
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -49,22 +151,16 @@ const HotelSalesList = ({
   });
 
   const filteredHotels = sortedHotels.filter(hotel => {
-      const cityName = hotel.city?.name || '';
-      const countryName = hotel.country?.name || '';
     const matchesSearch = hotel.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          hotel.cityName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          hotel.countryName?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCountry = filterCountry ? (hotel.country?.name || hotel.countryName) === filterCountry : true;
-    const matchesCity = filterCity ? (hotel.city?.name || hotel.cityName) === filterCity : true;
-    const matchesStatus = filterStatus === "all" ? true : 
-                         filterStatus === "active" ? hotel.isActive : 
-                         !hotel.isActive;
-    return matchesSearch && matchesCountry && matchesCity && matchesStatus;
+                          hotel.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          hotel.country?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCountry = filterCountry ? hotel.country === filterCountry : true;
+    const matchesCity = filterCity ? hotel.city === filterCity : true;
+    return matchesSearch && matchesCountry && matchesCity;
   });
 
-    const countries = [...new Set(hotels.map(hotel => hotel.country?.name || hotel.countryName).filter(Boolean))];
-    const cities = [...new Set(hotels.map(hotel => hotel.city?.name || hotel.cityName).filter(Boolean))];
-
+  const countries = [...new Set(hotels.map(hotel => hotel.country).filter(Boolean))];
+  const cities = [...new Set(hotels.map(hotel => hotel.city).filter(Boolean))];
 
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
@@ -72,8 +168,6 @@ const HotelSalesList = ({
   const totalPages = Math.ceil(filteredHotels.length / itemsPerPage);
 
   const toggleSelectHotel = (id) => {
-    if (!isAdmin) return;
-    
     setSelectedHotels(prev => 
       prev.includes(id) 
         ? prev.filter(hotelId => hotelId !== id)
@@ -82,8 +176,6 @@ const HotelSalesList = ({
   };
 
   const toggleSelectAll = () => {
-    if (!isAdmin) return;
-    
     if (selectedHotels.length === currentHotels.length) {
       setSelectedHotels([]);
     } else {
@@ -91,17 +183,15 @@ const HotelSalesList = ({
     }
   };
 
-  if (loading) return <HotelListSkeleton rowCount={5} />;
+  if (loading) return (
+    <HotelListSkeleton rowCount={5} />
+  );
 
   return (
     <div className="hsl-hotel-sales-list">
+
       <div className="hsl-card">
-        <h2 className="section-title">Registered Hotels</h2>
-        {!isAdmin && (
-          <div className="hsl-view-only-notice">
-            <FaInfoCircle /> View Only Mode - You can view hotels and create new ones, but only admins can edit or change status
-          </div>
-        )}
+      <h2 className="section-title" >Registered Hotels</h2>
 
         <div className="hsl-list-controls">
           <div className="hsl-search-filter-section">
@@ -137,27 +227,13 @@ const HotelSalesList = ({
                 </select>
               </div>
               
-              <div className="hsl-filter-group">
-                <label>Status</label>
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-              
-              <button className="hsl-btn hsl-btn-secondary" onClick={() => { 
-                setFilterCountry(""); 
-                setFilterCity(""); 
-                setFilterStatus("all");
-                setSearchTerm(""); 
-              }}>
+              <button className="hsl-btn hsl-btn-secondary" onClick={() => { setFilterCountry(""); setFilterCity(""); setSearchTerm(""); }}>
                 Clear Filters
               </button>
             </div>
           </div>
 
-          {isAdmin && selectedHotels.length > 0 && (
+          {selectedHotels.length > 0 && (
             <div className="hsl-bulk-actions-card">
               <div className="hsl-bulk-header">
                 <FaCheckCircle />
@@ -169,25 +245,11 @@ const HotelSalesList = ({
               <div className="hsl-bulk-controls">
                 <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)}>
                   <option value="">Choose action...</option>
-                  <option value="activate">Activate Selected</option>
-                  <option value="deactivate">Deactivate Selected</option>
+                  <option value="delete">Delete Selected</option>
                 </select>
                 <button 
-                  className="hsl-btn hsl-btn-primary" 
-                  onClick={() => {
-                    if (bulkAction === "activate") {
-                      selectedHotels.forEach(id => {
-                        const hotel = hotels.find(h => h.id === id);
-                        if (hotel && !hotel.isActive) toggleHotelStatus(id, hotel.isActive);
-                      });
-                    }
-                    if (bulkAction === "deactivate") {
-                      selectedHotels.forEach(id => {
-                        const hotel = hotels.find(h => h.id === id);
-                        if (hotel && hotel.isActive) toggleHotelStatus(id, hotel.isActive);
-                      });
-                    }
-                  }}
+                  className="hsl-btn hsl-btn-danger" 
+                  onClick={deleteMultipleHotels}
                   disabled={!bulkAction}
                 >
                   Apply Action
@@ -205,12 +267,7 @@ const HotelSalesList = ({
             {filteredHotels.length !== hotels.length && (
               <button 
                 className="hsl-btn hsl-btn-text" 
-                onClick={() => { 
-                  setFilterCountry(""); 
-                  setFilterCity(""); 
-                  setFilterStatus("all");
-                  setSearchTerm(""); 
-                }}
+                onClick={() => { setFilterCountry(""); setFilterCity(""); setSearchTerm(""); }}
               >
                 Clear all filters
               </button>
@@ -241,16 +298,12 @@ const HotelSalesList = ({
 
         {filteredHotels.length === 0 ? (
           <div className="hsl-no-results">
+            
             <h3>No hotels found</h3>
             <p>Try adjusting your search or filters to find what you're looking for.</p>
             <button 
               className="hsl-btn hsl-btn-primary" 
-              onClick={() => { 
-                setFilterCountry(""); 
-                setFilterCity(""); 
-                setFilterStatus("all");
-                setSearchTerm(""); 
-              }}
+              onClick={() => { setFilterCountry(""); setFilterCity(""); setSearchTerm(""); }}
             >
               Clear all filters
             </button>
@@ -261,15 +314,13 @@ const HotelSalesList = ({
               <table className="hsl-hotels-table">
                 <thead>
                   <tr>
-                    {isAdmin && (
-                      <th className="hsl-select-column">
-                        <input
-                          type="checkbox"
-                          checked={selectedHotels.length === currentHotels.length && currentHotels.length > 0}
-                          onChange={toggleSelectAll}
-                        />
-                      </th>
-                    )}
+                    <th className="hsl-select-column">
+                      <input
+                        type="checkbox"
+                        checked={selectedHotels.length === currentHotels.length && currentHotels.length > 0}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
                     <th onClick={() => handleSort('hotelName')} className="hsl-sortable-header">
                       <div>
                         <span>Hotel Name</span>
@@ -288,7 +339,6 @@ const HotelSalesList = ({
                         {sortField === 'country' && (sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />)}
                       </div>
                     </th>
-                    <th>Status</th>
                     <th>Sales Contacts</th>
                     <th>Reservation Contacts</th>
                     <th>Actions</th>
@@ -296,43 +346,28 @@ const HotelSalesList = ({
                 </thead>
                 <tbody>
                   {currentHotels.map(hotel => (
-                    <tr key={hotel.id} className={`${selectedHotels.includes(hotel.id) ? 'hsl-selected' : ''} ${!hotel.isActive ? 'hsl-inactive-row' : ''}`}>
-                      {isAdmin && (
-                        <td className="hsl-select-column">
-                          <input
-                            type="checkbox"
-                            checked={selectedHotels.includes(hotel.id)}
-                            onChange={() => toggleSelectHotel(hotel.id)}
-                            disabled={!hotel.isActive}
-                          />
-                        </td>
-                      )}
+                    <tr key={hotel.id} className={selectedHotels.includes(hotel.id) ? 'hsl-selected' : ''}>
+                      <td className="hsl-select-column">
+                        <input
+                          type="checkbox"
+                          checked={selectedHotels.includes(hotel.id)}
+                          onChange={() => toggleSelectHotel(hotel.id)}
+                        />
+                      </td>
                       <td>
                         <div className="hsl-hotel-name-cell">
                           <div className="hsl-hotel-name">{hotel.hotelName || 'No Name Provided'}</div>
                           {hotel.hotelChain && <div className="hsl-hotel-chain">{hotel.hotelChain}</div>}
-                          {!hotel.isActive && (
-                            <div className="hsl-inactive-label">
-                              <FaBan /> Inactive
-                            </div>
-                          )}
                         </div>
                       </td>
                       <td>
                         <div className="hsl-city-cell">
-                          <span className="hsl-city-name"> {hotel.city?.name || hotel.cityName || 'Not Defined'}</span>
+                          <span className="hsl-city-name">{hotel.city}</span>
                         </div>
                       </td>
                       <td>
                         <div className="hsl-country-cell">
-                          <span className="hsl-country-name">{hotel.country?.name || hotel.countryName || 'Not Defined'}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="hsl-status-cell">
-                          <span className={`hsl-status-badge ${hotel.isActive ? 'hsl-active' : 'hsl-inactive'}`}>
-                            {hotel.isActive ? 'Active' : 'Inactive'}
-                          </span>
+                          <span className="hsl-country-name">{hotel.country}</span>
                         </div>
                       </td>
                       <td>
@@ -363,41 +398,16 @@ const HotelSalesList = ({
                       </td>
                       <td>
                         <div className="hsl-action-buttons">
-                          <button 
-                            className="hsl-btn-icon hsl-view-btn" 
-                            onClick={() => openViewModal(hotel)} 
-                            title="View details"
-                          >
+                          <button className="hsl-btn-icon hsl-view-btn" onClick={() => setViewHotel(hotel)} title="View details">
                             <FaEye />
                           </button>
-                          
-                          {isAdmin ? (
-                            <>
-                              <button 
-                                className={`hsl-btn-icon hsl-edit-btn ${!hotel.isActive ? 'hsl-disabled' : ''}`} 
-                                onClick={() => openEditModal(hotel)} 
-                                title={hotel.isActive ? "Edit" : "Cannot edit inactive hotels"}
-                                disabled={!hotel.isActive}
-                              >
-                                <FaEdit />
-                              </button>
-                              <button 
-                                className={`hsl-btn-icon hsl-status-btn ${hotel.isActive ? 'hsl-active' : 'hsl-inactive'}`} 
-                                onClick={() => toggleHotelStatus(hotel.id, hotel.isActive)} 
-                                title={hotel.isActive ? 'Deactivate' : 'Activate'}
-                              >
-                                {hotel.isActive ? <FaToggleOn /> : <FaToggleOff />}
-                              </button>
-                            </>
-                          ) : (
-                            <button 
-                              className="hsl-btn-icon hsl-disabled" 
-                              title="Admin permission required for editing"
-                              disabled
-                            >
-                              <FaLock />
-                            </button>
-                          )}
+                          <button className="hsl-btn-icon hsl-edit-btn" onClick={() => setEditingHotel(hotel)} title="Edit">
+                            <FaEdit />
+                          </button>
+                          <button className="hsl-btn-icon hsl-delete-btn" onClick={() => deleteHotel(hotel.id)} title="Delete">
+                            <FaTrash />
+                          </button>
+  
                         </div>
                       </td>
                     </tr>
@@ -455,8 +465,27 @@ const HotelSalesList = ({
           </>
         )}
       </div>
+      
+     {viewHotel && (
+  <ViewHotelModal
+    hotel={viewHotel}
+    onClose={() => setViewHotel(null)}
+  />
+)}
+
+{editingHotel && (
+  <>
+    {console.log("Opening edit modal for:", editingHotel)}
+    <EditHotelModal
+      hotel={editingHotel}
+      onSave={saveHotel}
+      onCancel={() => setEditingHotel(null)}
+    />
+  </>
+
+)}
+
     </div>
   );
 };
-
 export default HotelSalesList;
