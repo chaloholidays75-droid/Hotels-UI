@@ -770,3 +770,14 @@ body {
   font-size: 0.9rem;
   border-left: 4px solid #1890ff;
 }
+.hsl-permission-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 10px 15px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}

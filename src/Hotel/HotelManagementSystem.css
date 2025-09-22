@@ -322,17 +322,26 @@ body.sb-collapsed .hms-nav-button fml-icon {
   }
 }
 .hms-user-role-badge {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #666;
   margin-top: 5px;
 }
 
 .hms-role-admin {
-  color: #1890ff;
+  color: #ff6b6b;
   font-weight: 600;
 }
 
 .hms-role-employee {
-  color: #52c41a;
+  color: #4ecdc4;
   font-weight: 600;
+}
+
+.hms-disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.hms-disabled:hover {
+  background-color: transparent !important;
 }
