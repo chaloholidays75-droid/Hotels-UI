@@ -12,7 +12,7 @@ export default function RecentActivities() {
     try {
       setLoading(true);
       const response = await fetch(
-        `https://backend.chaloholidayonline.com/api/RecentActivities?page=${page}&pageSize=${pageSize}`,
+        `https://backend.chaloholidayonline.com/api/recent?page=${page}&pageSize=${pageSize}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
