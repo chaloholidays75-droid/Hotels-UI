@@ -4,6 +4,7 @@ import {
   FaSync, FaEye, FaPlus, FaExclamationTriangle,
   FaGlobe, FaExclamationCircle, FaArrowUp, FaArrowDown
 } from 'react-icons/fa';
+import jwt_decode from "jwt-decode";
 import { Pie, Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -67,18 +68,62 @@ const Dashboard = ({ showNotification, onNavigate }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
-  const fetchWithToken = async (url, options = {}) => {
-  const token = localStorage.getItem('accessToken'); // get token
-  console.log(token);
+//   const fetchWithToken = async (url, options = {}) => {
+//   const token = localStorage.getItem('accessToken'); // get token
+//   console.log(token);
   
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-    'Authorization': `Bearer ${token}`  // attach token
-  };
+//   const headers = {
+//     'Content-Type': 'application/json',
+//     ...options.headers,
+//     'Authorization': `Bearer ${token}`  // attach token
+//   };
+//   const getValidToken = () => {
+//   const token = localStorage.getItem("accessToken");
+//   if (!token) return null;
 
-  const response = await fetch(url, { ...options, headers });
-  return response;
+//   try {
+//     const decoded = jwt_decode(token);
+//     const now = Date.now() / 1000; // current time in seconds
+//     if (decoded.exp && decoded.exp < now) {
+//       console.warn("Token expired");
+//       return null;
+//     }
+//     return token;
+//   } catch (err) {
+//     console.error("Invalid token", err);
+//     return null;
+//   }
+// };
+//   const response = await fetch(url, { ...options, headers });
+//   return response;
+// };
+  const getValidToken = () => {
+  const token = localStorage.getItem("accessToken");
+  if (!token) return null;
+
+  try {
+    const decoded = jwt_decode(token);
+    const now = Date.now() / 1000; // current time in seconds
+    if (decoded.exp && decoded.exp < now) {
+      console.warn("Token expired");
+      return null;
+    }
+    return token;
+  } catch (err) {
+    console.error("Invalid token", err);
+    return null;
+  }
+};
+const token = getValidToken();
+if (!token) {
+  console.error("No valid token found. Redirect to login.");
+  navigate("/login"); // optional
+  return;
+}
+
+const headers = {
+  "Content-Type": "application/json",
+  "Authorization": `Bearer ${token}`,
 };
 
   // Chart options and data
@@ -639,15 +684,16 @@ const fetchDashboardData = async () => {
       const normalizedActivities = activitiesData.map(activity => ({
         id: activity.id || Math.random().toString(36).substr(2, 9),
         user: activity.user || activity.userName || activity.createdBy || "System",
-        action: activity.action || "modified",
+        action: activity.action || "performed action on",
         type: activity.type || "item",
         name: activity.name || activity.title || "Unnamed",
-        timeAgo: activity.timeAgo || (activity.timestamp ? 
-          formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true }) : 
-          "Recently"),
         timestamp: activity.timestamp || new Date().toISOString(),
-        country: activity.country || null
+        country: activity.country || null,
+        timeAgo: activity.timestamp 
+          ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })
+          : "Recently",
       }));
+
       
       setRecentActivities(normalizedActivities);
     }
