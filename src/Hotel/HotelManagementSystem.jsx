@@ -104,14 +104,18 @@ const HotelManagementSystem = () => {
   };
 
 const openEditModal = (hotel) => {
+  // Check if user has admin role first
   if (userRole.toLowerCase() !== 'admin') {
-    if (!hotel.isActive) {
-      showNotification("Cannot edit deactivated hotels. Please activate first.", "error");
-      return;
-    }
-    showNotification("You don't have permission to edit hotels.", "error");
+    showNotification("You don't have permission to edit hotels. Only admins can perform this action.", "error");
     return;
   }
+  
+  // Only allow editing active hotels (for admins too)
+  if (!hotel.isActive) {
+    showNotification("Cannot edit deactivated hotels. Please activate first.", "error");
+    return;
+  }
+  
   setEditModal({ isOpen: true, hotel });
 };
 
