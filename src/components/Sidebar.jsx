@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './sidebar.css';
+import api from '../api';
 
-const Sidebar = ({ userName = "User Name",role= "admin", onLogout }) => {
+const Sidebar = ({ userName = "User Name",role= {role}, onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem('sidebarCollapsed') === 'true';
   });
