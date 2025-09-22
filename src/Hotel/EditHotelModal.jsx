@@ -236,28 +236,39 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
           <div className="form-section">
             <h3><FaUserTie /> Contact Persons</h3>
             {['sales', 'reservation', 'accounts', 'reception', 'concierge'].map(role => {
-              const rolePlural = `${role}Persons`;
+              const rolePluralMap = {
+                sales: 'salesPersons',
+                reservation: 'reservationPersons',
+                accounts: 'accountsPersons',
+                reception: 'receptionPersons',
+                concierge: 'concierges',
+              };
+              const rolePlural = rolePluralMap[role];
+              const persons = formData[rolePlural] || []; // safe fallback
+              const personCount = persons.length;
+
               const titleMap = {
                 salesPersons: 'Sales',
-                reservationPersons: 'Reservation', 
-                accountsPersons: 'Accounts', 
-                receptionPersons: 'Reception', 
-                conciergePersons: 'Concierge'
+                reservationPersons: 'Reservation',
+                accountsPersons: 'Accounts',
+                receptionPersons: 'Reception',
+                concierges: 'Concierge',
               };
+
               const iconMap = {
-                salesPersons: <FaUserTie/>,
-                reservationPersons: <FaClipboardList/>,
-                accountsPersons: <FaMoneyCheckAlt/>,
-                receptionPersons: <FaReceipt/>,
-                conciergePersons: <FaConciergeBell/>
+                salesPersons: <FaUserTie />,
+                reservationPersons: <FaClipboardList />,
+                accountsPersons: <FaMoneyCheckAlt />,
+                receptionPersons: <FaReceipt />,
+                concierges: <FaConciergeBell />,
               };
-              
+
               return (
                 <ContactRoleSection
                   key={rolePlural}
                   title={titleMap[rolePlural]}
                   role={role}
-                  persons={formData[rolePlural]}
+                  persons={persons}
                   onAdd={() => addPerson(role)}
                   onRemove={removePerson}
                   onChange={updatePerson}
@@ -268,6 +279,7 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
               );
             })}
           </div>
+
 
           {/* Special Remarks */}
           <div className="form-section">
