@@ -152,8 +152,7 @@ const HotelManagementSystem = () => {
       showNotification("Error updating hotel", "error");
     }
   };
-
- const toggleHotelStatus = async (id, currentStatus) => {
+const toggleHotelStatus = async (id, currentStatus) => {
   if (userRole.toLowerCase() !== 'admin') {
     showNotification("You do not have permission to change hotel status.", "error");
     return;
@@ -166,83 +165,136 @@ const HotelManagementSystem = () => {
     
     console.log('Using PATCH endpoint for status update');
     
+    // FIXED: Send proper JSON object (not just boolean)
     const patchResponse = await fetch(`${API_BASE_HOTEL}/${id}/status`, {
       method: "PATCH",
       headers: { 
         "Content-Type": "application/json",
         "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
       },
-      body: JSON.stringify(newStatus), // Just send the boolean value
+      body: JSON.stringify({ isActive: newStatus }), // ← Send as object, not just boolean
     });
 
     console.log('PATCH response status:', patchResponse.status);
     
-    if (!patchResponse.ok) {
-      const errorText = await patchResponse.text();
-      console.error('PATCH error response:', errorText);
+    if (patchResponse.ok) {
+      const result = await patchResponse.json();
+      console.log('PATCH success:', result);
       
-      // If PATCH fails, fall back to PUT
-      console.log('Falling back to PUT method...');
-      await updateUsingPut(id, newStatus);
+      // Update UI immediately
+      setHotels(prev => prev.map(h => 
+        h.id === id ? { ...h, isActive: newStatus } : h
+      ));
+      
+      showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
       return;
     }
-
-    // Parse the JSON response from PATCH
-    const result = await patchResponse.json();
-    console.log('PATCH success:', result);
     
-    // Update UI
-    setHotels(prev => prev.map(h => 
-      h.id === id ? { ...h, isActive: newStatus } : h
-    ));
+    // If PATCH fails, show detailed error
+    const errorText = await patchResponse.text();
+    console.error('PATCH error response:', errorText);
     
-    showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
+    if (patchResponse.status === 404) {
+      showNotification("Error: Status update endpoint not found. Please check server configuration.", "error");
+    } else {
+      showNotification(`Error: Could not update hotel status (${patchResponse.status})`, "error");
+    }
     
   } catch (err) {
     console.error("Error updating hotel status:", err);
     showNotification("Error: Could not update hotel status", "error");
   }
 };
+//  const toggleHotelStatus = async (id, currentStatus) => {
+//   if (userRole.toLowerCase() !== 'admin') {
+//     showNotification("You do not have permission to change hotel status.", "error");
+//     return;
+//   }
+  
+//   const newStatus = !currentStatus;
+  
+//   try {
+//     const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+    
+//     console.log('Using PATCH endpoint for status update');
+    
+//     const patchResponse = await fetch(`${API_BASE_HOTEL}/${id}/status`, {
+//       method: "PATCH",
+//       headers: { 
+//         "Content-Type": "application/json",
+//         "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+//       },
+//       body: JSON.stringify(newStatus), // Just send the boolean value
+//     });
 
-// Fallback PUT method
-const updateUsingPut = async (id, newStatus) => {
-  try {
-    const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+//     console.log('PATCH response status:', patchResponse.status);
     
-    const getResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
-    if (!getResponse.ok) throw new Error(`Failed to fetch hotel: ${getResponse.status}`);
-    
-    const hotelData = await getResponse.json();
-    
-    // Use UPPERCASE 'I' for IsActive
-    const updatedHotel = {
-      ...hotelData,
-      IsActive: newStatus
-    };
-    
-    const putResponse = await fetch(`${API_BASE_HOTEL}/${id}`, {
-      method: "PUT",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
-      },
-      body: JSON.stringify(updatedHotel),
-    });
+//     if (!patchResponse.ok) {
+//       const errorText = await patchResponse.text();
+//       console.error('PATCH error response:', errorText);
+      
+//       // If PATCH fails, fall back to PUT
+//       console.log('Falling back to PUT method...');
+//       await updateUsingPut(id, newStatus);
+//       return;
+//     }
 
-    if (!putResponse.ok) {
-      const errorText = await putResponse.text();
-      throw new Error(`PUT failed: ${putResponse.status}, ${errorText}`);
-    }
-
-    setHotels(prev => prev.map(h => 
-      h.id === id ? { ...h, isActive: newStatus } : h
-    ));
+//     // Parse the JSON response from PATCH
+//     const result = await patchResponse.json();
+//     console.log('PATCH success:', result);
     
-  } catch (error) {
-    console.error('PUT fallback also failed:', error);
-    throw error;
-  }
-};
+//     // Update UI
+//     setHotels(prev => prev.map(h => 
+//       h.id === id ? { ...h, isActive: newStatus } : h
+//     ));
+    
+//     showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
+    
+//   } catch (err) {
+//     console.error("Error updating hotel status:", err);
+//     showNotification("Error: Could not update hotel status", "error");
+//   }
+// };
+
+// // Fallback PUT method
+// const updateUsingPut = async (id, newStatus) => {
+//   try {
+//     const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+    
+//     const getResponse = await fetch(`${API_BASE_HOTEL}/${id}`);
+//     if (!getResponse.ok) throw new Error(`Failed to fetch hotel: ${getResponse.status}`);
+    
+//     const hotelData = await getResponse.json();
+    
+//     // Use UPPERCASE 'I' for IsActive
+//     const updatedHotel = {
+//       ...hotelData,
+//       IsActive: newStatus
+//     };
+    
+//     const putResponse = await fetch(`${API_BASE_HOTEL}/${id}`, {
+//       method: "PUT",
+//       headers: { 
+//         "Content-Type": "application/json",
+//         "Authorization": `Bearer ${localStorage.getItem('accessToken')}`
+//       },
+//       body: JSON.stringify(updatedHotel),
+//     });
+
+//     if (!putResponse.ok) {
+//       const errorText = await putResponse.text();
+//       throw new Error(`PUT failed: ${putResponse.status}, ${errorText}`);
+//     }
+
+//     setHotels(prev => prev.map(h => 
+//       h.id === id ? { ...h, isActive: newStatus } : h
+//     ));
+    
+//   } catch (error) {
+//     console.error('PUT fallback also failed:', error);
+//     throw error;
+//   }
+// };
 
   const manualRefresh = () => {
     fetchHotels();
