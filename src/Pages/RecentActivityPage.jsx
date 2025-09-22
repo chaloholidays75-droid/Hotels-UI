@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getRecentActivities } from "../api";
+// import { getRecentActivities } from "../api";
 import { format, isToday, isYesterday } from "date-fns";
 
 const RecentActivityPage = () => {
