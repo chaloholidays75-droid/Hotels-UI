@@ -6,7 +6,7 @@ import { FaCheckCircle, FaTimesCircle, FaTimes } from 'react-icons/fa';
 import ViewHotelModal from './ViewHotelModal';
 import EditHotelModal from './EditHotelModal';
 import Modal from './Modal';
-import { getHotelSales, updateHotelSale, updateHotelStatus, checkAuth } from '../services/api';
+import { getHotelSales, updateHotelSale, updateHotelStatus, checkAuth } from '../api';
 import './HotelManagementSystem.css';
 
 // Main Component
