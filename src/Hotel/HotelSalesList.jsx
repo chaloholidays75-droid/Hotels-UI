@@ -3,7 +3,7 @@ import HotelListSkeleton from '../components/HotelListSkeleton';
 import { 
   FaSearch, FaFilter, FaSortUp, FaSortDown, FaEye, 
   FaEdit, FaToggleOn, FaToggleOff, FaPlus, FaEllipsisV, FaTimes,
-  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan, FaLock
+  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan, FaLock,FaInfoCircle
 } from 'react-icons/fa';
 
 const HotelSalesList = ({ 
