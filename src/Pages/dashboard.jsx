@@ -618,7 +618,7 @@ const fetchDashboardData = async () => {
     ] = await Promise.allSettled([
       fetch(API_STATS, { headers }),
       fetch(API_RECENT_ACTIVITIES, { headers }),
-      fetch(API_HOTELS_BY_COUNTRY, { headers }),
+      fetch(API_HOTELS_BY_COUNTY, { headers }),
       fetch(API_AGENCIES_BY_COUNTRY, { headers }),
       fetch(API_TOP_COUNTRIES, { headers }),
       fetch(API_MONTHLY_STATS, { headers })
@@ -631,7 +631,22 @@ const fetchDashboardData = async () => {
 
     if (activitiesRes.status === 'fulfilled' && activitiesRes.value.ok) {
       const activitiesData = await activitiesRes.value.json();
-      setRecentActivities(activitiesData);
+      
+      // Normalize the activities data to handle missing user information
+      const normalizedActivities = activitiesData.map(activity => ({
+        id: activity.id || Math.random().toString(36).substr(2, 9),
+        user: activity.user || activity.userName || activity.createdBy || "System",
+        action: activity.action || "modified",
+        type: activity.type || "item",
+        name: activity.name || activity.title || "Unnamed",
+        timeAgo: activity.timeAgo || (activity.timestamp ? 
+          formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true }) : 
+          "Recently"),
+        timestamp: activity.timestamp || new Date().toISOString(),
+        country: activity.country || null
+      }));
+      
+      setRecentActivities(normalizedActivities);
     }
 
     if (hotelsByCountryRes.status === 'fulfilled' && hotelsByCountryRes.value.ok) {
@@ -735,8 +750,6 @@ const fetchDashboardData = async () => {
       </button>
     </div>
   );
-// console.log("Monthly stats:", monthlyStats);
-// console.log("Labels:", lineChartData.labels);
 
   return (
     <div className="dashboard-container ">
@@ -830,78 +843,72 @@ const fetchDashboardData = async () => {
               </div>
             </div>
           </div>
-
-           {/* Quick Actions */}
-{/*          <div className="quick-actions-section">
-            <h2>Quick Actions</h2>
-            <div className="quick-actions-grid">
-              <QuickAction
-                title="Manage Hotels"
-                icon={<fml-icon name="business-outline"></fml-icon>}
-                description="View and manage all hotel properties"
-                onClick={() => onNavigate('/backend/product/list')}
-              />
-              <QuickAction
-                title="Manage Agencies"
-                icon={<FaBuilding />}
-                description="View and manage agency partners"
-                onClick={() => onNavigate('/backend/product/agency')}
-              />
-              <QuickAction
-                title="Add New Property"
-                icon={<fml-icon name="add-outline"></fml-icon>}
-                description="Register a new hotel property"
-                onClick={() => onNavigate('/backend/product/list')}
-              />
-              <QuickAction
-                title="Analytics Report"
-                icon={<fml-icon name="analytics-outline"></fml-icon>}
-                description="Generate detailed analytics reports"
-                onClick={() => showNotification("Analytics feature coming soon!", "info")}
-              />
-            </div>
-          </div>*/}
         </div> 
 
         {/* Right Column - Sidebar */}
-    <div className="dashboard-sidebar">
-      <div className="recent-activities">
-        <div className="section-header">
-          <h3>Recent Activities</h3>
-          <Users size={18} />
-        </div>
-
-        <div className="activities-list">
-          {recentActivities.slice(0, 6).map((activity) => (
-            <div key={activity.id} className="activity-item">
-              <div className="activity-icon">
-                {activity.type === 'hotel' && <FaHotel />}
-                {activity.type === 'agency' && <FaBuilding />}
-                {!activity.type && <FaExclamationTriangle />}
-              </div>
-              <div className="activity-content">
-                <p className="activity-text">
-                  {activity.user || "Unknown user"} {activity.action} {activity.type} "{activity.name || 'Unnamed'}"
-                </p>
-                <div className="activity-meta">
-                  <span className="activity-time">
-                    {activity.timeAgo || "Unknown time"}
-                  </span>
-                </div>
-              </div>
+        <div className="dashboard-sidebar">
+          <div className="recent-activities">
+            <div className="section-header">
+              <h3>Recent Activities</h3>
+              <Users size={18} />
             </div>
-          ))}
-        </div>
 
-        <div className="see-more-wrapper">
-          <button
-            className="see-more-btn"
-            onClick={() => navigate("/recent-activities")}
-          >
-            See More
-          </button>
-        </div>
-      </div>
+            <div className="activities-list">
+              {recentActivities.slice(0, 6).map((activity, index) => {
+                // Determine user display name with better fallbacks
+                const getUserDisplayName = () => {
+                  if (activity.user) return activity.user;
+                  if (activity.userName) return activity.userName;
+                  if (activity.userEmail) return activity.userEmail.split('@')[0]; // Use part of email if available
+                  if (activity.createdBy) return activity.createdBy;
+                  return "System"; // Default fallback
+                };
+
+                // Determine activity description with better fallbacks
+                const getActivityDescription = () => {
+                  const user = getUserDisplayName();
+                  const action = activity.action || "performed action on";
+                  const type = activity.type || "item";
+                  const name = activity.name || 'Unnamed';
+                  
+                  return `${user} ${action} ${type} "${name}"`;
+                };
+
+                return (
+                  <div key={activity.id || `activity-${index}`} className="activity-item">
+                    <div className="activity-icon">
+                      {activity.type === 'hotel' && <FaHotel />}
+                      {activity.type === 'agency' && <FaBuilding />}
+                      {!activity.type && <FaExclamationTriangle />}
+                    </div>
+                    <div className="activity-content">
+                      <p className="activity-text">
+                        {getActivityDescription()}
+                      </p>
+                      <div className="activity-meta">
+                        <span className="activity-time">
+                          {activity.timestamp ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true }) : 
+                          activity.timeAgo || "Recently"}
+                        </span>
+                        {activity.country && (
+                          <span className="activity-country">{activity.country}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="see-more-wrapper">
+              <button
+                className="see-more-btn"
+                onClick={() => navigate("/recent-activities")}
+              >
+                See More
+              </button>
+            </div>
+          </div>
 
           {/* Top Countries */}
           <div className="top-countries">
@@ -928,7 +935,30 @@ const fetchDashboardData = async () => {
             </div>
           </div>
 
-          
+          {/* System Status */}
+          <div className="system-status">
+            <div className="section-header">
+              <h3>System Status</h3>
+              <Activity size={18} />
+            </div>
+            <div className="status-items">
+              <div className="status-item online">
+                <div className="status-dot"></div>
+                <span>API Services</span>
+                <span className="status-badge">Online</span>
+              </div>
+              <div className="status-item online">
+                <div className="status-dot"></div>
+                <span>Database</span>
+                <span className="status-badge">Online</span>
+              </div>
+              <div className="status-item online">
+                <div className="status-dot"></div>
+                <span>Storage</span>
+                <span className="status-badge">Online</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
