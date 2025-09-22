@@ -160,14 +160,14 @@ const toggleAgencyStatus = async (id) => {
         </div>
         
         <div className="tabs">
-          {isAdmin && (
+         
             <button 
               className={activeTab === 'add' ? 'tab active' : 'tab'} 
               onClick={() => handleTabChange('add')}
             >
               Add Agency
             </button>
-          )}
+          
           <button 
             className={activeTab === 'view' ? 'tab active' : 'tab'} 
             onClick={() => handleTabChange('view')}
