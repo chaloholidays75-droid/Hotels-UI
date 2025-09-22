@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from 'react';
 import Login from './Login/login';
 import Register from './Login/register';
 import ForgotPassword from './Login/ForgotPassword';
@@ -11,20 +11,20 @@ import { checkAuth } from './api';
 import Loader from './components/loader';
 import HotelSalesList from './Hotel/HotelSalesList';
 import Sidebar from './components/Sidebar';
-import { AuthContext } from './context/AuthContext';
+
 import RecentActivityPage from './Pages/RecentActivityPage';
 import './App.css';
 
 // Layout for authenticated pages
-function Layout({ children, onLogout }) {
-  const { user } = useContext(AuthContext);
+function Layout({ children, userName, onLogout }) {
   return (
     <div className="app-container">
-      <Sidebar onLogout={onLogout} /> {/* Sidebar now uses AuthContext */}
+      <Sidebar userName={userName} onLogout={onLogout} />
       <div className="page-content">{children}</div>
     </div>
   );
 }
+
 // Protect routes
 function ProtectedRoute({ children, isAuthenticated }) {
   return isAuthenticated ? children : <Navigate to="/backend/login" replace />;
@@ -34,7 +34,6 @@ function App() {
   const [userName, setUserName] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { user, loginUser, logoutUser } = useContext(AuthContext);
 
   useEffect(() => {
     async function verifyAuth() {
