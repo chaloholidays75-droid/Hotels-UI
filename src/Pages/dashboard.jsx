@@ -756,7 +756,7 @@ const fetchDashboardData = async () => {
         <MetricCard
           title="Total Hotels"
           value={stats.totalHotels}
-          change={12}
+          
           icon={<FaHotel />}
           backgroundColor=" rgb(232 246 255)"
           color= "rgb(52, 152, 219)"
@@ -765,7 +765,7 @@ const fetchDashboardData = async () => {
         <MetricCard
           title="Total Agencies"
           value={stats.totalAgencies}
-          change={8}
+          
           icon={<FaBuilding />}
           color=" rgb(46, 204, 113)"
           backgroundColor=" rgb(221 255 235)"
@@ -774,7 +774,7 @@ const fetchDashboardData = async () => {
         <MetricCard
           title="Active Properties"
           value={stats.activeHotels}
-          change={5}
+          
           icon={<Activity size={20} />}
           color="#9b59b6"
           backgroundColor="rgba(251, 241, 255, 1)"
@@ -783,7 +783,7 @@ const fetchDashboardData = async () => {
         <MetricCard
           title="Countries Covered"
           value={stats.totalCountries}
-          change={3}
+          
           icon={<Globe size={20} />}
           color="#e67e22"
           backgroundColor="#fff9f4ff"
