@@ -1,3 +1,4 @@
+// HotelSalesList.jsx
 import React, { useState } from 'react';
 import HotelListSkeleton from '../components/HotelListSkeleton';
 import { 
@@ -68,7 +69,6 @@ const HotelSalesList = ({
   const totalPages = Math.ceil(filteredHotels.length / itemsPerPage);
 
   const toggleSelectHotel = (id) => {
-    // Only allow selection for admin users
     if (!isAdmin) return;
     
     setSelectedHotels(prev => 
@@ -79,7 +79,6 @@ const HotelSalesList = ({
   };
 
   const toggleSelectAll = () => {
-    // Only allow selection for admin users
     if (!isAdmin) return;
     
     if (selectedHotels.length === currentHotels.length) {
