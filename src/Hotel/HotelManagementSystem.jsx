@@ -110,7 +110,7 @@ const HotelManagementSystem = () => {
     }
     
     // Check if user has admin role
-    if (userRole !== 'admin') {
+    if (userRole.toLowerCase() !== 'admin') {
       showNotification("You don't have permission to edit hotels. Only admins can perform this action.", "error");
       return;
     }
@@ -141,7 +141,7 @@ const HotelManagementSystem = () => {
 
   const toggleHotelStatus = async (id, currentStatus) => {
     // Check if user has admin role
-    if (userRole !== 'admin') {
+    if (userRole.toLowerCase() !== 'admin') {
       showNotification("You don't have permission to change hotel status. Only admins can perform this action.", "error");
       return;
     }
@@ -169,7 +169,7 @@ const HotelManagementSystem = () => {
   };
 
   // Check if user can add hotels (both admin and employee can add)
-  const canAddHotel = userRole === 'admin' || userRole === 'employee';
+  const canAddHotel = userRole.toLowerCase() === 'admin' || userRole.toLowerCase() === 'employee';
 
   return (
     <div className="hms-page-content ">
