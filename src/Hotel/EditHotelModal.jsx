@@ -9,9 +9,7 @@ import {
   FaClipboardList, 
   FaMoneyCheckAlt, 
   FaReceipt, 
-  FaConciergeBell,
-  FaPlus,
-  FaExclamationTriangle
+  FaConciergeBell
 } from 'react-icons/fa';
 
 const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
@@ -23,66 +21,73 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
   useEffect(() => {
     if (hotel) {
       setFormData({
-        ...hotel,
+        hotelName: hotel.hotelName || '',
+        country: hotel.country || '',
+        city: hotel.city || '',
+        address: hotel.address || '',
+        hotelEmail: hotel.hotelEmail || '',
+        hotelContactNumber: hotel.hotelContactNumber || '',
+        hotelChain: hotel.hotelChain || '',
+        region: hotel.region || '',
+        specialRemarks: hotel.specialRemarks || '',
+        isActive: hotel.isActive ?? true,
         salesPersons: hotel.salesPersons || [],
         reservationPersons: hotel.reservationPersons || [],
         accountsPersons: hotel.accountsPersons || [],
         receptionPersons: hotel.receptionPersons || [],
         concierges: hotel.concierges || [],
+        id: hotel.id,
+        CountryId: hotel.CountryId,
+        CityId: hotel.CityId
       });
       setErrors({});
       setTouched({});
     }
   }, [hotel]);
 
-  // Validate form fields
   const validateField = (field, value) => {
+    const val = value ?? '';
     let error = '';
-    
-    switch(field) {
+
+    switch (field) {
       case 'hotelName':
-        if (!value.trim()) error = 'Hotel name is required';
+        if (!val.trim()) error = 'Hotel name is required';
         break;
       case 'country':
-        if (!value.trim()) error = 'Country is required';
+        if (!val.trim()) error = 'Country is required';
         break;
       case 'city':
-        if (!value.trim()) error = 'City is required';
+        if (!val.trim()) error = 'City is required';
         break;
       case 'address':
-        if (!value.trim()) error = 'Address is required';
+        if (!val.trim()) error = 'Address is required';
         break;
       case 'hotelEmail':
-        if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
           error = 'Please enter a valid email address';
         }
         break;
       default:
         break;
     }
-    
+
     return error;
   };
 
-  // Update basic hotel fields with validation
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Validate on change if the field has been touched
     if (touched[field]) {
       const error = validateField(field, value);
       setErrors(prev => ({ ...prev, [field]: error }));
     }
   };
 
-  // Handle blur events for validation
   const handleBlur = (field) => {
     setTouched(prev => ({ ...prev, [field]: true }));
     const error = validateField(field, formData[field]);
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
-  // Update contact person safely
   const updatePerson = (role, index, field, value) => {
     const key = `${role}s`;
     setFormData(prev => {
@@ -92,7 +97,6 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
     });
   };
 
-  // Add a new contact person safely
   const addPerson = (role) => {
     const key = `${role}s`;
     setFormData(prev => ({
@@ -101,7 +105,6 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
     }));
   };
 
-  // Remove a contact person safely
   const removePerson = (role, index) => {
     const key = `${role}s`;
     setFormData(prev => ({
@@ -110,19 +113,16 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
     }));
   };
 
-  // Validate entire form before saving
   const validateForm = () => {
     const newErrors = {};
     const requiredFields = ['hotelName', 'country', 'city', 'address'];
-    
+
     requiredFields.forEach(field => {
       const error = validateField(field, formData[field]);
       if (error) newErrors[field] = error;
     });
-    
-    // Validate emails in contact persons
+
     const contactRoles = ['salesPersons', 'reservationPersons', 'accountsPersons', 'receptionPersons', 'concierges'];
-    
     contactRoles.forEach(role => {
       formData[role]?.forEach((person, index) => {
         if (person.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(person.email)) {
@@ -130,98 +130,89 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
         }
       });
     });
-    
+
     setErrors(newErrors);
     setTouched(requiredFields.reduce((acc, field) => ({ ...acc, [field]: true }), {}));
-    
+
     return Object.keys(newErrors).length === 0;
   };
 
-  // Save changes with validation
-// Save changes with validation
-const handleSave = async () => {
-  if (!validateForm()) return;
+  const handleSave = async () => {
+    if (!validateForm()) return;
 
-  setIsSaving(true);
-  try {
-    // Map formData to backend-friendly HotelDto
-    const payload = {
-      Id: formData.id,
-      CountryId: Number(formData.CountryId || formData.countryId), // ensure number
-      CityId: Number(formData.CityId || formData.cityId),           // ensure number
-      HotelName: formData.hotelName,
-      HotelEmail: formData.hotelEmail,
-      HotelContactNumber: formData.hotelContactNumber,
-      HotelChain: formData.hotelChain,
-      Address: formData.address,
-      Region: formData.region || '',
-      SpecialRemarks: formData.specialRemarks,
-      IsActive: formData.isActive ?? true,
+    setIsSaving(true);
+    try {
+      const payload = {
+        Id: formData.id,
+        CountryId: Number(formData.CountryId),
+        CityId: Number(formData.CityId),
+        HotelName: formData.hotelName,
+        HotelEmail: formData.hotelEmail,
+        HotelContactNumber: formData.hotelContactNumber,
+        HotelChain: formData.hotelChain,
+        Address: formData.address,
+        Region: formData.region,
+        SpecialRemarks: formData.specialRemarks,
+        IsActive: formData.isActive,
 
-      // Map staff arrays to PascalCase fields
-      SalesPersons: (formData.salesPersons || []).map(s => ({
-        Name: s.name || '',
-        Email: s.email || '',
-        ContactNumber: s.contact || ''
-      })),
-      ReceptionPersons: (formData.receptionPersons || []).map(s => ({
-        Name: s.name || '',
-        Email: s.email || '',
-        ContactNumber: s.contact || ''
-      })),
-      ReservationPersons: (formData.reservationPersons || []).map(s => ({
-        Name: s.name || '',
-        Email: s.email || '',
-        ContactNumber: s.contact || ''
-      })),
-      AccountsPersons: (formData.accountsPersons || []).map(s => ({
-        Name: s.name || '',
-        Email: s.email || '',
-        ContactNumber: s.contact || ''
-      })),
-      Concierges: (formData.concierges || []).map(s => ({
-        Name: s.name || '',
-        Email: s.email || '',
-        ContactNumber: s.contact || ''
-      }))
-    };
+        SalesPersons: (formData.salesPersons || []).map(s => ({
+          Name: s.name || '',
+          Email: s.email || '',
+          ContactNumber: s.contact || ''
+        })),
+        ReceptionPersons: (formData.receptionPersons || []).map(s => ({
+          Name: s.name || '',
+          Email: s.email || '',
+          ContactNumber: s.contact || ''
+        })),
+        ReservationPersons: (formData.reservationPersons || []).map(s => ({
+          Name: s.name || '',
+          Email: s.email || '',
+          ContactNumber: s.contact || ''
+        })),
+        AccountsPersons: (formData.accountsPersons || []).map(s => ({
+          Name: s.name || '',
+          Email: s.email || '',
+          ContactNumber: s.contact || ''
+        })),
+        Concierges: (formData.concierges || []).map(s => ({
+          Name: s.name || '',
+          Email: s.email || '',
+          ContactNumber: s.contact || ''
+        }))
+      };
 
-    // Call parent save function
-    await onSave(payload);
+      await onSave(payload);
+    } catch (error) {
+      console.error('Failed to save hotel:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-  } catch (error) {
-    console.error('Failed to save hotel:', error);
-  } finally {
-    setIsSaving(false);
-  }
-};
-
-
-  if (!formData) {
-    return (
-      <div className="modal-overlay">
-        <div className="modal-content">
-          <div className="modal-loading">
-            <div className="spinner"></div>
-            <p>Loading hotel data...</p>
-          </div>
+  if (!formData) return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-loading">
+          <div className="spinner"></div>
+          <p>Loading hotel data...</p>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
     <div className="modal-overlay">
       <div className="modal-content">
+        {/* Modal header */}
         <div className="modal-header">
           <h2>Edit Hotel Information</h2>
-          <button className="modal-close" onClick={onCancel}>
-            <FaTimes />
-          </button>
+          <button className="modal-close" onClick={onCancel}><FaTimes /></button>
         </div>
-        
+
+        {/* Modal body */}
         <div className="modal-body">
-          {/* Hotel Information */}
+          {/* Hotel Info */}
           <div className="form-section">
             <div className="section-header">
               <h3><FaBuilding /> Hotel Information</h3>
@@ -231,69 +222,71 @@ const handleSave = async () => {
               <div className="form-group">
                 <label>Hotel Name <span className="required">*</span></label>
                 <input 
-                  value={formData.hotelName || ""} 
+                  value={formData.hotelName} 
                   onChange={e => updateField('hotelName', e.target.value)}
                   onBlur={() => handleBlur('hotelName')}
                   className={errors.hotelName ? 'error' : ''}
-                  required 
                 />
                 {errors.hotelName && <span className="error-message">{errors.hotelName}</span>}
               </div>
+
               <div className="form-group">
                 <label>Country <span className="required">*</span></label>
                 <input 
-                  value={formData.country || ""} 
+                  value={formData.country} 
                   onChange={e => updateField('country', e.target.value)}
                   onBlur={() => handleBlur('country')}
                   className={errors.country ? 'error' : ''}
-                  required 
                 />
                 {errors.country && <span className="error-message">{errors.country}</span>}
               </div>
+
               <div className="form-group">
                 <label>City <span className="required">*</span></label>
                 <input 
-                  value={formData.city || ""} 
+                  value={formData.city} 
                   onChange={e => updateField('city', e.target.value)}
                   onBlur={() => handleBlur('city')}
                   className={errors.city ? 'error' : ''}
-                  required 
                 />
                 {errors.city && <span className="error-message">{errors.city}</span>}
               </div>
+
               <div className="form-group">
                 <label>Address <span className="required">*</span></label>
                 <input 
-                  value={formData.address || ""} 
+                  value={formData.address} 
                   onChange={e => updateField('address', e.target.value)}
                   onBlur={() => handleBlur('address')}
                   className={errors.address ? 'error' : ''}
-                  required 
                 />
                 {errors.address && <span className="error-message">{errors.address}</span>}
               </div>
+
               <div className="form-group">
                 <label>Contact Number</label>
                 <input 
-                  value={formData.hotelContactNumber || ""} 
+                  value={formData.hotelContactNumber} 
                   onChange={e => updateField('hotelContactNumber', e.target.value)} 
                 />
               </div>
+
               <div className="form-group">
                 <label>Hotel Email</label>
                 <input 
-                  type="email" 
-                  value={formData.hotelEmail || ""} 
+                  type="email"
+                  value={formData.hotelEmail} 
                   onChange={e => updateField('hotelEmail', e.target.value)}
                   onBlur={() => handleBlur('hotelEmail')}
                   className={errors.hotelEmail ? 'error' : ''}
                 />
                 {errors.hotelEmail && <span className="error-message">{errors.hotelEmail}</span>}
               </div>
+
               <div className="form-group">
                 <label>Hotel Chain</label>
                 <input 
-                  value={formData.hotelChain || ""} 
+                  value={formData.hotelChain} 
                   onChange={e => updateField('hotelChain', e.target.value)} 
                 />
               </div>
@@ -304,74 +297,48 @@ const handleSave = async () => {
           <div className="form-section">
             <div className="section-header">
               <h3><FaUserTie /> Contact Persons</h3>
-              <p>Key contacts at the hotel</p>
             </div>
-            <ContactRoleSection 
-              title="Sales Person" 
-              role="salesPerson" 
-              persons={formData.salesPersons} 
-              onAdd={() => addPerson('salesPerson')} 
-              onRemove={removePerson} 
-              onChange={updatePerson} 
-              phoneCode={'+1'}
-              icon={<FaUserTie />}
-              errors={errors}
-            />
-            <ContactRoleSection 
-              title="Reservation Person" 
-              role="reservationPerson" 
-              persons={formData.reservationPersons} 
-              onAdd={() => addPerson('reservationPerson')} 
-              onRemove={removePerson} 
-              onChange={updatePerson} 
-              phoneCode={'+1'} 
-              icon={<FaClipboardList />}
-              errors={errors}
-            />
-            <ContactRoleSection 
-              title="Accounts Person" 
-              role="accountsPerson" 
-              persons={formData.accountsPersons} 
-              onAdd={() => addPerson('accountsPerson')} 
-              onRemove={removePerson} 
-              onChange={updatePerson} 
-              phoneCode={'+1'} 
-              icon={<FaMoneyCheckAlt />}
-              errors={errors}
-            />
-            <ContactRoleSection 
-              title="Reception Person" 
-              role="receptionPerson" 
-              persons={formData.receptionPersons} 
-              onAdd={() => addPerson('receptionPerson')} 
-              onRemove={removePerson} 
-              onChange={updatePerson} 
-              phoneCode={'+1'} 
-              icon={<FaReceipt />}
-              errors={errors}
-            />
-            <ContactRoleSection 
-              title="Concierge" 
-              role="concierge" 
-              persons={formData.concierges} 
-              onAdd={() => addPerson('concierge')} 
-              onRemove={removePerson} 
-              onChange={updatePerson} 
-              phoneCode={'+1'} 
-              icon={<FaConciergeBell />}
-              errors={errors}
-            />
+            {['salesPerson','reservationPerson','accountsPerson','receptionPerson','concierge'].map(role => {
+              const rolePlural = role+'s';
+              const titleMap = {
+                salesPersons:'Sales Person',
+                reservationPersons:'Reservation Person',
+                accountsPersons:'Accounts Person',
+                receptionPersons:'Reception Person',
+                concierges:'Concierge'
+              };
+              const iconMap = {
+                salesPersons:<FaUserTie />,
+                reservationPersons:<FaClipboardList />,
+                accountsPersons:<FaMoneyCheckAlt />,
+                receptionPersons:<FaReceipt />,
+                concierges:<FaConciergeBell />
+              };
+              return (
+                <ContactRoleSection
+                  key={rolePlural}
+                  title={titleMap[rolePlural]}
+                  role={role}
+                  persons={formData[rolePlural]}
+                  onAdd={() => addPerson(role)}
+                  onRemove={removePerson}
+                  onChange={updatePerson}
+                  phoneCode={'+1'}
+                  icon={iconMap[rolePlural]}
+                  errors={errors}
+                />
+              )
+            })}
           </div>
 
           {/* Special Remarks */}
           <div className="form-section">
             <div className="section-header">
               <h3><FaInfoCircle /> Special Remarks</h3>
-              <p>Any additional information about the hotel</p>
             </div>
             <div className="form-group full-width">
               <textarea
-                value={formData.specialRemarks || ""}
+                value={formData.specialRemarks}
                 onChange={e => updateField('specialRemarks', e.target.value)}
                 rows="5"
                 placeholder="Add any special notes or remarks about this hotel..."
@@ -380,7 +347,7 @@ const handleSave = async () => {
           </div>
         </div>
 
-        {/* Actions */}
+        {/* Modal actions */}
         <div className="modal-footer">
           <div className="form-actions">
             <button className="btn btn-secondary" onClick={onCancel} disabled={isSaving}>
@@ -393,8 +360,7 @@ const handleSave = async () => {
           </div>
         </div>
       </div>
-      
-      <style jsx>{`
+            <style jsx>{`
         .modal-overlay {
           position: fixed;
           top: 0;
