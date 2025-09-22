@@ -6,11 +6,17 @@ const UserDetailsForm = ({
   errors, 
   setErrors, 
   passwordStrength, 
+  passwordMatch,
+  existingEmail,
+  existingUsername,
   handleChange, 
   setCurrentPage, 
   setActiveTab, 
   setAgencies, 
-  agencies 
+  agencies,
+  setShowSuccessMessage,
+  setShowErrorMessage,
+  setMessageBoxContent
 }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -35,6 +41,8 @@ const UserDetailsForm = ({
       formErrors.userEmailId = 'Email is required';
     } else if (!validateEmail(formData.userEmailId)) {
       formErrors.userEmailId = 'Please enter a valid email address';
+    } else if (existingEmail) {
+      formErrors.userEmailId = 'This email is already registered';
     }
     
     if (!formData.designation) formErrors.designation = 'Designation is required';
@@ -45,7 +53,11 @@ const UserDetailsForm = ({
       formErrors.mobileNo = 'Please enter a valid mobile number';
     }
     
-    if (!formData.userName) formErrors.userName = 'Username is required';
+    if (!formData.userName) {
+      formErrors.userName = 'Username is required';
+    } else if (existingUsername) {
+      formErrors.userName = 'This username is already taken';
+    }
     
     if (!formData.password) {
       formErrors.password = 'Password is required';
@@ -103,13 +115,15 @@ const UserDetailsForm = ({
         if (data.errors) {
           setErrors(data.errors);
         }
-        alert(data.title || "Failed to register agency");
+        setMessageBoxContent(data.title || "Failed to register agency");
+        setShowErrorMessage(true);
         return;
       }
 
       setAgencies([...agencies, data]);
       setActiveTab('view');
-      alert('Agency registered successfully!');
+      setMessageBoxContent('Agency registered successfully!');
+      setShowSuccessMessage(true);
 
       setFormData({
         agencyName: '',
@@ -135,7 +149,8 @@ const UserDetailsForm = ({
 
     } catch (error) {
       console.error("Error submitting to backend:", error);
-      alert("An error occurred while registering the agency");
+      setMessageBoxContent("An error occurred while registering the agency");
+      setShowErrorMessage(true);
     }
   };
 
@@ -200,10 +215,11 @@ const UserDetailsForm = ({
               name="userEmailId"
               value={formData.userEmailId}
               onChange={handleChange}
-              className={errors.userEmailId ? 'form-input error' : 'form-input'}
+              className={errors.userEmailId || existingEmail ? 'form-input error' : 'form-input'}
               placeholder="email@example.com"
             />
             {errors.userEmailId && <span className="error-message">{errors.userEmailId}</span>}
+            {existingEmail && !errors.userEmailId && <span className="error-message">This email is already registered</span>}
           </div>
         </div>
         
@@ -246,10 +262,11 @@ const UserDetailsForm = ({
               name="userName"
               value={formData.userName}
               onChange={handleChange}
-              className={errors.userName ? 'form-input error' : 'form-input'}
+              className={errors.userName || existingUsername ? 'form-input error' : 'form-input'}
               placeholder="Enter username"
             />
             {errors.userName && <span className="error-message">{errors.userName}</span>}
+            {existingUsername && !errors.userName && <span className="error-message">This username is already taken</span>}
           </div>
         </div>
         
@@ -290,7 +307,7 @@ const UserDetailsForm = ({
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={errors.confirmPassword ? 'form-input error' : 'form-input'}
+                className={errors.confirmPassword || (passwordMatch === false) ? 'form-input error' : 'form-input'}
                 placeholder="Confirm your password"
               />
               <span
@@ -301,6 +318,12 @@ const UserDetailsForm = ({
               </span>
             </div>
             {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+            {passwordMatch === false && !errors.confirmPassword && (
+              <span className="error-message">Passwords do not match</span>
+            )}
+            {passwordMatch === true && (
+              <span className="success-message">Passwords match</span>
+            )}
           </div>
         </div>
         
