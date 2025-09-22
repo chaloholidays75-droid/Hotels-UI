@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import jwt_decode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 import { formatDistanceToNow } from 'date-fns';
 
@@ -42,7 +42,8 @@ const Dashboard = ({ showNotification }) => {
       return null;
     }
   };
-
+  const decoded = jwtDecode(token);
+console.log(decoded);
   const token = getValidToken();
 
   // Redirect if token is invalid
