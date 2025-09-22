@@ -11,19 +11,20 @@ import { checkAuth } from './api';
 import Loader from './components/loader';
 import HotelSalesList from './Hotel/HotelSalesList';
 import Sidebar from './components/Sidebar';
+import { AuthContext } from './context/AuthContext';
 import RecentActivityPage from './Pages/RecentActivityPage';
 import './App.css';
 
 // Layout for authenticated pages
-function Layout({ children, userName, onLogout }) {
+function Layout({ children, onLogout }) {
+  const { user } = useContext(AuthContext);
   return (
     <div className="app-container">
-      <Sidebar userName={userName} onLogout={onLogout} />
+      <Sidebar onLogout={onLogout} /> {/* Sidebar now uses AuthContext */}
       <div className="page-content">{children}</div>
     </div>
   );
 }
-
 // Protect routes
 function ProtectedRoute({ children, isAuthenticated }) {
   return isAuthenticated ? children : <Navigate to="/backend/login" replace />;
@@ -33,6 +34,7 @@ function App() {
   const [userName, setUserName] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { user, loginUser, logoutUser } = useContext(AuthContext);
 
   useEffect(() => {
     async function verifyAuth() {
