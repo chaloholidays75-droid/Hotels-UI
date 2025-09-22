@@ -1,11 +1,17 @@
 import axios from 'axios';
 
-// Create a unified Axios instance for ALL API calls
+// Hotel API base URL (unchanged)
+const API_BASE_HOTEL = 'https://backend.chaloholidayonline.com/api/hotels';
+
+// Auth API base URL (aligned with your .NET backend)
+const API_BASE = 'https://backend.chaloholidayonline.com/api';
+
+// Create Axios instance for auth-related calls
 const api = axios.create({
-  baseURL: 'https://backend.chaloholidayonline.com/api',
+  baseURL: API_BASE,
 });
 
-// Axios interceptor for adding JWT token to ALL requests
+// Axios interceptor for adding JWT token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
   if (token) {
@@ -19,23 +25,20 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
-          const { data } = await api.post('/auth/refresh-token', { refreshToken });
+          const { data } = await api.post('/auth/refresh-token', {refreshToken});
           localStorage.setItem('accessToken', data.accessToken);
           localStorage.setItem('refreshToken', data.refreshToken);
-          localStorage.setItem('userRole', data.role);
           originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
           return api(originalRequest);
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userRole');
-          window.location.href = '/login';
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
           return Promise.reject(refreshError);
         }
       }
@@ -44,63 +47,90 @@ api.interceptors.response.use(
   }
 );
 
-// ✅ Get all hotel sales - UPDATED to use axios
+// === HOTEL-RELATED FUNCTIONS (UNCHANGED) ===
+
+// ✅ Get all hotel sales
 export async function getHotelSales() {
-  const response = await api.get('/hotels');
-  return response.data;
+  const response = await fetch(API_BASE_HOTEL);
+  if (!response.ok) throw new Error('Failed to fetch hotel sales');
+  return response.json();
 }
 
-// ✅ Get by Id - UPDATED
+// ✅ Get by Id
 export async function getHotelSaleById(id) {
-  const response = await api.get(`/hotels/${id}`);
-  return response.data;
+  const response = await fetch(`${API_BASE_HOTEL}/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch hotel sale');
+  return response.json();
 }
 
-// ✅ Create new - UPDATED
+// ✅ Create new
 export async function createHotelSale(data) {
-  const response = await api.post('/hotels', data);
-  return response.data;
+  const response = await fetch(API_BASE_HOTEL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error('Failed to create hotel sale: ' + errorText);
+  }
+
+  return response.json();
 }
 
-// ✅ Update - UPDATED
+// ✅ Update
 export async function updateHotelSale(id, data) {
-  const response = await api.put(`/hotels/${id}`, data);
-  return response.data;
+  const response = await fetch(`${API_BASE_HOTEL}/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error('Failed to update hotel sale: ' + errorText);
+  }
+
+  return response.json();
 }
 
-// ✅ Delete - UPDATED
+// ✅ Delete
 export async function deleteHotelSale(id) {
-  const response = await api.delete(`/hotels/${id}`);
-  return response.data;
+  const response = await fetch(`${API_BASE_HOTEL}/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) throw new Error('Failed to delete hotel sale');
+  return true;
 }
 
-// ✅ Update hotel status - FIXED to match backend expectation
-export async function updateHotelStatus(id, isActive) {
-  const response = await api.patch(`/hotels/${id}/status`, { isActive });
-  return response.data;
+// === AUTH-RELATED AND NON-HOTEL FUNCTIONS ===
+
+// Utility function for Axios with error handling
+async function safeAxios(url, method = 'get', data = null) {
+  try {
+    const config = { method, url };
+    if (data) {
+      config.data = data;
+      config.headers = { 'Content-Type': 'application/json' };
+    }
+    const res = await api(config);
+    return res.data || null; // Return null if no data
+  } catch (error) {
+    console.error(`Request failed for ${url}:`, error.response?.status, error.message);
+    return null; // Return null instead of throwing
+  }
 }
 
-// Auth functions
+// Check authentication status
 export async function checkAuth() {
   try {
-    const response = await api.get('/auth/me');
-    const data = response.data;
-    
-    if (data.role) {
-      localStorage.setItem('userRole', data.role);
-    }
-    if (data.fullName) {
-      localStorage.setItem('userFullName', data.fullName);
-    }
-    
-    return { 
-      isAuthenticated: true, 
-      userFullName: data.fullName,
-      role: data.role 
-    };
+    const { data } = await api.get('/auth/me');
+    return { isAuthenticated: true, userFullName: data.fullName };
   } catch (error) {
-    console.error('Auth check failed:', error);
-    return { isAuthenticated: false, userFullName: null, role: null };
+    console.error('Auth check failed:', error.response?.status, error.message);
+    return { isAuthenticated: false, userFullName: null };
   }
 }
 
@@ -108,22 +138,9 @@ export async function checkAuth() {
 export async function login(email, password) {
   try {
     const { data } = await api.post('/auth/login', { email, password });
-
-    console.log('Login API Response:', data);
-    console.log('Role from API:', data.role);
-    
-    
-    // Store tokens AND user role
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
-    localStorage.setItem('userRole', data.role); // ← ADD THIS LINE
-    localStorage.setItem('userFullName', data.userFullName); // Optional: store name too
-    
-    return { 
-      userFullName: data.userFullName, 
-      accessToken: data.accessToken,
-      role: data.role // ← Also return role
-    };
+    return { userFullName: data.userFullName, accessToken: data.accessToken };
   } catch (error) {
     console.error('Login failed:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Login failed. Check server.');
@@ -184,27 +201,5 @@ export async function getHotelsByCity(cityId) {
   if (!cityId) return null; // Safety check
   return await safeAxios(`${API_BASE}/hotels/by-city/${cityId}`);
 }
-
-export const getRecentActivities = async () => {
-  try {
-    const response = await axios.get(`${API_BASE}/RecentActivity`);
-    // If your API wraps data in 'data' property
-    return Array.isArray(response.data) ? response.data : response.data.data || [];
-  } catch (error) {
-    console.error("Error fetching recent activities:", error);
-    return [];
-  }
-};
-// // ✅ Add this function to your api.js
-// export async function updateHotelStatus(id, isActive) {
-//   try {
-//     const response = await api.post(`/hotels/${id}/status`, { isActive });
-//     return response.data;
-//   } catch (error) {
-//     console.error('Update hotel status failed:', error);
-//     throw error;
-//   }
-// }
-
 
 export default api;
