@@ -54,16 +54,17 @@ const HotelSalesList = ({
     const matchesSearch = hotel.hotelName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           hotel.cityName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           hotel.countryName?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCountry = filterCountry ? hotel.countryName === filterCountry : true;
-    const matchesCity = filterCity ? hotel.cityName === filterCity : true;
+    const matchesCountry = filterCountry ? (hotel.country?.name || hotel.countryName) === filterCountry : true;
+    const matchesCity = filterCity ? (hotel.city?.name || hotel.cityName) === filterCity : true;
     const matchesStatus = filterStatus === "all" ? true : 
                          filterStatus === "active" ? hotel.isActive : 
                          !hotel.isActive;
     return matchesSearch && matchesCountry && matchesCity && matchesStatus;
   });
 
-  const countries = [...new Set(hotels.map(hotel => hotel.country?.name).filter(Boolean))];
-  const cities = [...new Set(hotels.map(hotel => hotel.city?.name).filter(Boolean))];
+    const countries = [...new Set(hotels.map(hotel => hotel.country?.name || hotel.countryName).filter(Boolean))];
+    const cities = [...new Set(hotels.map(hotel => hotel.city?.name || hotel.cityName).filter(Boolean))];
+
 
   const indexOfLast = currentPage * itemsPerPage;
   const indexOfFirst = indexOfLast - itemsPerPage;
@@ -319,12 +320,12 @@ const HotelSalesList = ({
                       </td>
                       <td>
                         <div className="hsl-city-cell">
-                          <span className="hsl-city-name">{hotel.city?.name || 'Not Defined'}</span>
+                          <span className="hsl-city-name"> {hotel.city?.name || hotel.cityName || 'Not Defined'}</span>
                         </div>
                       </td>
                       <td>
                         <div className="hsl-country-cell">
-                          <span className="hsl-country-name">{hotel.country?.name || "Not Defined"}</span>
+                          <span className="hsl-country-name">{hotel.country?.name || hotel.countryName || 'Not Defined'}</span>
                         </div>
                       </td>
                       <td>
