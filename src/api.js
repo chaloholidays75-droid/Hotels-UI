@@ -195,16 +195,16 @@ export const getRecentActivities = async () => {
     return [];
   }
 };
-// ✅ Add this function to your api.js
-export async function updateHotelStatus(id, isActive) {
-  try {
-    const response = await api.post(`/hotels/${id}/status`, { isActive });
-    return response.data;
-  } catch (error) {
-    console.error('Update hotel status failed:', error);
-    throw error;
-  }
-}
+// // ✅ Add this function to your api.js
+// export async function updateHotelStatus(id, isActive) {
+//   try {
+//     const response = await api.post(`/hotels/${id}/status`, { isActive });
+//     return response.data;
+//   } catch (error) {
+//     console.error('Update hotel status failed:', error);
+//     throw error;
+//   }
+// }
 
 
 export default api;
