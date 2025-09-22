@@ -105,39 +105,46 @@ const HotelManagementSystem = () => {
     setEditModal({ isOpen: false, hotel: null });
   };
 
-  const saveHotel = async (hotel) => {
-    try {
-      await updateHotelSale(hotel.id, hotel);
-      closeEditModal();
-      fetchHotels();
-      showNotification("Hotel updated successfully!", "success");
-    } catch (err) {
-      console.error("Error updating hotel:", err);
-      showNotification("Error updating hotel: " + err.message, "error");
-    }
-  };
+const saveHotel = async (hotel) => {
+  try {
+    console.log('Saving hotel data:', hotel);
+    await updateHotelSale(hotel.id, hotel);
+    closeEditModal();
+    fetchHotels();
+    showNotification("Hotel updated successfully!", "success");
+  } catch (err) {
+    console.error("Error updating hotel:", err);
+    console.error("Error response:", err.response?.data);
+    showNotification("Error updating hotel: " + (err.response?.data?.message || err.message), "error");
+  }
+};
 
-  const toggleHotelStatus = async (id, currentStatus) => {
-    if (userRole.toLowerCase() !== 'admin') {
-      showNotification("You do not have permission to change hotel status.", "error");
-      return;
-    }
+const toggleHotelStatus = async (id, currentStatus) => {
+  if (userRole.toLowerCase() !== 'admin') {
+    showNotification("You do not have permission to change hotel status.", "error");
+    return;
+  }
+  
+  const newStatus = !currentStatus;
+  
+  try {
+    console.log('Toggling hotel status:', { id, currentStatus, newStatus });
     
-    const newStatus = !currentStatus;
+    await updateHotelStatus(id, newStatus);
     
-    try {
-      await updateHotelStatus(id, newStatus);
-      
-      setHotels(prev => prev.map(h => 
-        h.id === id ? { ...h, isActive: newStatus } : h
-      ));
-      
-      showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
-    } catch (err) {
-      console.error("Error updating hotel status:", err);
-      showNotification("Error updating hotel status: " + err.message, "error");
-    }
-  };
+    console.log('Status update successful, updating local state');
+    
+    setHotels(prev => prev.map(h => 
+      h.id === id ? { ...h, isActive: newStatus } : h
+    ));
+    
+    showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
+  } catch (err) {
+    console.error("Error updating hotel status:", err);
+    console.error("Error response:", err.response?.data);
+    showNotification("Error updating hotel status: " + (err.response?.data?.message || err.message), "error");
+  }
+};
 
   const isAdmin = userRole.toLowerCase() === 'admin';
 

@@ -1,17 +1,11 @@
 import axios from 'axios';
 
-// Hotel API base URL (unchanged)
-const API_BASE_HOTEL = 'https://backend.chaloholidayonline.com/api/hotels';
-
-// Auth API base URL (aligned with your .NET backend)
-const API_BASE = 'https://backend.chaloholidayonline.com/api';
-
-// Create Axios instance for auth-related calls
+// Create a unified Axios instance for ALL API calls
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: 'https://backend.chaloholidayonline.com/api',
 });
 
-// Axios interceptor for adding JWT token
+// Axios interceptor for adding JWT token to ALL requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
   if (token) {
@@ -25,12 +19,12 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
-          const { data } = await api.post('/auth/refresh-token', {refreshToken});
+          const { data } = await api.post('/auth/refresh-token', { refreshToken });
           localStorage.setItem('accessToken', data.accessToken);
           localStorage.setItem('refreshToken', data.refreshToken);
           localStorage.setItem('userRole', data.role);
@@ -38,8 +32,10 @@ api.interceptors.response.use(
           return api(originalRequest);
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('userRole');
+          window.location.href = '/login';
           return Promise.reject(refreshError);
         }
       }
@@ -48,88 +44,48 @@ api.interceptors.response.use(
   }
 );
 
-// === HOTEL-RELATED FUNCTIONS (UNCHANGED) ===
-
-// ✅ Get all hotel sales
+// ✅ Get all hotel sales - UPDATED to use axios
 export async function getHotelSales() {
-  const response = await fetch(API_BASE_HOTEL);
-  if (!response.ok) throw new Error('Failed to fetch hotel sales');
-  return response.json();
+  const response = await api.get('/hotels');
+  return response.data;
 }
 
-// ✅ Get by Id
+// ✅ Get by Id - UPDATED
 export async function getHotelSaleById(id) {
-  const response = await fetch(`${API_BASE_HOTEL}/${id}`);
-  if (!response.ok) throw new Error('Failed to fetch hotel sale');
-  return response.json();
+  const response = await api.get(`/hotels/${id}`);
+  return response.data;
 }
 
-// ✅ Create new
+// ✅ Create new - UPDATED
 export async function createHotelSale(data) {
-  const response = await fetch(API_BASE_HOTEL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error('Failed to create hotel sale: ' + errorText);
-  }
-
-  return response.json();
+  const response = await api.post('/hotels', data);
+  return response.data;
 }
 
-// ✅ Update
+// ✅ Update - UPDATED
 export async function updateHotelSale(id, data) {
-  const response = await fetch(`${API_BASE_HOTEL}/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error('Failed to update hotel sale: ' + errorText);
-  }
-
-  return response.json();
+  const response = await api.put(`/hotels/${id}`, data);
+  return response.data;
 }
 
-// ✅ Delete
+// ✅ Delete - UPDATED
 export async function deleteHotelSale(id) {
-  const response = await fetch(`${API_BASE_HOTEL}/${id}`, {
-    method: 'DELETE',
-  });
-
-  if (!response.ok) throw new Error('Failed to delete hotel sale');
-  return true;
+  const response = await api.delete(`/hotels/${id}`);
+  return response.data;
 }
 
-// === AUTH-RELATED AND NON-HOTEL FUNCTIONS ===
-
-// Utility function for Axios with error handling
-async function safeAxios(url, method = 'get', data = null) {
-  try {
-    const config = { method, url };
-    if (data) {
-      config.data = data;
-      config.headers = { 'Content-Type': 'application/json' };
-    }
-    const res = await api(config);
-    return res.data || null; // Return null if no data
-  } catch (error) {
-    console.error(`Request failed for ${url}:`, error.response?.status, error.message);
-    return null; // Return null instead of throwing
-  }
+// ✅ Update hotel status - FIXED to match backend expectation
+export async function updateHotelStatus(id, isActive) {
+  const response = await api.patch(`/hotels/${id}/status`, { isActive });
+  return response.data;
 }
 
-// Check authentication status
+// Auth functions
 export async function checkAuth() {
   try {
-    const { data } = await api.get('/auth/me');
+    const response = await api.get('/auth/me');
+    const data = response.data;
     
-    // Store role if available
     if (data.role) {
       localStorage.setItem('userRole', data.role);
     }
@@ -143,7 +99,7 @@ export async function checkAuth() {
       role: data.role 
     };
   } catch (error) {
-    console.error('Auth check failed:', error.response?.status, error.message);
+    console.error('Auth check failed:', error);
     return { isAuthenticated: false, userFullName: null, role: null };
   }
 }
