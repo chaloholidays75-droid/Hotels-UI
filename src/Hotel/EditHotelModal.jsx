@@ -6,7 +6,26 @@ import {
 } from 'react-icons/fa';
 
 const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
-  const [formData, setFormData] = useState(null);
+  const [formData, setFormData] = useState({
+    id: '',
+    hotelName: '',
+    country: '',
+    city: '',
+    address: '',
+    hotelEmail: '',
+    hotelContactNumber: '',
+    hotelChain: '',
+    region: '',
+    specialRemarks: '',
+    isActive: true,
+    salesPersons: [],
+    reservationPersons: [],
+    accountsPersons: [],
+    receptionPersons: [],
+    concierges: [],
+    CountryId: null,
+    CityId: null
+  });
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [isSaving, setIsSaving] = useState(false);
@@ -14,7 +33,7 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
   useEffect(() => {
     if (hotel) {
       setFormData({
-        id: hotel.id,
+        id: hotel.id || '',
         hotelName: hotel.hotelName || '',
         country: hotel.country || '',
         city: hotel.city || '',
@@ -30,8 +49,8 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
         accountsPersons: hotel.accountsPersons || [],
         receptionPersons: hotel.receptionPersons || [],
         concierges: hotel.concierges || [],
-        CountryId: hotel.CountryId,
-        CityId: hotel.CityId
+        CountryId: hotel.CountryId || null,
+        CityId: hotel.CityId || null
       });
       setErrors({});
       setTouched({});
@@ -77,7 +96,7 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
   };
 
   const updatePerson = (role, index, field, value) => {
-    const key = `${role}s`;
+    const key = `${role}Persons`;
     setFormData(prev => {
       const updated = prev[key] ? [...prev[key]] : [];
       updated[index] = { ...updated[index], [field]: value };
@@ -86,7 +105,7 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
   };
 
   const addPerson = (role) => {
-    const key = `${role}s`;
+    const key = `${role}Persons`;
     setFormData(prev => ({
       ...prev,
       [key]: prev[key] ? [...prev[key], { name: '', email: '', contact: '' }] : [{ name: '', email: '', contact: '' }]
@@ -94,7 +113,7 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
   };
 
   const removePerson = (role, index) => {
-    const key = `${role}s`;
+    const key = `${role}Persons`;
     setFormData(prev => ({
       ...prev,
       [key]: prev[key] ? prev[key].filter((_, i) => i !== index) : []
@@ -117,12 +136,23 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
     });
 
     setErrors(newErrors);
-    setTouched({ hotelName:true, country:true, city:true, address:true });
+    
+    // Mark required fields as touched
+    const newTouched = {...touched};
+    ['hotelName', 'country', 'city', 'address'].forEach(field => {
+      newTouched[field] = true;
+    });
+    setTouched(newTouched);
+    
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSave = async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      console.log('Form validation failed');
+      return;
+    }
+    
     setIsSaving(true);
     try {
       const payload = {
@@ -145,13 +175,13 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
       };
       await onSave(payload);
     } catch (err) {
-      console.error(err);
+      console.error('Save error:', err);
     } finally {
       setIsSaving(false);
     }
   };
 
-  if (!formData) return (
+  if (!hotel || !formData.id) return (
     <div className="modal-overlay">
       <div className="modal-content"><p>Loading hotel data...</p></div>
     </div>
@@ -205,40 +235,53 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
           {/* Contact Persons */}
           <div className="form-section">
             <h3><FaUserTie /> Contact Persons</h3>
-            {['salesPerson','reservationPerson','accountsPerson','receptionPerson','concierge'].map(role=>{
-              const rolePlural = role+'s';
-              const titleMap = { salesPersons:'Sales', reservationPersons:'Reservation', accountsPersons:'Accounts', receptionPersons:'Reception', concierges:'Concierge'};
-              const iconMap = { salesPersons:<FaUserTie/>, reservationPersons:<FaClipboardList/>, accountsPersons:<FaMoneyCheckAlt/>, receptionPersons:<FaReceipt/>, concierges:<FaConciergeBell/>};
+            {['sales', 'reservation', 'accounts', 'reception', 'concierge'].map(role => {
+              const rolePlural = `${role}Persons`;
+              const titleMap = {
+                salesPersons: 'Sales',
+                reservationPersons: 'Reservation', 
+                accountsPersons: 'Accounts', 
+                receptionPersons: 'Reception', 
+                conciergePersons: 'Concierge'
+              };
+              const iconMap = {
+                salesPersons: <FaUserTie/>,
+                reservationPersons: <FaClipboardList/>,
+                accountsPersons: <FaMoneyCheckAlt/>,
+                receptionPersons: <FaReceipt/>,
+                conciergePersons: <FaConciergeBell/>
+              };
+              
               return (
                 <ContactRoleSection
                   key={rolePlural}
                   title={titleMap[rolePlural]}
                   role={role}
                   persons={formData[rolePlural]}
-                  onAdd={()=>addPerson(role)}
+                  onAdd={() => addPerson(role)}
                   onRemove={removePerson}
                   onChange={updatePerson}
                   phoneCode={'+1'}
                   icon={iconMap[rolePlural]}
                   errors={errors}
                 />
-              )
+              );
             })}
           </div>
 
           {/* Special Remarks */}
           <div className="form-section">
             <h3><FaInfoCircle /> Special Remarks</h3>
-            <textarea value={formData.specialRemarks} onChange={e=>updateField('specialRemarks', e.target.value)} rows={5} placeholder="Add special remarks..." />
+            <textarea value={formData.specialRemarks} onChange={e => updateField('specialRemarks', e.target.value)} rows={5} placeholder="Add special remarks..." />
           </div>
         </div>
 
         <div className="modal-footer">
           <button onClick={onCancel} disabled={isSaving}><FaTimes/> Cancel</button>
-          <button onClick={handleSave} disabled={isSaving}>{isSaving?'Saving...':<><FaSave/> Save Changes</>}</button>
+          <button onClick={handleSave} disabled={isSaving}>{isSaving ? 'Saving...' : <><FaSave/> Save Changes</>}</button>
         </div>
       </div>
-          <style jsx>{`
+      <style jsx>{`
         .modal-overlay {
           position: fixed;
           top: 0;
@@ -279,21 +322,6 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
           color: #333;
         }
         
-        .modal-close {
-          background: none;
-          border: none;
-          font-size: 1.2rem;
-          cursor: pointer;
-          color: #999;
-          padding: 5px;
-          border-radius: 4px;
-        }
-        
-        .modal-close:hover {
-          color: #666;
-          background: #f5f5f5;
-        }
-        
         .modal-body {
           padding: 24px;
           overflow-y: auto;
@@ -304,71 +332,43 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
           padding: 20px 24px;
           border-top: 1px solid #eaeaea;
           background: #f9f9f9;
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
         }
         
         .form-section {
           margin-bottom: 30px;
         }
         
-        .section-header {
-          margin-bottom: 20px;
-        }
-        
-        .section-header h3 {
+        .form-section h3 {
           display: flex;
           align-items: center;
           gap: 10px;
-          margin: 0 0 5px 0;
+          margin: 0 0 20px 0;
           font-size: 1.2rem;
           color: #333;
         }
         
-        .section-header p {
-          margin: 0;
-          color: #666;
-          font-size: 0.9rem;
-        }
-        
-        .form-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-          gap: 20px;
-        }
-        
         .form-group {
-          display: flex;
-          flex-direction: column;
-        }
-        
-        .form-group.full-width {
-          grid-column: 1 / -1;
+          margin-bottom: 15px;
         }
         
         label {
-          margin-bottom: 8px;
+          display: block;
+          margin-bottom: 5px;
           font-weight: 500;
-          color: #444;
         }
         
-        .required {
-          color: #e22;
-        }
-        
-        input, textarea {
-          padding: 10px 12px;
+        input, textarea, select {
+          width: 100%;
+          padding: 8px 12px;
           border: 1px solid #ddd;
-          border-radius: 6px;
+          border-radius: 4px;
           font-size: 1rem;
-          transition: border-color 0.2s;
         }
         
-        input:focus, textarea:focus {
-          outline: none;
-          border-color: #4a90e2;
-          box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-        }
-        
-        input.error, textarea.error {
+        input.error, textarea.error, select.error {
           border-color: #e22;
         }
         
@@ -378,96 +378,19 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
           margin-top: 5px;
         }
         
-        .form-actions {
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-        }
-        
-        .btn {
+        button {
+          padding: 10px 15px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
           display: flex;
           align-items: center;
-          gap: 8px;
-          padding: 10px 20px;
-          border: none;
-          border-radius: 6px;
-          font-size: 1rem;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s;
+          gap: 5px;
         }
         
-        .btn:disabled {
+        button:disabled {
           opacity: 0.6;
           cursor: not-allowed;
-        }
-        
-        .btn-primary {
-          background-color: #4a90e2;
-          color: white;
-        }
-        
-        .btn-primary:hover:not(:disabled) {
-          background-color: #3a80d2;
-        }
-        
-        .btn-secondary {
-          background-color: #f5f5f5;
-          color: #333;
-        }
-        
-        .btn-secondary:hover:not(:disabled) {
-          background-color: #e5e5e5;
-        }
-        
-        .spinner {
-          width: 16px;
-          height: 16px;
-          border: 2px solid transparent;
-          border-top: 2px solid currentColor;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-        
-        .modal-loading {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 40px;
-          color: #666;
-        }
-        
-        .modal-loading .spinner {
-          margin-bottom: 15px;
-          color: #4a90e2;
-        }
-        
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        @media (max-width: 768px) {
-          .modal-overlay {
-            padding: 10px;
-          }
-          
-          .modal-content {
-            max-height: 95vh;
-          }
-          
-          .form-grid {
-            grid-template-columns: 1fr;
-          }
-          
-          .form-actions {
-            flex-direction: column;
-          }
-          
-          .btn {
-            justify-content: center;
-          }
         }
       `}</style>
     </div>
