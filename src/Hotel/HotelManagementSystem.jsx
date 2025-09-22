@@ -24,6 +24,7 @@ const HotelManagementSystem = () => {
     const fetchUserRole = () => {
       // This is a simulation - replace with actual auth logic
       const role = localStorage.getItem('userRole') || 'employee';
+      console.log("Fetched userRole:", role);
       setUserRole(role);
     };
     
