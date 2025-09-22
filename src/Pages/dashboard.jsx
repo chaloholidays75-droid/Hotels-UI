@@ -4,7 +4,8 @@ import {
   FaSync, FaEye, FaPlus, FaExclamationTriangle,
   FaGlobe, FaExclamationCircle, FaArrowUp, FaArrowDown
 } from 'react-icons/fa';
-import jwt_decode from "jwt-decode";
+import { decode as jwt_decode } from "jwt-decode";
+
 import { Pie, Line, Bar, Doughnut } from 'react-chartjs-2';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
