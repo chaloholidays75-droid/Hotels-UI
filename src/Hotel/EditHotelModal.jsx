@@ -5,7 +5,7 @@ import {
   FaClipboardList, FaMoneyCheckAlt, FaReceipt, FaConciergeBell
 } from 'react-icons/fa';
 
-const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
+const EditHotelModal = ({ hotel,countriesList, citiesList, onSave, onCancel, isLoading = false }) => {
   const [formData, setFormData] = useState({
     id: '',
     hotelName: '',
