@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from "jwt-decode";
-
 import { formatDistanceToNow } from 'date-fns';
 
 const API_BASE = "https://backend.chaloholidayonline.com/api";
@@ -33,18 +32,28 @@ const Dashboard = ({ showNotification }) => {
     if (!token) return null;
 
     try {
-      const decoded = jwt_decode(token);
+      const decoded = jwtDecode(token);
       const now = Date.now() / 1000;
-      if (decoded.exp && decoded.exp < now) return null;
+      if (decoded.exp && decoded.exp < now) {
+        console.warn("Token expired");
+        return null;
+      }
       return token;
     } catch (err) {
       console.error("Invalid token:", err);
       return null;
     }
   };
-  const decoded = jwtDecode(token);
-console.log(decoded);
+
   const token = getValidToken();
+
+  // Debugging: log token and decoded payload
+  useEffect(() => {
+    if (token) {
+      const decoded = jwtDecode(token);
+      console.log("Decoded token:", decoded);
+    }
+  }, [token]);
 
   // Redirect if token is invalid
   useEffect(() => {
@@ -141,7 +150,9 @@ console.log(decoded);
       <p>Recent Activities:</p>
       <ul>
         {recentActivities.slice(0, 5).map(a => (
-          <li key={a.id}>{`${a.user} ${a.action} ${a.type} "${a.name}" (${a.timeAgo})`}</li>
+          <li key={a.id}>
+            {`${a.user} ${a.action} ${a.type} "${a.name}" (${a.timeAgo})`}
+          </li>
         ))}
       </ul>
       <button onClick={fetchDashboardData} disabled={refreshing}>
