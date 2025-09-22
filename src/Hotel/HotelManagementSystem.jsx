@@ -24,6 +24,7 @@ const HotelManagementSystem = () => {
     const fetchUserRole = () => {
       // This would typically come from your auth context or user API
       const role = localStorage.getItem('userRole') || 'employee'; // Default to employee
+      console.log('User role from localStorage:', role);
       setUserRole(role);
     };
     
@@ -110,7 +111,7 @@ const HotelManagementSystem = () => {
     }
     
     // Check if user has admin role
-    if (userRole !== 'admin') {
+     if (userRole.toLowerCase() !== 'admin') {
       showNotification("You do not have permission to edit hotels.", "error");
       return;
     }
@@ -141,7 +142,7 @@ const HotelManagementSystem = () => {
 
   const toggleHotelStatus = async (id, currentStatus) => {
     // Check if user has admin role
-    if (userRole !== 'admin') {
+    if (userRole.toLowerCase() !== 'admin') {
       showNotification("You do not have permission to change hotel status.", "error");
       return;
     }
@@ -169,7 +170,7 @@ const HotelManagementSystem = () => {
   };
 
   // Check if user is admin
-  const isAdmin = userRole === 'admin';
+  const isAdmin = userRole.toLowerCase() === 'admin';
 
   return (
     <div className="hms-page-content ">
