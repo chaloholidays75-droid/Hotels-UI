@@ -1,79 +1,114 @@
-import React, { useEffect, useState } from "react";
-// import { getRecentActivities } from "../api";
-import { format, isToday, isYesterday } from "date-fns";
+import { useEffect, useState } from "react";
 
-const RecentActivityPage = () => {
+export default function RecentActivities() {
   const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(20); // items per page
+  const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await getRecentActivities();
-      setActivities(data || []);
-    };
-    fetchData();
-  }, []);
+  const fetchActivities = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `https://backend.chaloholidayonline.com/api/RecentActivities?page=${page}&pageSize=${pageSize}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      const data = await response.json();
 
-  // Group activities by day
-  const groupedActivities = (activities || []).reduce((groups, activity) => {
-    if (!activity.CreatedAt) return groups;
-    const date = new Date(activity.CreatedAt);
-    if (isNaN(date)) return groups;
+      // Optional: filter locally if backend doesn't support search
+      const filtered = data.filter(a =>
+        a.userName.toLowerCase().includes(search.toLowerCase()) ||
+        a.entity.toLowerCase().includes(search.toLowerCase()) ||
+        (a.description && a.description.toLowerCase().includes(search.toLowerCase()))
+      );
 
-    let groupLabel = "";
-    if (isToday(date)) groupLabel = "Today";
-    else if (isYesterday(date)) groupLabel = "Yesterday";
-    else groupLabel = format(date, "MMM dd, yyyy");
-
-    if (!groups[groupLabel]) groups[groupLabel] = [];
-    groups[groupLabel].push(activity);
-    return groups;
-  }, {});
-
-  const actionStyles = {
-    Created: { color: "#16a34a", fontWeight: 600 },
-    Edited: { color: "#2563eb", fontWeight: 600 },
-    Deleted: { color: "#dc2626", fontWeight: 600 },
+      setActivities(filtered);
+      setTotalPages(Math.ceil(data.length / pageSize));
+    } catch (err) {
+      console.error("Failed to fetch recent activities:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div style={{ padding: "20px", fontFamily: "Arial, sans-serif", color: "#1f2937" }}>
-      <h2 style={{ marginBottom: "20px" }}>All Recent Activities</h2>
+  useEffect(() => {
+    fetchActivities();
+  }, [page, search]);
 
-      {Object.keys(groupedActivities).length === 0 ? (
-        <p>No recent activities found.</p>
+  return (
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-4">Recent Activities</h2>
+
+      {/* Search Box */}
+      <input
+        type="text"
+        placeholder="Search by user, entity or description..."
+        className="border p-2 mb-4 w-full"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      {loading ? (
+        <p>Loading...</p>
       ) : (
-        Object.entries(groupedActivities).map(([day, acts]) => (
-          <div key={day} style={{ marginBottom: "30px" }}>
-            <h3 style={{ marginBottom: "10px" }}>{day}</h3>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr>
-                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>User</th>
-                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Action</th>
-                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Entity</th>
-                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Entity ID</th>
-                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Description</th>
-                  <th style={{ borderBottom: "2px solid #ccc", padding: "8px", textAlign: "left" }}>Time</th>
+        <table className="w-full border-collapse border">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="border p-2">User</th>
+              <th className="border p-2">Action</th>
+              <th className="border p-2">Entity</th>
+              <th className="border p-2">Description</th>
+              <th className="border p-2">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activities.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="text-center p-4">
+                  No activities found
+                </td>
+              </tr>
+            ) : (
+              activities.map((a) => (
+                <tr key={a.id} className="hover:bg-gray-100">
+                  <td className="border p-2">{a.userName}</td>
+                  <td className="border p-2">{a.action}</td>
+                  <td className="border p-2">{a.entity}</td>
+                  <td className="border p-2">{a.description || "-"}</td>
+                  <td className="border p-2">
+                    {new Date(a.timestamp).toLocaleString()}
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {acts.map((act) => (
-                  <tr key={act.Id} style={{ borderBottom: "1px solid #e5e7eb" }}>
-                    <td style={{ padding: "8px" }}>{act.Username || "Unknown user"}</td>
-                    <td style={actionStyles[act.ActionType] || {}}>{act.ActionType}</td>
-                    <td style={{ padding: "8px" }}>{act.Entity}</td>
-                    <td style={{ padding: "8px" }}>{act.EntityId}</td>
-                    <td style={{ padding: "8px" }}>{act.Description}</td>
-                    <td style={{ padding: "8px" }}>{new Date(act.CreatedAt).toLocaleTimeString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))
+              ))
+            )}
+          </tbody>
+        </table>
       )}
+
+      {/* Pagination */}
+      <div className="mt-4 flex justify-center gap-2">
+        <button
+          className="border px-3 py-1 rounded disabled:opacity-50"
+          disabled={page === 1}
+          onClick={() => setPage((p) => p - 1)}
+        >
+          Prev
+        </button>
+        <span className="px-3 py-1">{page}</span>
+        <button
+          className="border px-3 py-1 rounded disabled:opacity-50"
+          disabled={page === totalPages || totalPages === 0}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
-};
-
-export default RecentActivityPage;
+}

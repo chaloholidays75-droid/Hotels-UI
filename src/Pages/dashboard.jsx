@@ -59,6 +59,11 @@ const Dashboard = ({ showNotification, onNavigate }) => {
     totalCountries: 0,
     monthlyGrowth: 0
   });
+  const latestActivities = [...recentActivities]
+  .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+  .slice(0, 6);
+const hotelActivities = latestActivities.filter(a => a.type === 'hotel');
+const agencyActivities = latestActivities.filter(a => a.type === 'agency');
   const [recentActivities, setRecentActivities] = useState([]);
   const [hotelsByCountry, setHotelsByCountry] = useState([]);
   const [agenciesByCountry, setAgenciesByCountry] = useState([]);
@@ -853,52 +858,39 @@ const fetchDashboardData = async () => {
               <Users size={18} />
             </div>
 
-            <div className="activities-list">
-              {recentActivities.slice(0, 6).map((activity, index) => {
-                // Determine user display name with better fallbacks
-                const getUserDisplayName = () => {
-                  if (activity.user) return activity.user;
-                  if (activity.userName) return activity.userName;
-                  if (activity.userEmail) return activity.userEmail.split('@')[0]; // Use part of email if available
-                  if (activity.createdBy) return activity.createdBy;
-                  return "System"; // Default fallback
-                };
-
-                // Determine activity description with better fallbacks
-                const getActivityDescription = () => {
-                  const user = getUserDisplayName();
-                  const action = activity.action || "performed action on";
-                  const type = activity.type || "item";
-                  const name = activity.name || 'Unnamed';
-                  
-                  return `${user} ${action} ${type} "${name}"`;
-                };
+          <div className="activities-list">
+            {recentActivities
+              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+              .slice(0, 6)
+              .map((activity, index) => {
+                const user = activity.user || activity.userName || activity.createdBy || "System";
+                const action = activity.action || "performed action on";
+                const type = activity.type || "item";
+                const name = activity.name || "Unnamed";
 
                 return (
                   <div key={activity.id || `activity-${index}`} className="activity-item">
                     <div className="activity-icon">
-                      {activity.type === 'hotel' && <FaHotel />}
-                      {activity.type === 'agency' && <FaBuilding />}
-                      {!activity.type && <FaExclamationTriangle />}
+                      {type === 'hotel' && <FaHotel />}
+                      {type === 'agency' && <FaBuilding />}
+                      {!type && <FaExclamationTriangle />}
                     </div>
                     <div className="activity-content">
-                      <p className="activity-text">
-                        {getActivityDescription()}
-                      </p>
+                      <p className="activity-text">{`${user} ${action} ${type} "${name}"`}</p>
                       <div className="activity-meta">
                         <span className="activity-time">
-                          {activity.timestamp ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true }) : 
-                          activity.timeAgo || "Recently"}
+                          {activity.timestamp 
+                            ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })
+                            : "Recently"}
                         </span>
-                        {activity.country && (
-                          <span className="activity-country">{activity.country}</span>
-                        )}
+                        {activity.country && <span className="activity-country">{activity.country}</span>}
                       </div>
                     </div>
                   </div>
                 );
-              })}
-            </div>
+            })}
+          </div>
+
 
             <div className="see-more-wrapper">
               <button
