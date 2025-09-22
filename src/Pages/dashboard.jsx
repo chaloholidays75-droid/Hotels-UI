@@ -59,11 +59,7 @@ const Dashboard = ({ showNotification, onNavigate }) => {
     totalCountries: 0,
     monthlyGrowth: 0
   });
-  const latestActivities = [...recentActivities]
-  .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-  .slice(0, 6);
-const hotelActivities = latestActivities.filter(a => a.type === 'hotel');
-const agencyActivities = latestActivities.filter(a => a.type === 'agency');
+
   const [recentActivities, setRecentActivities] = useState([]);
   const [hotelsByCountry, setHotelsByCountry] = useState([]);
   const [agenciesByCountry, setAgenciesByCountry] = useState([]);
@@ -83,7 +79,11 @@ const agencyActivities = latestActivities.filter(a => a.type === 'agency');
   const response = await fetch(url, { ...options, headers });
   return response;
 };
-
+    const latestActivities = [...recentActivities]
+  .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+  .slice(0, 6);
+const hotelActivities = latestActivities.filter(a => a.type === 'hotel');
+const agencyActivities = latestActivities.filter(a => a.type === 'agency');
   // Chart options and data
   const lineChartOptions = {
     responsive: true,
