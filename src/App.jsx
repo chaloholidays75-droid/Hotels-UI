@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from "react";
 import Login from './Login/login';
 import Register from './Login/register';
 import ForgotPassword from './Login/ForgotPassword';
