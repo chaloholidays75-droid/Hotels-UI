@@ -69,6 +69,8 @@ const Dashboard = ({ showNotification, onNavigate }) => {
   const [error, setError] = useState(null);
   const fetchWithToken = async (url, options = {}) => {
   const token = localStorage.getItem('accessToken'); // get token
+  console.log(token);
+  
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
