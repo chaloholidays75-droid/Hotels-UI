@@ -618,7 +618,7 @@ const fetchDashboardData = async () => {
     ] = await Promise.allSettled([
       fetch(API_STATS, { headers }),
       fetch(API_RECENT_ACTIVITIES, { headers }),
-      fetch(API_HOTELS_BY_COUNTY, { headers }),
+      fetch(API_HOTELS_BY_COUNTRY, { headers }),
       fetch(API_AGENCIES_BY_COUNTRY, { headers }),
       fetch(API_TOP_COUNTRIES, { headers }),
       fetch(API_MONTHLY_STATS, { headers })
