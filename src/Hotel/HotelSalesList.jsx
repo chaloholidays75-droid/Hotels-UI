@@ -3,9 +3,8 @@ import HotelListSkeleton from '../components/HotelListSkeleton';
 import { 
   FaSearch, FaFilter, FaSortUp, FaSortDown, FaEye, 
   FaEdit, FaToggleOn, FaToggleOff, FaPlus, FaEllipsisV, FaTimes,
-  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan, FaLock, FaRedo
+  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan, FaLock
 } from 'react-icons/fa';
-import './viewhotel.css';
 
 const HotelSalesList = ({ 
   hotels, 
@@ -15,7 +14,7 @@ const HotelSalesList = ({
   openEditModal, 
   toggleHotelStatus,
   isAdmin,
-  refreshHotels // Add refresh function prop
+  userRole 
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCountry, setFilterCountry] = useState("");
@@ -68,6 +67,7 @@ const HotelSalesList = ({
   const totalPages = Math.ceil(filteredHotels.length / itemsPerPage);
 
   const toggleSelectHotel = (id) => {
+    // Only allow selection for admin users
     if (!isAdmin) return;
     
     setSelectedHotels(prev => 
@@ -78,6 +78,7 @@ const HotelSalesList = ({
   };
 
   const toggleSelectAll = () => {
+    // Only allow selection for admin users
     if (!isAdmin) return;
     
     if (selectedHotels.length === currentHotels.length) {
@@ -95,7 +96,7 @@ const HotelSalesList = ({
         <h2 className="section-title">Registered Hotels</h2>
         {!isAdmin && (
           <div className="hsl-view-only-notice">
-            <FaLock /> View Only Mode - You have read-only access
+            <FaInfoCircle /> View Only Mode - You can view hotels and create new ones, but only admins can edit or change status
           </div>
         )}
 
@@ -174,13 +175,13 @@ const HotelSalesList = ({
                     if (bulkAction === "activate") {
                       selectedHotels.forEach(id => {
                         const hotel = hotels.find(h => h.id === id);
-                        if (hotel && !hotel.isActive) toggleHotelStatus(id, true);
+                        if (hotel && !hotel.isActive) toggleHotelStatus(id, hotel.isActive);
                       });
                     }
                     if (bulkAction === "deactivate") {
                       selectedHotels.forEach(id => {
                         const hotel = hotels.find(h => h.id === id);
-                        if (hotel && hotel.isActive) toggleHotelStatus(id, false);
+                        if (hotel && hotel.isActive) toggleHotelStatus(id, hotel.isActive);
                       });
                     }
                   }}
@@ -231,15 +232,6 @@ const HotelSalesList = ({
               onClick={() => handleSort('country')}
             >
               Country {sortField === 'country' && (sortDirection === 'asc' ? <FaSortUp /> : <FaSortDown />)}
-            </button>
-            
-            {/* Add Refresh Button */}
-            <button 
-              className="hsl-btn hsl-btn-text hsl-refresh-btn"
-              onClick={refreshHotels}
-              title="Refresh hotel data"
-            >
-              <FaRedo /> Refresh
             </button>
           </div>
         </div>
@@ -388,7 +380,7 @@ const HotelSalesList = ({
                               </button>
                               <button 
                                 className={`hsl-btn-icon hsl-status-btn ${hotel.isActive ? 'hsl-active' : 'hsl-inactive'}`} 
-                                onClick={() => toggleHotelStatus(hotel.id, !hotel.isActive)} 
+                                onClick={() => toggleHotelStatus(hotel.id, hotel.isActive)} 
                                 title={hotel.isActive ? 'Deactivate' : 'Activate'}
                               >
                                 {hotel.isActive ? <FaToggleOn /> : <FaToggleOff />}
@@ -397,7 +389,7 @@ const HotelSalesList = ({
                           ) : (
                             <button 
                               className="hsl-btn-icon hsl-disabled" 
-                              title="Admin permission required"
+                              title="Admin permission required for editing"
                               disabled
                             >
                               <FaLock />
