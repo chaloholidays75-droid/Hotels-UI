@@ -138,20 +138,64 @@ const EditHotelModal = ({ hotel, onSave, onCancel, isLoading = false }) => {
   };
 
   // Save changes with validation
-  const handleSave = async () => {
-    if (!validateForm()) {
-      return;
-    }
-    
-    setIsSaving(true);
-    try {
-      await onSave(formData);
-    } catch (error) {
-      console.error('Failed to save hotel:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+// Save changes with validation
+const handleSave = async () => {
+  if (!validateForm()) return;
+
+  setIsSaving(true);
+  try {
+    // Map formData to backend-friendly HotelDto
+    const payload = {
+      Id: formData.id,
+      CountryId: Number(formData.CountryId || formData.countryId), // ensure number
+      CityId: Number(formData.CityId || formData.cityId),           // ensure number
+      HotelName: formData.hotelName,
+      HotelEmail: formData.hotelEmail,
+      HotelContactNumber: formData.hotelContactNumber,
+      HotelChain: formData.hotelChain,
+      Address: formData.address,
+      Region: formData.region || '',
+      SpecialRemarks: formData.specialRemarks,
+      IsActive: formData.isActive ?? true,
+
+      // Map staff arrays to PascalCase fields
+      SalesPersons: (formData.salesPersons || []).map(s => ({
+        Name: s.name || '',
+        Email: s.email || '',
+        ContactNumber: s.contact || ''
+      })),
+      ReceptionPersons: (formData.receptionPersons || []).map(s => ({
+        Name: s.name || '',
+        Email: s.email || '',
+        ContactNumber: s.contact || ''
+      })),
+      ReservationPersons: (formData.reservationPersons || []).map(s => ({
+        Name: s.name || '',
+        Email: s.email || '',
+        ContactNumber: s.contact || ''
+      })),
+      AccountsPersons: (formData.accountsPersons || []).map(s => ({
+        Name: s.name || '',
+        Email: s.email || '',
+        ContactNumber: s.contact || ''
+      })),
+      Concierges: (formData.concierges || []).map(s => ({
+        Name: s.name || '',
+        Email: s.email || '',
+        ContactNumber: s.contact || ''
+      }))
+    };
+
+    // Call parent save function
+    await onSave(payload);
+
+  } catch (error) {
+    console.error('Failed to save hotel:', error);
+  } finally {
+    setIsSaving(false);
+  }
+};
+
 
   if (!formData) {
     return (
