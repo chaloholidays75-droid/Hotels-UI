@@ -4,6 +4,7 @@ import AgencyList from './AgencyList';
 import AgencyViewModal from './AgencyViewModal';
 import AgencyEditModal from './AgencyEditModal';
 import './AgencyManagement.css';
+import agencyApi from '../api/agencyApi';
 
 const AgencyManagement = () => {
   const [activeTab, setActiveTab] = useState('view');
@@ -30,32 +31,49 @@ const AgencyManagement = () => {
     }
   }, [activeTab]);
 
-  const fetchAgencies = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch("https://backend.chaloholidayonline.com/api/agency", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
-      });
-      const data = await response.json();
+  // const fetchAgencies = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await fetch("https://backend.chaloholidayonline.com/api/agency", {
+  //       method: "GET",
+  //       headers: { "Content-Type": "application/json" }
+  //     });
+  //     const data = await response.json();
       
-      if (response.ok) {
-        const transformedAgencies = data.map(agency => ({
-          ...agency,
-          status: agency.isActive ? 'Active' : 'Inactive'
-        }));
-        setAgencies(transformedAgencies);
-      } else {
-        console.error("Failed to fetch agencies:", data);
-        alert("Failed to fetch agencies");
-      }
-    } catch (error) {
-      console.error("Error fetching agencies:", error);
-      alert("An error occurred while fetching agencies");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     if (response.ok) {
+  //       const transformedAgencies = data.map(agency => ({
+  //         ...agency,
+  //         status: agency.isActive ? 'Active' : 'Inactive'
+  //       }));
+  //       setAgencies(transformedAgencies);
+  //     } else {
+  //       console.error("Failed to fetch agencies:", data);
+  //       alert("Failed to fetch agencies");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching agencies:", error);
+  //     alert("An error occurred while fetching agencies");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+  const fetchAgencies = async () => {
+  setLoading(true);
+  try {
+    const data = await agencyApi.getAgencies();
+    const transformedAgencies = data.map(agency => ({
+      ...agency,
+      status: agency.isActive ? 'Active' : 'Inactive'
+    }));
+    setAgencies(transformedAgencies);
+  } catch (error) {
+    console.error("Error fetching agencies:", error);
+    alert("Failed to fetch agencies");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const openViewModal = (agency) => {
     setViewModal({ isOpen: true, agency });
@@ -103,46 +121,59 @@ const toggleAgencyStatus = async (id) => {
     )
   );
 
-  try {
-    const response = await fetch(`https://backend.chaloholidayonline.com/api/agency/${id}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isActive: newStatus })
-    });
-    console.log("PATCH body:", {isActive: newStatus });
+  // try {
+  //   const response = await fetch(`https://backend.chaloholidayonline.com/api/agency/${id}/status`, {
+  //     method: 'PATCH',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({ isActive: newStatus })
+  //   });
+  //   console.log("PATCH body:", {isActive: newStatus });
 
-    if (response.ok) {
-      alert(`Agency ${newStatus ? 'activated' : 'deactivated'} successfully!`);
-    } else {
-      let errorMessage = 'Unknown error';
+  //   if (response.ok) {
+  //     alert(`Agency ${newStatus ? 'activated' : 'deactivated'} successfully!`);
+  //   } else {
+  //     let errorMessage = 'Unknown error';
+  //     try {
+  //       const errorData = await response.json();
+  //       errorMessage = errorData.message || errorMessage;
+  //     } catch {}
+  //     alert(`Failed to update agency status: ${errorMessage}`);
+
+  //     // Rollback UI on failure
+  //     setAgencies(prevAgencies =>
+  //       prevAgencies.map(a =>
+  //         a.id === id
+  //           ? { ...a, isActive: agency.isActive, status: agency.isActive ? 'Active' : 'Inactive' }
+  //           : a
+  //       )
+  //     );
+  //   }
+  // } catch (err) {
+  //   console.error('Error updating agency status:', err);
+  //   alert('An error occurred while updating agency status');
+
+  //   // Rollback UI on error
+  //   setAgencies(prevAgencies =>
+  //     prevAgencies.map(a =>
+  //       a.id === id
+  //         ? { ...a, isActive: agency.isActive, status: agency.isActive ? 'Active' : 'Inactive' }
+  //         : a
+  //     )
+  //   );
+  // }
       try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-      } catch {}
-      alert(`Failed to update agency status: ${errorMessage}`);
+      await agencyApi.updateAgencyStatus(id, newStatus);
+      alert(`Agency ${newStatus ? 'activated' : 'deactivated'} successfully!`);
+    } catch (err) {
+      console.error('Error updating agency status:', err);
+      alert('Failed to update agency status');
 
-      // Rollback UI on failure
-      setAgencies(prevAgencies =>
-        prevAgencies.map(a =>
-          a.id === id
-            ? { ...a, isActive: agency.isActive, status: agency.isActive ? 'Active' : 'Inactive' }
-            : a
-        )
-      );
+      // Rollback on error
+      setAgencies(prev => prev.map(a =>
+        a.id === id ? { ...a, isActive: agency.isActive, status: agency.isActive ? 'Active' : 'Inactive' } : a
+      ));
     }
-  } catch (err) {
-    console.error('Error updating agency status:', err);
-    alert('An error occurred while updating agency status');
 
-    // Rollback UI on error
-    setAgencies(prevAgencies =>
-      prevAgencies.map(a =>
-        a.id === id
-          ? { ...a, isActive: agency.isActive, status: agency.isActive ? 'Active' : 'Inactive' }
-          : a
-      )
-    );
-  }
 };
 
 
@@ -183,6 +214,7 @@ const toggleAgencyStatus = async (id) => {
             setActiveTab={setActiveTab}
             setAgencies={setAgencies}
             agencies={agencies}
+            refreshAgencies={fetchAgencies}
           />
         ) : (
           <AgencyList
