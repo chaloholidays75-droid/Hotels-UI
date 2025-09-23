@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import api from '../api';
+import api from '../api/api';
 import { Eye, EyeOff, CheckCircle, XCircle, Loader } from 'lucide-react';
 
 function ResetPassword() {

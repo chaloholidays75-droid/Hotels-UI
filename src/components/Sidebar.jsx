@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './sidebar.css';
-import api from '../api';
+import api from '../api/api';
 
 const Sidebar = ( {onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(() => {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FaHotel, FaGlobe, FaCalendar, FaExclamationTriangle } from 'react-icons/fa';
 import CountUp from 'react-countup';
-import { getStats } from "../api";
+import { getStats } from "../api/api";
 // import './statsbar.css'
 
 const StatsBar = () => {

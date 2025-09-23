@@ -50,55 +50,59 @@ api.interceptors.response.use(
 // === HOTEL-RELATED FUNCTIONS (UNCHANGED) ===
 
 // ✅ Get all hotel sales
-// Hotel API functions using Axios
 export async function getHotelSales() {
-  try {
-    const res = await api.get('/hotels'); // Axios adds token automatically
-    return res.data;
-  } catch (error) {
-    console.error('Failed to fetch hotels:', error.response?.status, error.message);
-    throw error;
-  }
+  const response = await fetch(API_BASE_HOTEL);
+  if (!response.ok) throw new Error('Failed to fetch hotel sales');
+  return response.json();
 }
 
+// ✅ Get by Id
 export async function getHotelSaleById(id) {
-  try {
-    const res = await api.get(`/hotels/${id}`);
-    return res.data;
-  } catch (error) {
-    console.error(`Failed to fetch hotel ${id}:`, error.response?.status, error.message);
-    throw error;
-  }
+  const response = await fetch(`${API_BASE_HOTEL}/${id}`);
+  if (!response.ok) throw new Error('Failed to fetch hotel sale');
+  return response.json();
 }
 
+// ✅ Create new
 export async function createHotelSale(data) {
-  try {
-    const res = await api.post('/hotels', data);
-    return res.data;
-  } catch (error) {
-    console.error('Failed to create hotel:', error.response?.data || error.message);
-    throw error;
+  const response = await fetch(API_BASE_HOTEL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error('Failed to create hotel sale: ' + errorText);
   }
+
+  return response.json();
 }
 
+// ✅ Update
 export async function updateHotelSale(id, data) {
-  try {
-    const res = await api.put(`/hotels/${id}`, data);
-    return res.data;
-  } catch (error) {
-    console.error(`Failed to update hotel ${id}:`, error.response?.data || error.message);
-    throw error;
+  const response = await fetch(`${API_BASE_HOTEL}/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error('Failed to update hotel sale: ' + errorText);
   }
+
+  return response.json();
 }
 
+// ✅ Delete
 export async function deleteHotelSale(id) {
-  try {
-    await api.delete(`/hotels/${id}`);
-    return true;
-  } catch (error) {
-    console.error(`Failed to delete hotel ${id}:`, error.response?.data || error.message);
-    throw error;
-  }
+  const response = await fetch(`${API_BASE_HOTEL}/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) throw new Error('Failed to delete hotel sale');
+  return true;
 }
 
 // === AUTH-RELATED AND NON-HOTEL FUNCTIONS ===
