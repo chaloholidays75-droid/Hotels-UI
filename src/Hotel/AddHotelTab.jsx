@@ -7,6 +7,7 @@ import {
   FaHotel, FaMapMarkerAlt, FaPhone, FaEnvelope, FaLink, FaTrash,
   FaCheckCircle, FaExclamationTriangle, FaTimes
 } from 'react-icons/fa';
+import api from '../api/api';
 
 const API_BASE = "https://backend.chaloholidayonline.com/api";
 const API_BASE_HOTEL = `${API_BASE}/hotels`;
@@ -413,16 +414,24 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
     fetchCountries();
   }, []);
 
-  const fetchHotels = async cityId => {
-    if (!cityId) return;
-    try {
-      const res = await fetch(`${API_BASE_HOTEL}?cityId=${cityId}`);
-      if (!res.ok) throw new Error("Failed to fetch hotels");
-      const data = await res.json();
-      setHotelsInCity(data);
-    } catch (err) { console.error(err); }
-  };
-
+  // const fetchHotels = async cityId => {
+  //   if (!cityId) return;
+  //   try {
+  //     const res = await fetch(`${API_BASE_HOTEL}?cityId=${cityId}`);
+  //     if (!res.ok) throw new Error("Failed to fetch hotels");
+  //     const data = await res.json();
+  //     setHotelsInCity(data);
+  //   } catch (err) { console.error(err); }
+  // };
+  const fetchHotels = async (cityId) => {
+  if (!cityId) return;
+  try {
+    const res = await api.get(`/hotels/by-city/${cityId}`);
+    setHotelsInCity(res.data);
+  } catch (err) {
+    console.error('Failed to fetch hotels:', err.response?.status, err.message);
+  }
+};
   // ================= Validation =================
   const validateForm = () => {
     const errors = {};
