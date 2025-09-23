@@ -8,6 +8,7 @@ export default function RecentActivities() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
 
+  // Fetch activities from backend
   const fetchActivities = async () => {
     try {
       setLoading(true);
@@ -22,16 +23,44 @@ export default function RecentActivities() {
       const data = await response.json();
 
       // Optional: filter locally if backend doesn't support search
-      const filtered = data.filter(a =>
-        a.userName.toLowerCase().includes(search.toLowerCase()) ||
-        a.entity.toLowerCase().includes(search.toLowerCase()) ||
-        (a.description && a.description.toLowerCase().includes(search.toLowerCase()))
+      const filtered = data.filter(
+        (a) =>
+          a.userName.toLowerCase().includes(search.toLowerCase()) ||
+          a.entity.toLowerCase().includes(search.toLowerCase()) ||
+          (a.description &&
+            a.description.toLowerCase().includes(search.toLowerCase()))
       );
 
       setActivities(filtered);
       setTotalPages(Math.ceil(data.length / pageSize));
     } catch (err) {
       console.error("Failed to fetch recent activities:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Backfill endpoint
+  const backfillActivities = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(
+        "https://backend.chaloholidayonline.com/api/recent/backfill",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Backfill failed");
+
+      alert("Recent activities backfilled successfully!");
+      fetchActivities(); // Refresh table
+    } catch (err) {
+      console.error(err);
+      alert("Failed to backfill activities");
     } finally {
       setLoading(false);
     }
@@ -45,14 +74,23 @@ export default function RecentActivities() {
     <div className="p-4">
       <h2 className="text-2xl font-bold mb-4">Recent Activities</h2>
 
-      {/* Search Box */}
-      <input
-        type="text"
-        placeholder="Search by user, entity or description..."
-        className="border p-2 mb-4 w-full"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
+      {/* Search & Backfill */}
+      <div className="flex justify-between mb-4">
+        <input
+          type="text"
+          placeholder="Search by user, entity or description..."
+          className="border p-2 w-1/2"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
+          onClick={backfillActivities}
+          disabled={loading}
+        >
+          Backfill Activities
+        </button>
+      </div>
 
       {loading ? (
         <p>Loading...</p>
