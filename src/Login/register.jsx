@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { z } from "zod";
-import { register } from "../api/api";
+import { register } from "../api/authApi";
 import {
   Box,
   Button,

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { z } from 'zod';
-import { login } from '../api/api';
+import { login } from '../api/authApi';
 
 // Zod schema for form validation
 const loginSchema = z.object({
