@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AgencyDetailsForm from './AgencyDetailsForm';
 import UserDetailsForm from './UserDetailsForm';
-import agencyApi from '../api/agencyApi';
+import api from '../api/agencyApi';
 
 // Message Box Component
 const MessageBox = ({ type, message, onClose, isVisible }) => {
