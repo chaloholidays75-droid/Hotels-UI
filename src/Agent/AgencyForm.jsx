@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import AgencyDetailsForm from './AgencyDetailsForm';
 import UserDetailsForm from './UserDetailsForm';
-import api from '../api/agencyApi';
+import agencyApi from '../api/agencyApi';
 
 // Message Box Component
 const MessageBox = ({ type, message, onClose, isVisible }) => {
@@ -98,7 +98,7 @@ const AgencyForm = ({ setActiveTab, setAgencies, agencies }) => {
     // Check if email already exists in database
 if (name === 'userEmailId' && value) {
   try {
-    const { data } = await api.get(`/agency/check-email?email=${encodeURIComponent(value)}`);
+    const { data } = await agencyApi.get(`/agency/check-email?email=${encodeURIComponent(value)}`);
     setExistingEmail(data.exists);
   } catch (error) {
     console.error("Error checking email:", error.response?.data || error.message);
@@ -107,7 +107,7 @@ if (name === 'userEmailId' && value) {
 
 if (name === 'userName' && value) {
   try {
-    const { data } = await api.get(`/agency/check-username?username=${encodeURIComponent(value)}`);
+    const { data } = await agencyApi.get(`/agency/check-username?username=${encodeURIComponent(value)}`);
     setExistingUsername(data.exists);
   } catch (error) {
     console.error("Error checking username:", error.response?.data || error.message);
