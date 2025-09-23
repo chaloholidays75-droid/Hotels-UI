@@ -89,15 +89,16 @@ export async function checkEmailExists(email) {
   }
 }
 
-// export default {
-//   getAgencies,
-//   getAgencyById,
-//   createAgency,
-//   updateAgency,
-//   deleteAgency,
-//   updateAgencyStatus,
-//   checkUsernameExists,
-//   checkEmailExists,
-// };
+const agencyApi = {
+  getAgencies,
+  getAgencyById,
+  createAgency,
+  updateAgency,
+  deleteAgency,
+  updateAgencyStatus,
+  checkUsernameExists,
+  checkEmailExists
+};
+
 export default agencyApi;
 
