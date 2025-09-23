@@ -5,7 +5,7 @@ import HotelSalesList from './HotelSalesList';
 import { FaCheckCircle, FaTimesCircle, FaTimes } from 'react-icons/fa';
 import ViewHotelModal from './ViewHotelModal';
 import EditHotelModal from './EditHotelModal';
-import { getHotelSales, toggleHotelStatus, updateHotelSale } from '../api/hotelApi';
+import { getHotelSales, toggleHotelStatus, updateHotelSale , getCountries, getCitiesByCountry  } from '../api/hotelApi';
 import Modal from './Modal';
 import './HotelManagementSystem.css';
 
@@ -132,18 +132,71 @@ const HotelManagementSystem = () => {
   //     setLoading(false);
   //   }
   // };
-    const fetchHotels = async () => {
-    setLoading(true);
-    try {
-      const data = await getHotelSales();
-      setHotels(data);
-    } catch (err) {
-      console.error('Error fetching hotels:', err);
-      showNotification(`Error fetching hotels: ${err.message}`, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+
+
+const fetchHotels = async () => {
+  setLoading(true);
+  try {
+    // 1️⃣ Fetch hotels
+    const hotels = await getHotelSales();
+
+    // 2️⃣ Fetch countries
+    const countries = await getCountries();
+    const countryMap = new Map(countries.map(c => [c.id, c.name]));
+
+    // 3️⃣ Build cities map dynamically per country
+    const uniqueCountryIds = [...new Set(hotels.map(h => h.countryId))];
+    const citiesMap = {};
+
+    await Promise.all(
+      uniqueCountryIds.map(async countryId => {
+        const cities = await getCitiesByCountry(countryId);
+        citiesMap[countryId] = new Map(cities.map(c => [c.id, c.name]));
+      })
+    );
+
+    // 4️⃣ Map hotel data
+    const adjustedHotels = hotels.map(hotel => ({
+      ...hotel,
+      country: countryMap.get(hotel.countryId) || 'Unknown Country',
+      city: citiesMap[hotel.countryId]?.get(hotel.cityId) || 'Unknown City',
+      salesPersons: Array.isArray(hotel.salesPersons)
+        ? hotel.salesPersons
+        : hotel.salesPersonName
+        ? [{ name: hotel.salesPersonName, email: hotel.salesPersonEmail, contact: hotel.salesPersonContact }]
+        : [],
+      reservationPersons: Array.isArray(hotel.reservationPersons)
+        ? hotel.reservationPersons
+        : hotel.reservationPersonName
+        ? [{ name: hotel.reservationPersonName, email: hotel.reservationPersonEmail, contact: hotel.reservationPersonContact }]
+        : [],
+      accountsPersons: Array.isArray(hotel.accountsPersons)
+        ? hotel.accountsPersons
+        : hotel.accountsPersonName
+        ? [{ name: hotel.accountsPersonName, email: hotel.accountsPersonEmail, contact: hotel.accountsPersonContact }]
+        : [],
+      receptionPersons: Array.isArray(hotel.receptionPersons)
+        ? hotel.receptionPersons
+        : hotel.receptionPersonName
+        ? [{ name: hotel.receptionPersonName, email: hotel.receptionPersonEmail, contact: hotel.receptionPersonContact }]
+        : [],
+      concierges: Array.isArray(hotel.concierges)
+        ? hotel.concierges
+        : hotel.conciergeName
+        ? [{ name: hotel.conciergeName, email: hotel.conciergeEmail, contact: hotel.conciergeContact }]
+        : [],
+      isActive: hotel.isActive !== undefined ? hotel.isActive : true
+    }));
+
+    setHotels(adjustedHotels);
+  } catch (err) {
+    console.error('Error fetching hotels:', err);
+    showNotification(`Error fetching hotels: ${err.message}`, 'error');
+  } finally {
+    setLoading(false);
+  }
+};
+
   const openViewModal = (hotel) => {
     setViewModal({ isOpen: true, hotel });
   };
