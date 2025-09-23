@@ -49,7 +49,7 @@ export default function RecentActivities() {
     try {
       setBackfillLoading(true);
       const response = await fetch(
-        "https://backend.chaloholidayonline.com/api/recent/backfill",
+        "https://backend.chaloholidayonline.com/api/recent/fix-old-activities", // <-- correct endpoint
         {
           method: "POST",
           headers: {
