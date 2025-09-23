@@ -65,3 +65,35 @@ export async function toggleHotelStatus(id, isActive) {
     throw error;
   }
 }
+// Get all countries
+export async function getCountries() {
+  try {
+    const res = await api.get('/countries');
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch countries:', error.response?.status, error.message);
+    throw error;
+  }
+}
+
+// Get cities by country ID
+export async function getCitiesByCountry(countryId) {
+  try {
+    const res = await api.get(`/cities/by-country/${countryId}`);
+    return res.data;
+  } catch (error) {
+    console.error(`Failed to fetch cities for country ${countryId}:`, error.response?.status, error.message);
+    throw error;
+  }
+}
+// Get all Hotels by city ID and country ID
+export async function getHotelsByCityAndCountry(countryId, cityId) {
+  try { 
+    const res = await api.get(`/hotels/by-location`, { params: { countryId, cityId } });
+    return res.data;
+  } catch (error) {
+    console.error(`Failed to fetch hotels for country ${countryId} and city ${cityId}:`, error.response?.status, error.message);
+    throw error;
+  } 
+}
+export default api;

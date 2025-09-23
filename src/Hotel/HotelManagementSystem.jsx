@@ -132,31 +132,18 @@ const HotelManagementSystem = () => {
   //     setLoading(false);
   //   }
   // };
-const fetchHotels = async () => {
-  setLoading(true);
-  try {
-    const hotels = await getHotelSales();
-    const countriesRes = await api.get('/countries');
-    const citiesRes = await api.get('/cities'); // or by-country if needed
-
-    const countryMap = new Map(countriesRes.data.map(c => [c.id, c.name]));
-    const cityMap = new Map(citiesRes.data.map(c => [c.id, c.name]));
-
-    const adjustedHotels = hotels.map(h => ({
-      ...h,
-      country: countryMap.get(h.countryId) || "Unknown Country",
-      city: cityMap.get(h.cityId) || "Unknown City"
-    }));
-
-    setHotels(adjustedHotels);
-  } catch (err) {
-    console.error('Error fetching hotels:', err);
-    showNotification(`Error fetching hotels: ${err.message}`, 'error');
-  } finally {
-    setLoading(false);
-  }
-};
-
+    const fetchHotels = async () => {
+    setLoading(true);
+    try {
+      const data = await getHotelSales();
+      setHotels(data);
+    } catch (err) {
+      console.error('Error fetching hotels:', err);
+      showNotification(`Error fetching hotels: ${err.message}`, 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
   const openViewModal = (hotel) => {
     setViewModal({ isOpen: true, hotel });
   };
