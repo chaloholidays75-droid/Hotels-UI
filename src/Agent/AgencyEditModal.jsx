@@ -295,7 +295,7 @@ const handleEditSubmit = async (e) => {
                   <div className="form-group">
                     <label className="form-label">Website</label>
                     <input
-                      type="url"
+                      type="text"
                       name="website"
                       value={editModal.agency.website}
                       onChange={handleEditChange}
