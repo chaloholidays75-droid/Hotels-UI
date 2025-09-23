@@ -493,6 +493,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(safePayload),
       });
+      let data = null;
       try {
           data = await response.json();
         } catch {
