@@ -7,8 +7,8 @@ export default function RecentActivities() {
   const [pageSize] = useState(20); // items per page
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
+  const [backfillLoading, setBackfillLoading] = useState(false);
 
-  // Fetch activities from backend
   const fetchActivities = async () => {
     try {
       setLoading(true);
@@ -40,57 +40,59 @@ export default function RecentActivities() {
     }
   };
 
-  // Backfill endpoint
-  const backfillActivities = async () => {
+  useEffect(() => {
+    fetchActivities();
+  }, [page, search]);
+
+  // BACKFILL HANDLER
+  const handleBackfill = async () => {
     try {
-      setLoading(true);
+      setBackfillLoading(true);
       const response = await fetch(
         "https://backend.chaloholidayonline.com/api/recent/backfill",
         {
           method: "POST",
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
           },
         }
       );
 
       if (!response.ok) throw new Error("Backfill failed");
 
-      alert("Recent activities backfilled successfully!");
-      fetchActivities(); // Refresh table
+      const result = await response.json();
+      alert(result.message || "Backfill completed!");
+      fetchActivities(); // refresh the list
     } catch (err) {
       console.error(err);
-      alert("Failed to backfill activities");
+      alert("Failed to backfill recent activities");
     } finally {
-      setLoading(false);
+      setBackfillLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchActivities();
-  }, [page, search]);
 
   return (
     <div className="p-4">
       <h2 className="text-2xl font-bold mb-4">Recent Activities</h2>
 
-      {/* Search & Backfill */}
-      <div className="flex justify-between mb-4">
-        <input
-          type="text"
-          placeholder="Search by user, entity or description..."
-          className="border p-2 w-1/2"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
-          onClick={backfillActivities}
-          disabled={loading}
-        >
-          Backfill Activities
-        </button>
-      </div>
+      {/* Backfill Button */}
+      <button
+        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
+        onClick={handleBackfill}
+        disabled={backfillLoading}
+      >
+        {backfillLoading ? "Backfilling..." : "Backfill Old Activities"}
+      </button>
+
+      {/* Search Box */}
+      <input
+        type="text"
+        placeholder="Search by user, entity or description..."
+        className="border p-2 mb-4 w-full"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
 
       {loading ? (
         <p>Loading...</p>
