@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import agencyApi from '../api/agencyApi';
 const UserDetailsForm = ({ 
   formData, 
   setFormData, 
@@ -77,82 +77,67 @@ const UserDetailsForm = ({
     return Object.keys(formErrors).length === 0;
   };
 
-  const handleUserSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateUserForm()) return;
+const handleUserSubmit = async (e) => {
+  e.preventDefault();
+  if (!validateUserForm()) return;
 
-    const newAgency = {
-      agencyName: formData.agencyName,
-      countryId: formData.countryId,
-      cityId: formData.cityId,
-      postCode: formData.postCode,
-      address: formData.address,
-      website: formData.website,
-      phoneNo: formData.phoneNo,
-      emailId: formData.emailId,
-      businessCurrency: formData.businessCurrency,
-      title: formData.title,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      userEmailId: formData.userEmailId,
-      designation: formData.designation,
-      mobileNo: formData.mobileNo,
-      userName: formData.userName,
-      password: formData.password,
-      acceptTerms: formData.acceptTerms
-    };
-
-    try {
-      const response = await fetch("https://backend.chaloholidayonline.com/api/agency", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newAgency)
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        if (data.errors) {
-          setErrors(data.errors);
-        }
-        setMessageBoxContent(data.title || "Failed to register agency");
-        setShowErrorMessage(true);
-        return;
-      }
-
-      setAgencies([...agencies, data]);
-      setActiveTab('view');
-      setMessageBoxContent('Agency registered successfully!');
-      setShowSuccessMessage(true);
-
-      setFormData({
-        agencyName: '',
-        countryId: '',
-        cityId: '',
-        postCode: '',
-        address: '',
-        website: '',
-        phoneNo: '',
-        emailId: '',
-        businessCurrency: 'USD',
-        title: '',
-        firstName: '',
-        lastName: '',
-        userEmailId: '',
-        designation: '',
-        mobileNo: '',
-        userName: '',
-        password: '',
-        confirmPassword: '',
-        acceptTerms: false
-      });
-
-    } catch (error) {
-      console.error("Error submitting to backend:", error);
-      setMessageBoxContent("An error occurred while registering the agency");
-      setShowErrorMessage(true);
-    }
+  const newAgency = {
+    agencyName: formData.agencyName,
+    countryId: formData.countryId,
+    cityId: formData.cityId,
+    postCode: formData.postCode,
+    address: formData.address,
+    website: formData.website,
+    phoneNo: formData.phoneNo,
+    emailId: formData.emailId,
+    businessCurrency: formData.businessCurrency,
+    title: formData.title,
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    userEmailId: formData.userEmailId,
+    designation: formData.designation,
+    mobileNo: formData.mobileNo,
+    userName: formData.userName,
+    password: formData.password,
+    acceptTerms: formData.acceptTerms
   };
+
+  try {
+    const createdAgency = await agencyApi.createAgency(newAgency);
+
+    setAgencies([...agencies, createdAgency]);
+    setActiveTab('view');
+    setMessageBoxContent('Agency registered successfully!');
+    setShowSuccessMessage(true);
+
+    setFormData({
+      agencyName: '',
+      countryId: '',
+      cityId: '',
+      postCode: '',
+      address: '',
+      website: '',
+      phoneNo: '',
+      emailId: '',
+      businessCurrency: 'USD',
+      title: '',
+      firstName: '',
+      lastName: '',
+      userEmailId: '',
+      designation: '',
+      mobileNo: '',
+      userName: '',
+      password: '',
+      confirmPassword: '',
+      acceptTerms: false
+    });
+
+  } catch (error) {
+    console.error("Error submitting to backend:", error);
+    setMessageBoxContent(error.response?.data?.title || "An error occurred while registering the agency");
+    setShowErrorMessage(true);
+  }
+};
 
   return (
     <form onSubmit={handleUserSubmit} className="agency-form">
