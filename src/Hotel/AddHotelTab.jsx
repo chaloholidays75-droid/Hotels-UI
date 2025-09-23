@@ -496,19 +496,30 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       countryId: formData.countryId
     };
 
-    try {
-      const response = await fetch(`${API_BASE_HOTEL}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(safePayload),
-      });
+    // try {
+    //   const response = await fetch(`${API_BASE_HOTEL}`, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify(safePayload),
+    //   });
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save hotel");
-      }
+    //   if (!response.ok) {
+    //     const errorData = await response.json();
+    //     throw new Error(errorData.message || "Failed to save hotel");
+    //   }
 
-      const data = await response.json();
+    //   const data = await response.json();
+    //   console.log("Hotel saved:", data);
+    //   setMessageBoxContent("Hotel information saved successfully!");
+    //   setShowSuccessMessage(true);
+    //   resetForm();
+    // } catch (err) {
+    //   console.error(err);
+    //   setMessageBoxContent(`Error: ${err.message}`);
+    //   setShowErrorMessage(true);
+    // }
+        try {
+      const data = await createHotelSale(safePayload);
       console.log("Hotel saved:", data);
       setMessageBoxContent("Hotel information saved successfully!");
       setShowSuccessMessage(true);
@@ -517,7 +528,9 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
       console.error(err);
       setMessageBoxContent(`Error: ${err.message}`);
       setShowErrorMessage(true);
-    } finally {
+    }
+ 
+    finally {
       setIsSubmitting(false);
     }
   };

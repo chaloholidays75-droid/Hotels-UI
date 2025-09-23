@@ -26,10 +26,24 @@ export async function getHotelSaleById(id) {
 export async function createHotelSale(data) {
   try {
     const res = await api.post('/hotels', data);
+
+    // If backend responds with no content, axios will have res.data as empty
+    if (!res.data || Object.keys(res.data).length === 0) {
+      return null; // success, but no data returned
+    }
+
     return res.data;
   } catch (error) {
-    console.error('Failed to create hotel:', error.response?.data || error.message);
-    throw error;
+    let message = "Failed to create hotel";
+
+    if (error.response?.data?.message) {
+      message = error.response.data.message;
+    } else if (error.message) {
+      message = error.message;
+    }
+
+    console.error(message);
+    throw new Error(message);
   }
 }
 
