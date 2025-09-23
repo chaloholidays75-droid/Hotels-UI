@@ -8,7 +8,7 @@ import {
   FaCheckCircle, FaExclamationTriangle, FaTimes
 } from 'react-icons/fa';
 import api from '../api/api';
-import { createHotelSale } from './hotelapi';
+import { createHotelSale } from '../api/hotelApi';
 
 const API_BASE = "https://backend.chaloholidayonline.com/api";
 const API_BASE_HOTEL = `${API_BASE}/hotels`;
