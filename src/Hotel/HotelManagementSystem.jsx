@@ -1,31 +1,138 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { FaCheckCircle, FaTimesCircle, FaTimes } from 'react-icons/fa';
+import React, { useState, useCallback, useEffect } from 'react';
+// import StatsBar from '../components/statsbar';
 import AddHotelTab from './AddHotelTab';
 import HotelSalesList from './HotelSalesList';
+import { FaCheckCircle, FaTimesCircle, FaTimes } from 'react-icons/fa';
 import ViewHotelModal from './ViewHotelModal';
 import EditHotelModal from './EditHotelModal';
 import { getHotelSales, toggleHotelStatus, updateHotelSale } from '../api/hotelApi';
+import Modal from './Modal';
 import './HotelManagementSystem.css';
 
+// Main Component
 const HotelManagementSystem = () => {
-  const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const [activeView, setActiveView] = useState('view');
-  const [userRole, setUserRole] = useState('employee');
-  const [isRoleLoaded, setIsRoleLoaded] = useState(false);
   const [viewModal, setViewModal] = useState({ isOpen: false, hotel: null });
   const [editModal, setEditModal] = useState({ isOpen: false, hotel: null });
-  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [hotels, setHotels] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [userRole, setUserRole] = useState(''); // Will be populated from auth context or API
+  const [isRoleLoaded, setIsRoleLoaded] = useState(false);
 
-  // Load user role
+  // Simulate getting user role from authentication context
   useEffect(() => {
-    const role = localStorage.getItem('userRole')?.toLowerCase() || 'employee';
-    setUserRole(role);
-    setIsRoleLoaded(true);
+    const fetchUserRole = () => {
+      try {
+        // Check multiple possible storage locations and formats
+        let role = localStorage.getItem('userRole') || 
+                   localStorage.getItem('role') ||
+                   sessionStorage.getItem('userRole') ||
+                   sessionStorage.getItem('role');
+        
+        // If not found in storage, check if there's a user object
+        if (!role) {
+          const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+          if (userData) {
+            try {
+              const user = JSON.parse(userData);
+              role = user.role || user.userRole;
+            } catch (e) {
+              console.error("Error parsing user data:", e);
+            }
+          }
+        }
+        
+        // Default to employee if no role found
+        role = role || 'employee';
+        
+        // Normalize the role (case-insensitive)
+        const normalizedRole = role.toLowerCase().trim();
+        
+        // Map to expected values
+        if (normalizedRole.includes('admin')) {
+          role = 'admin';
+        } else if (normalizedRole.includes('employee')) {
+          role = 'employee';
+        }
+        
+        console.log("Setting user role to:", role);
+        setUserRole(role);
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+        setUserRole('employee');
+      } finally {
+        setIsRoleLoaded(true);
+      }
+    };
+    
+    fetchUserRole();
   }, []);
 
-  // Fetch hotels
-  const fetchHotels = async () => {
+  const showNotification = useCallback((message, type) => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => setNotification({ show: false, message: '', type: '' }), 5000);
+  }, []);
+
+  // Fetch hotels when switching to view tab
+  useEffect(() => {
+    if (activeView === 'view') {
+      fetchHotels();
+    }
+  }, [activeView]);
+
+  // const fetchHotels = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+  //     const API_BASE_COUNTRIES = "https://backend.chaloholidayonline.com/api/countries";
+  //     const API_BASE_CITIES = "https://backend.chaloholidayonline.com/api/cities/by-country";
+      
+  //     // Fetch hotels
+  //     const hotelRes = await fetch(API_BASE_HOTEL);
+  //     if (!hotelRes.ok) throw new Error(`Hotel fetch failed: ${hotelRes.status}`);
+  //     const hotelData = await hotelRes.json();
+
+  //     // Fetch countries
+  //     const countryRes = await fetch(API_BASE_COUNTRIES);
+  //     if (!countryRes.ok) throw new Error(`Countries fetch failed: ${countryRes.status}`);
+  //     const countryData = await countryRes.json();
+
+  //     // Fetch cities for each unique countryId
+  //     const cityPromises = [...new Set(hotelData.map(h => h.countryId))].map(countryId =>
+  //       fetch(`${API_BASE_CITIES}/${countryId}`).then(async res => {
+  //         if (!res.ok) throw new Error(`Cities fetch failed for country ${countryId}: ${res.status}`);
+  //         return res.json();
+  //       })
+  //     );
+  //     const citiesData = (await Promise.all(cityPromises)).flat();
+
+  //     // Create lookup maps
+  //     const countryMap = new Map(countryData.map(c => [c.id, c.name]));
+  //     const cityMap = new Map(citiesData.map(c => [c.id, c.name]));
+
+  //     // Map hotel data with country and city names
+  //     const adjustedData = hotelData.map(hotel => ({
+  //       ...hotel,
+  //       country: countryMap.get(hotel.countryId) || "Unknown Country",
+  //       city: cityMap.get(hotel.cityId) || "Unknown City",
+  //       salesPersons: Array.isArray(hotel.salesPersons) ? hotel.salesPersons : (hotel.salesPersonName ? [{ name: hotel.salesPersonName, email: hotel.salesPersonEmail, contact: hotel.salesPersonContact }] : []),
+  //       reservationPersons: Array.isArray(hotel.reservationPersons) ? hotel.reservationPersons : (hotel.reservationPersonName ? [{ name: hotel.reservationPersonName, email: hotel.reservationPersonEmail, contact: hotel.reservationPersonContact }] : []),
+  //       accountsPersons: Array.isArray(hotel.accountsPersons) ? hotel.accountsPersons : (hotel.accountsPersonName ? [{ name: hotel.accountsPersonName, email: hotel.accountsPersonEmail, contact: hotel.accountsPersonContact }] : []),
+  //       receptionPersons: Array.isArray(hotel.receptionPersons) ? hotel.receptionPersons : (hotel.receptionPersonName ? [{ name: hotel.receptionPersonName, email: hotel.receptionPersonEmail, contact: hotel.receptionPersonContact }] : []),
+  //       concierges: Array.isArray(hotel.concierges) ? hotel.concierges : (hotel.conciergeName ? [{ name: hotel.conciergeName, email: hotel.conciergeEmail, contact: hotel.conciergeContact }] : []),
+  //       isActive: hotel.isActive !== undefined ? hotel.isActive : true
+  //     }));
+
+  //     setHotels(adjustedData);
+  //   } catch (err) {
+  //     console.error("Error fetching hotels:", err);
+  //     showNotification(`Error fetching hotels: ${err.message}`, "error");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+    const fetchHotels = async () => {
     setLoading(true);
     try {
       const data = await getHotelSales();
@@ -37,41 +144,64 @@ const HotelManagementSystem = () => {
       setLoading(false);
     }
   };
+  const openViewModal = (hotel) => {
+    setViewModal({ isOpen: true, hotel });
+  };
 
-  useEffect(() => {
-    if (activeView === 'view') fetchHotels();
-  }, [activeView]);
+  const closeViewModal = () => {
+    setViewModal({ isOpen: false, hotel: null });
+  };
 
-  const showNotification = useCallback((message, type) => {
-    setNotification({ show: true, message, type });
-    setTimeout(() => setNotification({ show: false, message: '', type: '' }), 5000);
-  }, []);
-
-  // Modals
-  const openViewModal = hotel => setViewModal({ isOpen: true, hotel });
-  const closeViewModal = () => setViewModal({ isOpen: false, hotel: null });
-  const openEditModal = hotel => {
-    if (userRole !== 'admin') {
-      showNotification("Only admins can edit hotels", "error");
+  const openEditModal = (hotel) => {
+    // Check if user role is loaded
+    if (!isRoleLoaded) {
+      showNotification("Please wait while we verify your permissions.", "info");
       return;
     }
+    
+    // Check if user has admin role
+    if (userRole.toLowerCase() !== 'admin') {
+      showNotification("You don't have permission to edit hotels. Only admins can perform this action.", "error");
+      return;
+    }
+    
+    // Only allow editing active hotels
+    if (!hotel.isActive) {
+      showNotification("Cannot edit deactivated hotels. Please activate first.", "error");
+      return;
+    }
+    
     setEditModal({ isOpen: true, hotel });
   };
-  const closeEditModal = () => setEditModal({ isOpen: false, hotel: null });
 
-  const saveHotel = async hotel => {
+  const closeEditModal = () => {
+    setEditModal({ isOpen: false, hotel: null });
+  };
+
+  const saveHotel = async (hotel) => {
     try {
-      await updateHotelSale(hotel.id, hotel);
+      const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+      await fetch(`${API_BASE_HOTEL}/${hotel.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(hotel),
+      });
       closeEditModal();
-      fetchHotels();
+      fetchHotels(); // Refresh the list
       showNotification("Hotel updated successfully!", "success");
     } catch (err) {
-      console.error(err);
-      showNotification("Failed to update hotel", "error");
+      console.error("Error updating hotel:", err);
+      showNotification("Error updating hotel", "error");
     }
   };
 
-  const handleToggleHotelStatus = async (id, currentStatus) => {
+  // const toggleHotelStatus = async (id, currentStatus) => {
+  //   // Check if user role is loaded
+  //   if (!isRoleLoaded) {
+  //     showNotification("Please wait while we verify your permissions.", "info");
+  //     return;
+  //   }
+    const handleToggleHotelStatus = async (id, currentStatus) => {
     if (userRole !== 'admin') {
       showNotification("Only admins can change hotel status", "error");
       return;
@@ -85,48 +215,125 @@ const HotelManagementSystem = () => {
       showNotification("Failed to update hotel status", "error");
     }
   };
+    // Check if user has admin role
+    if (userRole.toLowerCase() !== 'admin') {
+      showNotification("You don't have permission to change hotel status. Only admins can perform this action.", "error");
+      return;
+    }
+    
+    const newStatus = !currentStatus;
+    
+    try {
+      const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+      await fetch(`${API_BASE_HOTEL}/${id}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: newStatus }),
+      });
+      
+      // Update local state
+      setHotels(prev => prev.map(h => 
+        h.id === id ? { ...h, isActive: newStatus } : h
+      ));
+      
+      showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
+    } catch (err) {
+      console.error("Error updating hotel status:", err);
+      showNotification("Error updating hotel status", "error");
+    }
+  };
 
-  const canAddHotel = (userRole === 'admin' || userRole === 'employee') && isRoleLoaded;
+  // Check if user can add hotels (both admin and employee can add)
+  const canAddHotel = (userRole.toLowerCase() === 'admin' || userRole.toLowerCase() === 'employee') && isRoleLoaded;
 
   return (
-    <div className="hms-page-content">
+    <div className="hms-page-content ">
+      {/* Notification System */}
       {notification.show && (
         <div className={`hms-notification ${notification.type}`}>
           <div className="hms-notification-content">
             <div className="hms-notification-icon">
               {notification.type === 'success' ? <FaCheckCircle /> : <FaTimesCircle />}
             </div>
-            <span>{notification.message}</span>
-            <button onClick={() => setNotification({ show: false, message: '', type: '' })}><FaTimes /></button>
+            <span className="hms-notification-message">{notification.message}</span>
+            <button 
+              className="hms-notification-close" 
+              onClick={() => setNotification({ show: false, message: '', type: '' })}
+              aria-label="Close notification"
+            >
+              <FaTimes />
+            </button>
           </div>
         </div>
       )}
-
+      
+      {/* Header Section */}
       <header className="hms-system-header">
-        <h1>Hotel Management System</h1>
-        <p>Manage hotel information, contacts, and facilities</p>
-        <div>Logged in as: <span className={`hms-role-${userRole}`}>{userRole}</span></div>
-        <div className="hms-nav-buttons">
-          <button disabled={!canAddHotel} onClick={() => canAddHotel && setActiveView('add')}>Add Hotel</button>
-          <button onClick={() => setActiveView('view')}>View Hotels ({hotels.length})</button>
+        <div className="hms-header-content">
+          <div className="hms-header-content-title">
+            <h1 className="hms-header-title">Hotel Management System</h1>
+            <p className="hms-header-subtitle">Manage hotel information, contacts, and facilities</p>
+            <div className="hms-user-role-badge">
+              {isRoleLoaded ? (
+                <>Logged in as: <span className={`hms-role-${userRole}`}>{userRole}</span></>
+              ) : (
+                <>Loading permissions...</>
+              )}
+            </div>
+          </div>
+          <div className="hms-nav-buttons">
+            <button 
+              className={`hms-nav-button ${activeView === 'add' ? 'hms-active' : ''} ${!canAddHotel ? 'hms-disabled' : ''}`} 
+              onClick={() => canAddHotel && setActiveView('add')}
+              title={!canAddHotel ? "You don't have permission to add hotels" : "Add new hotel"}
+              disabled={!canAddHotel}
+            >
+              <fml-icon name="add-outline" size="medium"></fml-icon> 
+              <span>Add Hotel</span>
+            </button>
+            <button 
+              className={`hms-nav-button ${activeView === 'view' ? 'hms-active' : ''}`} 
+              onClick={() => setActiveView('view')}
+            >
+              <fml-icon name="document-text-outline"></fml-icon>
+              <span>View Hotels ({hotels.length})</span>
+            </button>
+          </div>
         </div>
       </header>
-
+      
+      {/* Content Section */}
       <main className="hms-content">
         {activeView === 'add' && canAddHotel && <AddHotelTab showNotification={showNotification} />}
         {activeView === 'view' && (
-          <HotelSalesList
+          <HotelSalesList 
             hotels={hotels}
             loading={loading}
+            showNotification={showNotification}
             openViewModal={openViewModal}
             openEditModal={openEditModal}
             toggleHotelStatus={handleToggleHotelStatus}
+            userRole={userRole}
+            isRoleLoaded={isRoleLoaded}
           />
         )}
       </main>
 
-      {viewModal.isOpen && <ViewHotelModal hotel={viewModal.hotel} onClose={closeViewModal} />}
-      {editModal.isOpen && <EditHotelModal hotel={editModal.hotel} onSave={saveHotel} onCancel={closeEditModal} />}
+      {/* Modals */}
+      {viewModal.isOpen && (
+        <ViewHotelModal
+          hotel={viewModal.hotel}
+          onClose={closeViewModal}
+        />
+      )}
+
+      {editModal.isOpen && (
+        <EditHotelModal
+          hotel={editModal.hotel}
+          onSave={saveHotel}
+          onCancel={closeEditModal}
+        />
+      )}
     </div>
   );
 };
