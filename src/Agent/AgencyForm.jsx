@@ -96,23 +96,24 @@ const AgencyForm = ({ setActiveTab, setAgencies, agencies }) => {
     }
     
     // Check if email already exists in database
-if (name === 'userEmailId' && value) {
-  try {
-    const { data } = await agencyApi.get(`/agency/check-email?email=${encodeURIComponent(value)}`);
-    setExistingEmail(data.exists);
-  } catch (error) {
-    console.error("Error checking email:", error.response?.data || error.message);
-  }
-}
+    if (name === 'userEmailId' && value) {
+      try {
+        const exists = await agencyApi.checkEmailExists(value);
+        setExistingEmail(exists);
+      } catch (error) {
+        console.error("Error checking email:", error.response?.data || error.message);
+      }
+    }
 
-if (name === 'userName' && value) {
-  try {
-    const { data } = await agencyApi.get(`/agency/check-username?username=${encodeURIComponent(value)}`);
-    setExistingUsername(data.exists);
-  } catch (error) {
-    console.error("Error checking username:", error.response?.data || error.message);
-  }
-}
+    // ✅ Check if username already exists
+    if (name === 'userName' && value) {
+      try {
+        const exists = await agencyApi.checkUsernameExists(value);
+        setExistingUsername(exists);
+      } catch (error) {
+        console.error("Error checking username:", error.response?.data || error.message);
+      }
+    }
   };
 
   const checkPasswordStrength = (password) => {
