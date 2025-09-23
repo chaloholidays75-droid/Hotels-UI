@@ -499,7 +499,7 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
         } catch {
           console.warn("No JSON returned from server");
         }
-
+        console.log("Response data:", data);
         if (!response.ok) {
           throw new Error(data?.message || "Failed to save hotel");
         }
