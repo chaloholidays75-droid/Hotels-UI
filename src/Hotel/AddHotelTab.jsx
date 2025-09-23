@@ -493,24 +493,38 @@ const AddHotelTab = ({ showNotification, setActiveTab }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(safePayload),
       });
+      try {
+          data = await response.json();
+        } catch {
+          console.warn("No JSON returned from server");
+        }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to save hotel");
+        if (!response.ok) {
+          throw new Error(data?.message || "Failed to save hotel");
+        }
+
+        console.log("Hotel saved:", data);
+        setMessageBoxContent("Hotel information saved successfully!");
+        setShowSuccessMessage(true);
+        resetForm();
+      } catch (err) {
+        console.error(err);
+        setMessageBoxContent(`Error: ${err.message}`);
+        setShowErrorMessage(true);
       }
 
-      const data = await response.json();
-      console.log("Hotel saved:", data);
-      setMessageBoxContent("Hotel information saved successfully!");
-      setShowSuccessMessage(true);
-      resetForm();
-    } catch (err) {
-      console.error(err);
-      setMessageBoxContent(`Error: ${err.message}`);
-      setShowErrorMessage(true);
-    } finally {
-      setIsSubmitting(false);
-    }
+    //   const data = await response.json();
+    //   console.log("Hotel saved:", data);
+    //   setMessageBoxContent("Hotel information saved successfully!");
+    //   setShowSuccessMessage(true);
+    //   resetForm();
+    // } catch (err) {
+    //   console.error(err);
+    //   setMessageBoxContent(`Error: ${err.message}`);
+    //   setShowErrorMessage(true);
+    // } finally {
+    //   setIsSubmitting(false);
+    // }
   };
 
   // ================= Page Navigation =================
