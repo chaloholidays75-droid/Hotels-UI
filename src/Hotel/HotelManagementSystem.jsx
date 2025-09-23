@@ -178,29 +178,67 @@ const HotelManagementSystem = () => {
     setEditModal({ isOpen: false, hotel: null });
   };
 
-  const saveHotel = async (hotel) => {
+  // const saveHotel = async (hotel) => {
+  //   try {
+  //     const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+  //     await fetch(`${API_BASE_HOTEL}/${hotel.id}`, {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify(hotel),
+  //     });
+  //     closeEditModal();
+  //     fetchHotels(); // Refresh the list
+  //     showNotification("Hotel updated successfully!", "success");
+  //   } catch (err) {
+  //     console.error("Error updating hotel:", err);
+  //     showNotification("Error updating hotel", "error");
+  //   }
+  // };
+    const saveHotel = async hotel => {
     try {
-      const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
-      await fetch(`${API_BASE_HOTEL}/${hotel.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(hotel),
-      });
+      await updateHotelSale(hotel.id, hotel);
       closeEditModal();
-      fetchHotels(); // Refresh the list
+      fetchHotels();
       showNotification("Hotel updated successfully!", "success");
     } catch (err) {
-      console.error("Error updating hotel:", err);
-      showNotification("Error updating hotel", "error");
+      console.error(err);
+      showNotification("Failed to update hotel", "error");
     }
   };
-
   // const toggleHotelStatus = async (id, currentStatus) => {
   //   // Check if user role is loaded
   //   if (!isRoleLoaded) {
   //     showNotification("Please wait while we verify your permissions.", "info");
   //     return;
   //   }
+    
+  //   // Check if user has admin role
+  //   if (userRole.toLowerCase() !== 'admin') {
+  //     showNotification("You don't have permission to change hotel status. Only admins can perform this action.", "error");
+  //     return;
+  //   }
+    
+  //   const newStatus = !currentStatus;
+    
+  //   try {
+  //     const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
+  //     await fetch(`${API_BASE_HOTEL}/${id}/status`, {
+  //       method: "PUT",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ isActive: newStatus }),
+  //     });
+      
+  //     // Update local state
+  //     setHotels(prev => prev.map(h => 
+  //       h.id === id ? { ...h, isActive: newStatus } : h
+  //     ));
+      
+  //     showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
+  //   } catch (err) {
+  //     console.error("Error updating hotel status:", err);
+  //     showNotification("Error updating hotel status", "error");
+  //   }
+  // };
     const handleToggleHotelStatus = async (id, currentStatus) => {
     if (userRole !== 'admin') {
       showNotification("Only admins can change hotel status", "error");
@@ -213,33 +251,6 @@ const HotelManagementSystem = () => {
     } catch (err) {
       console.error(err);
       showNotification("Failed to update hotel status", "error");
-    }
-  };
-    // Check if user has admin role
-    if (userRole.toLowerCase() !== 'admin') {
-      showNotification("You don't have permission to change hotel status. Only admins can perform this action.", "error");
-      return;
-    }
-    
-    const newStatus = !currentStatus;
-    
-    try {
-      const API_BASE_HOTEL = "https://backend.chaloholidayonline.com/api/hotels";
-      await fetch(`${API_BASE_HOTEL}/${id}/status`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: newStatus }),
-      });
-      
-      // Update local state
-      setHotels(prev => prev.map(h => 
-        h.id === id ? { ...h, isActive: newStatus } : h
-      ));
-      
-      showNotification(`Hotel ${newStatus ? 'activated' : 'deactivated'} successfully!`, "success");
-    } catch (err) {
-      console.error("Error updating hotel status:", err);
-      showNotification("Error updating hotel status", "error");
     }
   };
 
