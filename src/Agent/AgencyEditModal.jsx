@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { updateAgency } from '../api/agencyApi';
 
 const AgencyEditModal = ({ editModal,setEditModal, closeEditModal, setAgencies, agencies }) => {
   const [showNotification, setShowNotification] = useState('');
@@ -115,6 +116,86 @@ const AgencyEditModal = ({ editModal,setEditModal, closeEditModal, setAgencies, 
     return error.message || "An unknown error occurred";
   };
 
+// const handleEditSubmit = async (e) => {
+//   e.preventDefault();
+//   if (!editModal.agency) return;
+
+//   if (!editModal.agency.id || isNaN(editModal.agency.id)) {
+//     alert("Invalid agency ID");
+//     return;
+//   }
+
+//   if (!validateEditForm()) return;
+
+//   // Prepare payload for backend
+//   const payload = {
+//     ...editModal.agency,
+//     countryId: editModal.agency.country?.id,
+//     cityId: editModal.agency.city?.id,
+//   };
+
+//   // Remove nested objects before sending
+//   delete payload.country;
+//   delete payload.city;
+
+//   // Remove undefined or null values
+//   Object.keys(payload).forEach((key) => {
+//     if (payload[key] === undefined || payload[key] === null) {
+//       delete payload[key];
+//     }
+//   });
+
+//   try {
+//     const res = await fetch(
+//       `https://backend.chaloholidayonline.com/api/agency/${editModal.agency.id}`,
+//       {
+//         method: "PUT",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify(payload),
+//       }
+//     );
+
+//     if (res.ok) {
+//       const contentLength = res.headers.get("content-length");
+//       let updated;
+
+//       if (contentLength && parseInt(contentLength) > 0) {
+//         updated = await res.json();
+//       } else {
+//         updated = {
+//           ...payload,
+//           updatedAt: new Date().toISOString(),
+//         };
+//       }
+
+//       // Keep country and city objects for UI display
+//       setAgencies((prev) =>
+//         prev.map((a) =>
+//           a.id === updated.id
+//             ? { ...updated, country: editModal.agency.country, city: editModal.agency.city }
+//             : a
+//         )
+//       );
+
+//       alert("Agency updated successfully!");
+//       closeEditModal();
+//     } else {
+//       let errorData;
+//       try {
+//         errorData = await res.json();
+//       } catch {
+//         errorData = { message: await res.text() || "Unknown error" };
+//       }
+
+//       console.error("Update failed:", errorData);
+//       alert(`Failed to update agency: ${errorData.message || "Unknown error"}`);
+//     }
+//   } catch (error) {
+//     const message = parseErrorMessage(error);
+//     console.error("Error details:", error);
+//     alert(`Error: ${message}`);
+//   }
+// };
 const handleEditSubmit = async (e) => {
   e.preventDefault();
   if (!editModal.agency) return;
@@ -126,76 +207,43 @@ const handleEditSubmit = async (e) => {
 
   if (!validateEditForm()) return;
 
-  // Prepare payload for backend
+  // Prepare payload
   const payload = {
     ...editModal.agency,
     countryId: editModal.agency.country?.id,
     cityId: editModal.agency.city?.id,
   };
 
-  // Remove nested objects before sending
+  // Remove nested objects
   delete payload.country;
   delete payload.city;
 
-  // Remove undefined or null values
-  Object.keys(payload).forEach((key) => {
-    if (payload[key] === undefined || payload[key] === null) {
-      delete payload[key];
-    }
+  // Remove undefined/null
+  Object.keys(payload).forEach(key => {
+    if (payload[key] === undefined || payload[key] === null) delete payload[key];
   });
 
   try {
-    const res = await fetch(
-      `https://backend.chaloholidayonline.com/api/agency/${editModal.agency.id}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }
+    await updateAgency(editModal.agency.id, payload); // uses axios instance with token
+    alert("Agency updated successfully!");
+
+    // Update UI
+    setAgencies(prev =>
+      prev.map(a =>
+        a.id === editModal.agency.id
+          ? { ...payload, country: editModal.agency.country, city: editModal.agency.city }
+          : a
+      )
     );
 
-    if (res.ok) {
-      const contentLength = res.headers.get("content-length");
-      let updated;
-
-      if (contentLength && parseInt(contentLength) > 0) {
-        updated = await res.json();
-      } else {
-        updated = {
-          ...payload,
-          updatedAt: new Date().toISOString(),
-        };
-      }
-
-      // Keep country and city objects for UI display
-      setAgencies((prev) =>
-        prev.map((a) =>
-          a.id === updated.id
-            ? { ...updated, country: editModal.agency.country, city: editModal.agency.city }
-            : a
-        )
-      );
-
-      alert("Agency updated successfully!");
-      closeEditModal();
-    } else {
-      let errorData;
-      try {
-        errorData = await res.json();
-      } catch {
-        errorData = { message: await res.text() || "Unknown error" };
-      }
-
-      console.error("Update failed:", errorData);
-      alert(`Failed to update agency: ${errorData.message || "Unknown error"}`);
-    }
+    closeEditModal();
   } catch (error) {
-    const message = parseErrorMessage(error);
-    console.error("Error details:", error);
-    alert(`Error: ${message}`);
+    console.error("Failed to update agency:", error.response?.data || error.message);
+    alert(
+      `Failed to update agency: ${error.response?.data?.message || error.message || "Unknown error"}`
+    );
   }
 };
-
 
   return (
     <div className="modal-overlay">
