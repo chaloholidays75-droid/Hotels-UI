@@ -15,18 +15,22 @@ export async function login(email, password) {
 }
 // ✅ Logout
 export async function logout() {
-  try {
-    const refreshToken = localStorage.getItem('refreshToken');
-    console.log("Before logout:", {
-      accessToken: localStorage.getItem('accessToken'),
-      refreshToken: refreshToken,
-      userRole: localStorage.getItem('userRole'),
-      userFullName: localStorage.getItem('userFullName')
-    });
+  const refreshToken = localStorage.getItem('refreshToken');
 
+  try {
     if (refreshToken) {
       await api.post('/auth/logout', { refreshToken });
     }
+  } catch (err) {
+    console.error('Logout failed:', err.response?.data || err.message);
+  } finally {
+    // Always clear tokens
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userFullName');
+  }
+}
 
     // Clear all local storage items
     localStorage.removeItem('accessToken');
