@@ -57,8 +57,13 @@ function Register() {
           formData.firstName,
           formData.lastName,
           formData.email,
-          formData.password
+          formData.password,
+          formData.role,
         );
+        
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userRole");
         navigate("/backend/login");
       } catch (err) {
         setErrors({
