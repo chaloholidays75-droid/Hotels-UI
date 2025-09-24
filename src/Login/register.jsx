@@ -22,6 +22,7 @@ const registerSchema = z.object({
   lastName: z.string().min(1, "Last name is required").max(50),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters").max(100),
+   role: z.string().min(1, "Role is required"),
 });
 
 function Register() {
@@ -30,6 +31,7 @@ function Register() {
     lastName: "",
     email: "",
     password: "",
+    role: "", 
   });
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
@@ -188,9 +190,26 @@ function Register() {
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </InputAdornment>
+                      
                     ),
                   }}
                 />
+                <TextField
+                  select
+                  label="Role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  error={!!errors.role}
+                  helperText={errors.role}
+                  variant="standard"
+                  fullWidth
+                  SelectProps={{ native: true }}
+                  >
+                  <option value="">Select role</option>
+                  <option value="Admin">Admin</option>
+                  <option value="User">User</option>
+                </TextField>
 
                 {errors.general && (
                   <Alert severity="error">{errors.general}</Alert>
