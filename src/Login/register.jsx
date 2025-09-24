@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { register, login } from "../api/authApi";
-import "./Register.css"; // We'll create this CSS file
+import "./Register.css"; // We'll update this CSS file
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -57,12 +57,11 @@ function Register() {
       <div className="register-card">
         <div className="register-header">
           <h2>Create Account</h2>
-          <p>Join us today and get started</p>
+          <p>Join our platform</p>
         </div>
         
         {error && (
           <div className="error-message">
-            <span className="error-icon">⚠️</span>
             {error}
           </div>
         )}
@@ -70,57 +69,51 @@ function Register() {
         <form onSubmit={handleSubmit} className="register-form">
           <div className="form-row">
             <div className="input-group">
-              <label htmlFor="firstName">First Name</label>
               <input 
                 type="text" 
-                id="firstName"
                 name="firstName" 
                 value={formData.firstName} 
                 onChange={handleChange}
-                placeholder="Enter your first name"
+                placeholder="First Name"
+                required
               />
             </div>
             <div className="input-group">
-              <label htmlFor="lastName">Last Name</label>
               <input 
                 type="text" 
-                id="lastName"
                 name="lastName" 
                 value={formData.lastName} 
                 onChange={handleChange}
-                placeholder="Enter your last name"
+                placeholder="Last Name"
+                required
               />
             </div>
           </div>
           
           <div className="input-group">
-            <label htmlFor="email">Email Address</label>
             <input 
               type="email" 
-              id="email"
               name="email" 
               value={formData.email} 
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder="Email Address"
+              required
             />
           </div>
           
           <div className="input-group">
-            <label htmlFor="password">Password</label>
             <input 
               type="password" 
-              id="password"
               name="password" 
               value={formData.password} 
               onChange={handleChange}
-              placeholder="Create a password"
+              placeholder="Password"
+              required
             />
           </div>
           
           <div className="input-group">
-            <label htmlFor="role">Account Type</label>
             <select 
-              id="role"
               name="role" 
               value={formData.role} 
               onChange={handleChange}
@@ -136,14 +129,7 @@ function Register() {
             className={`submit-button ${isLoading ? 'loading' : ''}`}
             disabled={isLoading}
           >
-            {isLoading ? (
-              <>
-                <span className="spinner"></span>
-                Creating Account...
-              </>
-            ) : (
-              "Create Account"
-            )}
+            {isLoading ? "Creating Account..." : "Create Account"}
           </button>
         </form>
         
