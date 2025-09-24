@@ -76,4 +76,4 @@ export async function checkAuth() {
     return { isAuthenticated: false, userFullName: null, userRole: 'employee' };
   }
 }
-export default authapi;
+export default api;
