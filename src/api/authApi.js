@@ -32,24 +32,6 @@ export async function logout() {
   }
 }
 
-    // Clear all local storage items
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userFullName');
-
-    console.log("After logout:", {
-      accessToken: localStorage.getItem('accessToken'),
-      refreshToken: localStorage.getItem('refreshToken'),
-      userRole: localStorage.getItem('userRole'),
-      userFullName: localStorage.getItem('userFullName')
-    });
-
-  } catch (err) {
-    console.error('Logout failed:', err.response?.data || err.message);
-  }
-}
-
 
 // ✅ Register
 export async function register(firstName, lastName, email, password ,role) {
