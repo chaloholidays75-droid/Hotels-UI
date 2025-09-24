@@ -208,7 +208,7 @@ function Register() {
                   >
                   <option value="">Select role</option>
                   <option value="Admin">Admin</option>
-                  <option value="User">User</option>
+                  <option value="Employee">Employee</option>
                 </TextField>
 
                 {errors.general && (
