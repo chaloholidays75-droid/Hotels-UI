@@ -39,10 +39,27 @@ const Sidebar = ( {onLogout }) => {
     document.body.classList.toggle('sb-collapsed', isCollapsed);
   }, [isCollapsed]);
 
-  const handleLogout = () => {
-    if (onLogout) onLogout(); // ✅ calls App's logout
-    navigate('/backend/login', { replace: true }); // ✅ redirect
-  };
+const handleLogout = async () => {
+  try {
+    // Optional: call backend to revoke refresh token
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken) {
+      await api.post('/auth/logout', { refreshToken });
+    }
+  } catch (err) {
+    console.warn("Failed to revoke token on server:", err);
+  }
+
+  // Clear local storage
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('userRole');
+  localStorage.removeItem('userFullName');
+
+  if (onLogout) onLogout(); 
+  navigate('/backend/login', { replace: true }); 
+};
+
 
   return (
     <div className={`sb-sidebar ${isCollapsed ? 'sb-collapsed' : ''}`}>
