@@ -39,4 +39,4 @@ api.interceptors.response.use(
   }
 );
 
-export default apiinstance;
+export default api;
