@@ -8,7 +8,7 @@ export default function Register() {
     lastName: "",
     email: "",
     password: "",
-    role: "Employee", // default role
+    role: " ", // default role
   });
 
   const [error, setError] = useState("");
