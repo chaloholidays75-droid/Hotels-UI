@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import { z } from "zod";
-import { register } from "../api/authApi";
+import { register, login } from "../api/authApi"; // import login too
 import {
   Box,
   Button,
@@ -14,7 +14,6 @@ import {
   IconButton,
 } from "@mui/material";
 import { Person, Email, Lock, Visibility, VisibilityOff } from "@mui/icons-material";
-import { fontFamily } from "@mui/system";
 
 // ✅ Validation schema
 const registerSchema = z.object({
@@ -22,7 +21,7 @@ const registerSchema = z.object({
   lastName: z.string().min(1, "Last name is required").max(50),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters").max(100),
-   role: z.string().min(1, "Role is required"),
+  role: z.string().min(1, "Role is required"),
 });
 
 function Register() {
@@ -52,19 +51,26 @@ function Register() {
         setErrors(result.error.flatten().fieldErrors);
         return;
       }
+
       try {
+        // 1️⃣ Register user
         await register(
           formData.firstName,
           formData.lastName,
           formData.email,
           formData.password,
-          formData.role,
+          formData.role || "Employee"
         );
-        
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("userRole");
-        navigate("/backend/login");
+
+        // 2️⃣ Automatically log in new user
+        const loginData = await login(formData.email, formData.password);
+
+        // 3️⃣ Save tokens and role correctly
+        localStorage.setItem("accessToken", loginData.accessToken);
+        localStorage.setItem("userRole", formData.role || "Employee");
+
+        // 4️⃣ Navigate to dashboard or main page
+        navigate("/backend/dashboard"); // adjust route as needed
       } catch (err) {
         setErrors({
           general: "Registration failed: " + (err?.message || "Unknown error"),
@@ -76,7 +82,7 @@ function Register() {
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
-      {/* Left Side - Form (20%) */}
+      {/* Left Side - Form */}
       <Box
         sx={{
           flex: 2,
@@ -90,15 +96,8 @@ function Register() {
       >
         <Box sx={{ width: "100%", maxWidth: 400 }}>
           <Stack spacing={4}>
-            {/* Header */}
             <Box>
-              <Typography
-                variant="h3"
-                fontWeight="700"
-                color="text.primary"
-                fontFamily={'poppins'}
-                gutterBottom
-              >
+              <Typography variant="h3" fontWeight="700" gutterBottom>
                 Create Account
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -106,13 +105,12 @@ function Register() {
               </Typography>
             </Box>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} >
+            <form onSubmit={handleSubmit}>
               <Stack spacing={3}>
+                {/* First Name */}
                 <TextField
                   label="First Name"
                   name="firstName"
-                  style={{ fontFamily: "Poppins" }}
                   value={formData.firstName}
                   onChange={handleChange}
                   error={!!errors.firstName}
@@ -120,7 +118,6 @@ function Register() {
                   variant="standard"
                   fullWidth
                   InputProps={{
-                    sx: {fontFamily :"Poppins"},
                     startAdornment: (
                       <InputAdornment position="start">
                         <Person color="action" />
@@ -129,6 +126,7 @@ function Register() {
                   }}
                 />
 
+                {/* Last Name */}
                 <TextField
                   label="Last Name"
                   name="lastName"
@@ -139,7 +137,6 @@ function Register() {
                   variant="standard"
                   fullWidth
                   InputProps={{
-                    sx: {fontFamily :"Poppins"},
                     startAdornment: (
                       <InputAdornment position="start">
                         <Person color="action" />
@@ -148,6 +145,7 @@ function Register() {
                   }}
                 />
 
+                {/* Email */}
                 <TextField
                   label="Email Address"
                   type="email"
@@ -159,7 +157,6 @@ function Register() {
                   variant="standard"
                   fullWidth
                   InputProps={{
-                    sx: {fontFamily :"Poppins"},
                     startAdornment: (
                       <InputAdornment position="start">
                         <Email color="action" />
@@ -168,9 +165,9 @@ function Register() {
                   }}
                 />
 
+                {/* Password */}
                 <TextField
                   label="Password"
-                  style={{ fontFamily: "Poppins" }}
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
@@ -180,7 +177,6 @@ function Register() {
                   variant="standard"
                   fullWidth
                   InputProps={{
-                    sx: {fontFamily :"Poppins"},
                     startAdornment: (
                       <InputAdornment position="start">
                         <Lock color="action" />
@@ -195,10 +191,11 @@ function Register() {
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </InputAdornment>
-                      
                     ),
                   }}
                 />
+
+                {/* Role */}
                 <TextField
                   select
                   label="Role"
@@ -210,55 +207,23 @@ function Register() {
                   variant="standard"
                   fullWidth
                   SelectProps={{ native: true }}
-                  >
+                >
                   <option value="">Select role</option>
                   <option value="Admin">Admin</option>
                   <option value="Employee">Employee</option>
                 </TextField>
 
-                {errors.general && (
-                  <Alert severity="error">{errors.general}</Alert>
-                )}
+                {errors.general && <Alert severity="error">{errors.general}</Alert>}
 
-                <Button
-                  type="submit"
-                  variant="contained"
-                  fullWidth
-                  sx={{
-                    py: 1.5,
-                    fontWeight: 600,
-                    textTransform: "none",
-                    fontSize: "1rem",
-                    background:
-                      '#1e2877ff',
-                      color:
-                      'white',
-                      borderRadius:
-                      '50px',
-                    "&:hover": {
-                      color:
-                        '#6a11cb',
-                      border:
-                      '1px solid #6a11cb',
-                      backgroundColor:
-                      'white'
-                    },
-                  }}
-                >
+                <Button type="submit" variant="contained" fullWidth>
                   Sign Up
                 </Button>
               </Stack>
             </form>
 
-            {/* Footer */}
             <Typography variant="body2" textAlign="center">
               Already have an account?{" "}
-              <Link
-                component={RouterLink}
-                to="/backend/login"
-                underline="hover"
-                sx={{ fontWeight: 600 }}
-              >
+              <Link component={RouterLink} to="/backend/login" underline="hover">
                 Sign In
               </Link>
             </Typography>
@@ -266,7 +231,7 @@ function Register() {
         </Box>
       </Box>
 
-      {/* Right Side - Image (80%) */}
+      {/* Right Side Image */}
       <Box
         sx={{
           flex: 8,
