@@ -15,7 +15,7 @@ export async function login(email, password) {
 }
 
 // ✅ Register
-export async function register(firstName, lastName, email, password) {
+export async function register(firstName, lastName, email, password ,role) {
   try {
     await api.post('/auth/register', { firstName, lastName, email, password , role }); 
     return true;
