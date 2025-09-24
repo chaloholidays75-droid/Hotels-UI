@@ -13,6 +13,23 @@ export async function login(email, password) {
     throw new Error(err.response?.data?.message || 'Login failed');
   }
 }
+// ✅ Logout
+export async function logout() {
+  try {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) return;
+
+    await api.post('/auth/logout', { refreshToken });
+
+    // Clear all local storage items
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userFullName');
+  } catch (err) {
+    console.error('Logout failed:', err.response?.data || err.message);
+  }
+}
 
 // ✅ Register
 export async function register(firstName, lastName, email, password ,role) {

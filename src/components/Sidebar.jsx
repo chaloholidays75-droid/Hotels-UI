@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './sidebar.css';
-import api from '../api/api';
+import { logout } from '../api/authApi';
 
 const Sidebar = ( {onLogout }) => {
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -40,26 +40,10 @@ const Sidebar = ( {onLogout }) => {
   }, [isCollapsed]);
 
 const handleLogout = async () => {
-  try {
-    // Optional: call backend to revoke refresh token
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (refreshToken) {
-      await api.post('/auth/logout', { refreshToken });
-    }
-  } catch (err) {
-    console.warn("Failed to revoke token on server:", err);
-  }
-
-  // Clear local storage
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('userRole');
-  localStorage.removeItem('userFullName');
-
-  if (onLogout) onLogout(); 
-  navigate('/backend/login', { replace: true }); 
+  await logout();          // ✅ call backend and clear tokens
+  if (onLogout) onLogout(); // call parent handler if any
+  navigate('/backend/login', { replace: true }); // redirect to login
 };
-
 
   return (
     <div className={`sb-sidebar ${isCollapsed ? 'sb-collapsed' : ''}`}>
