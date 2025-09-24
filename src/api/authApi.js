@@ -7,7 +7,7 @@ export async function login(email, password) {
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('userRole', data.userRole || 'employee'); // save role
-    return { userFullName: data.userFullName, accessToken: data.accessToken };
+    return data;
   } catch (err) {
     console.error('Login failed:', err.response?.data || err.message);
     throw new Error(err.response?.data?.message || 'Login failed');
@@ -90,4 +90,4 @@ export async function checkAuth() {
     return { isAuthenticated: false, userFullName: null, userRole: 'employee' };
   }
 }
-export default api;
+export default authapi;

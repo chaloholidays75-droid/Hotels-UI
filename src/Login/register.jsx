@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { register, login } from "../api/authApi";
-import "./Register.css"; // We'll update this CSS file
+import { useNavigate } from "react-router-dom";
+import { register } from "../api/authApi";
 
-function Register() {
+export default function Register() {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -18,7 +17,7 @@ function Register() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData({ ...formData, [name]: value });
     setError("");
   };
 
@@ -27,120 +26,72 @@ function Register() {
     setIsLoading(true);
 
     // Simple validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.role) {
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
       setError("All fields are required");
       setIsLoading(false);
       return;
     }
 
     try {
-      console.log("Register payload:", formData); // debug
+      console.log("Register payload:", formData);
 
-      // Register user
-      await register(formData.firstName, formData.lastName, formData.email, formData.password, formData.role);
+      // Call register API
+      await register(
+        formData.firstName,
+        formData.lastName,
+        formData.email,
+        formData.password,
+        formData.role
+      );
 
-      // Login user
-      const loginData = await login(formData.email, formData.password);
-      localStorage.setItem("accessToken", loginData.accessToken);
-      localStorage.setItem("userRole", formData.role);
-
-      navigate("/backend/login"); // redirect to login
+      alert("Registration successful!");
+      navigate("/backend/login"); // redirect to login page
     } catch (err) {
-      setError(err?.message || "Registration failed");
+      setError(err.message || "Registration failed");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="register-container">
-      <div className="register-card">
-        <div className="register-header">
-          <h2>Create Account</h2>
-          <p>Join our platform</p>
-        </div>
-        
-        {error && (
-          <div className="error-message">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="register-form">
-          <div className="form-row">
-            <div className="input-group">
-              <input 
-                type="text" 
-                name="firstName" 
-                value={formData.firstName} 
-                onChange={handleChange}
-                placeholder="First Name"
-                required
-              />
-            </div>
-            <div className="input-group">
-              <input 
-                type="text" 
-                name="lastName" 
-                value={formData.lastName} 
-                onChange={handleChange}
-                placeholder="Last Name"
-                required
-              />
-            </div>
-          </div>
-          
-          <div className="input-group">
-            <input 
-              type="email" 
-              name="email" 
-              value={formData.email} 
-              onChange={handleChange}
-              placeholder="Email Address"
-              required
-            />
-          </div>
-          
-          <div className="input-group">
-            <input 
-              type="password" 
-              name="password" 
-              value={formData.password} 
-              onChange={handleChange}
-              placeholder="Password"
-              required
-            />
-          </div>
-          
-          <div className="input-group">
-            <select 
-              name="role" 
-              value={formData.role} 
-              onChange={handleChange}
-              className="role-select"
-            >
-              <option value="Employee">Employee</option>
-              <option value="Admin">Admin</option>
-            </select>
-          </div>
-          
-          <button 
-            type="submit" 
-            className={`submit-button ${isLoading ? 'loading' : ''}`}
-            disabled={isLoading}
-          >
-            {isLoading ? "Creating Account..." : "Create Account"}
-          </button>
-        </form>
-        
-        <div className="login-redirect">
-          <p>
-            Already have an account? <Link to="/backend/login" className="login-link">Sign In</Link>
-          </p>
-        </div>
-      </div>
+    <div>
+      <h2>Register</h2>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <input
+          name="firstName"
+          placeholder="First Name"
+          value={formData.firstName}
+          onChange={handleChange}
+        />
+        <input
+          name="lastName"
+          placeholder="Last Name"
+          value={formData.lastName}
+          onChange={handleChange}
+        />
+        <input
+          name="email"
+          type="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+        />
+        <input
+          name="password"
+          type="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+        />
+        <select name="role" value={formData.role} onChange={handleChange}>
+          <option value="Employee">Employee</option>
+          <option value="Admin">Admin</option>
+        </select>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? "Registering..." : "Register"}
+        </button>
+      </form>
     </div>
   );
 }
-
-export default Register;
