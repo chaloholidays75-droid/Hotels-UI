@@ -5,14 +5,18 @@ import AgencyViewModal from './AgencyViewModal';
 import AgencyEditModal from './AgencyEditModal';
 import './AgencyManagement.css';
 import agencyApi from '../api/agencyApi';
+import { AuthContext } from '../context/AuthContext';
 
 const AgencyManagement = () => {
+    const { user } = useContext(AuthContext);
+  const userRole = user?.role || 'employee';
+ 
   const [activeTab, setActiveTab] = useState('view');
   const [agencies, setAgencies] = useState([]);
   const [viewModal, setViewModal] = useState({ isOpen: false, agency: null });
   const [editModal, setEditModal] = useState({ isOpen: false, agency: null });
   const [loading, setLoading] = useState(false);
-  const [userRole, setUserRole] = useState('');
+  
 
   // Get user role from localStorage
   useEffect(() => {
