@@ -20,7 +20,7 @@ const HotelManagementSystem = () => {
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
   // const [userRole, setUserRole] = useState(''); // Will be populated from auth context or API
-  const [isRoleLoaded, setIsRoleLoaded] = useState(false);
+  // const [isRoleLoaded, setIsRoleLoaded] = useState(false);
 
   // Simulate getting user role from authentication context
   const { user } = useContext(AuthContext);
@@ -212,10 +212,10 @@ const fetchHotels = async () => {
 
   const openEditModal = (hotel) => {
     // Check if user role is loaded
-    if (!isRoleLoaded) {
-      showNotification("Please wait while we verify your permissions.", "info");
-      return;
-    }
+    // if (!isRoleLoaded) {
+    //   showNotification("Please wait while we verify your permissions.", "info");
+    //   return;
+    // }
     
     // Check if user has admin role
     if (userRole.toLowerCase() !== 'admin') {
@@ -313,7 +313,7 @@ const fetchHotels = async () => {
   };
 
   // Check if user can add hotels (both admin and employee can add)
-  const canAddHotel = (userRole.toLowerCase() === 'admin' || userRole.toLowerCase() === 'employee') && isRoleLoaded;
+  const canAddHotel = (userRole.toLowerCase() === 'admin' || userRole.toLowerCase() === 'employee') ;
 
   return (
     <div className="hms-page-content ">
@@ -343,11 +343,7 @@ const fetchHotels = async () => {
             <h1 className="hms-header-title">Hotel Management System</h1>
             <p className="hms-header-subtitle">Manage hotel information, contacts, and facilities</p>
             <div className="hms-user-role-badge">
-              {isRoleLoaded ? (
-                <>Logged in as: <span className={`hms-role-${userRole}`}>{userRole}</span></>
-              ) : (
-                <>Loading permissions...</>
-              )}
+              Logged in as: <span className={`role-${userRole.toLowerCase()}`}>{userRole}</span>
             </div>
           </div>
           <div className="hms-nav-buttons">
@@ -383,7 +379,7 @@ const fetchHotels = async () => {
             openEditModal={openEditModal}
             toggleHotelStatus={handleToggleHotelStatus}
             userRole={userRole}
-            isRoleLoaded={isRoleLoaded}
+         
           />
         )}
       </main>
