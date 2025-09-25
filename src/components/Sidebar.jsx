@@ -27,7 +27,7 @@ const Sidebar = ({ onLogout }) => {
     if (onLogout) onLogout();
     navigate('/backend/login', { replace: true });
   };
-  console.log("User role:", user.role);
+  
 
   const menuItems = [
     { id: 1, name: 'Dashboard', icon: <fml-icon name="analytics-outline"></fml-icon>, path: '/backend/product/dashboard' },
