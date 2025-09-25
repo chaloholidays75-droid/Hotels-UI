@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
       try {
         const { isAuthenticated, userFullName, role } = await checkAuth();
         setIsAuthenticated(isAuthenticated);
-        setUser({ name: userFullName, role: role?.toLowerCase() || "employee" });
+        setUser({ name: userFullName, role: role || "Employee" });
       } catch {
         setIsAuthenticated(false);
         setUser(null);
