@@ -1,31 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './sidebar.css';
-import { logout } from '../api/authApi';
+import { AuthContext } from '../context/AuthContext.jsx';
 
-const Sidebar = ( {onLogout }) => {
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    return localStorage.getItem('sidebarCollapsed') === 'true';
-  });
-  
-  const [userInfo, setUserInfo] = useState({
-    name: localStorage.getItem('userFullName') || "User",
-    role: localStorage.getItem('userRole') || "Guest",
-  });
+const Sidebar = ({ onLogout }) => {
+  const { user, logout } = useContext(AuthContext); // ✅ get user from context
+  const [isCollapsed, setIsCollapsed] = useState(() => localStorage.getItem('sidebarCollapsed') === 'true');
   const [hoveredItem, setHoveredItem] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
-    useEffect(() => {
-    // If role/name changes in localStorage (like after login), sync them
-    const fullName = localStorage.getItem('userFullName') || "User";
-    const role = localStorage.getItem('userRole') || "Guest";
-    setUserInfo({ name: fullName, role });
-  }, []);
-  const menuItems = [
-    { id: 1, name: 'Dashboard', icon: <fml-icon name="analytics-outline"></fml-icon>, path: '/backend/product/dashboard' },
-    { id: 2, name: 'Hotel', icon: <fml-icon name="pricetag-outline"></fml-icon>, path: '/backend/product/hotel' },
-    { id: 3, name: 'Agency', icon: <fml-icon name="people-outline"></fml-icon>, path: '/backend/product/agency' },
-  ];
 
   const toggleSidebar = () => {
     setIsCollapsed(prev => {
@@ -39,11 +22,17 @@ const Sidebar = ( {onLogout }) => {
     document.body.classList.toggle('sb-collapsed', isCollapsed);
   }, [isCollapsed]);
 
-const handleLogout = async () => {
-  await logout();          // ✅ call backend and clear tokens
-  if (onLogout) onLogout(); // call parent handler if any
-  navigate('/backend/login', { replace: true }); // redirect to login
-};
+  const handleLogout = async () => {
+    if (logout) logout(); // logout from context
+    if (onLogout) onLogout();
+    navigate('/backend/login', { replace: true });
+  };
+
+  const menuItems = [
+    { id: 1, name: 'Dashboard', icon: <fml-icon name="analytics-outline"></fml-icon>, path: '/backend/product/dashboard' },
+    { id: 2, name: 'Hotel', icon: <fml-icon name="pricetag-outline"></fml-icon>, path: '/backend/product/hotel' },
+    { id: 3, name: 'Agency', icon: <fml-icon name="people-outline"></fml-icon>, path: '/backend/product/agency' },
+  ];
 
   return (
     <div className={`sb-sidebar ${isCollapsed ? 'sb-collapsed' : ''}`}>
@@ -95,14 +84,14 @@ const handleLogout = async () => {
         <div className="sb-user-profile">
           <div className="sb-avatar">
             <img
-              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(userInfo.name)}&background=7269ef&color=fff`}
-              alt={userInfo.name}
+              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "User")}&background=7269ef&color=fff`}
+              alt={user?.name || "User"}
             />
           </div>
           {!isCollapsed && (
             <div className="sb-user-info">
-              <h4>{userInfo.name}</h4>
-              <p>{userInfo.role}</p>
+              <h4>{user?.name || "User"}</h4>
+              <p>{user?.role || "Guest"}</p>
             </div>
           )}
         </div>
@@ -116,3 +105,15 @@ const handleLogout = async () => {
 };
 
 export default Sidebar;
+// --- IGNORE ---
+// Context for Auth
+// import { createContext, useState, useEffect } from 'react';
+// import { checkAuth } from '../api/authApi';
+// export const AuthContext = createContext();
+// export const AuthProvider = ({ children }) => {
+//   const [user, setUser] = useState(null); // { name, role }
+//   const [isAuthenticated, setIsAuthenticated] = useState(false);
+//   const [isLoading, setIsLoading] = useState(true);
+//   useEffect(() => {
+//     const verifyAuth = async () => {
+//       try {

@@ -1,33 +1,39 @@
-// src/context/AuthContext.js
+// context/AuthContext.jsx
 import React, { createContext, useState, useEffect } from "react";
+import { checkAuth } from "../api/authApi";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState({
-    name: localStorage.getItem("userFullName") || "User",
-    role: localStorage.getItem("userRole") || "Guest",
-  });
+  const [user, setUser] = useState(null); // { name, role }
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Keep localStorage and state in sync
   useEffect(() => {
-    localStorage.setItem("userFullName", user.name);
-    localStorage.setItem("userRole", user.role);
-  }, [user]);
+    const verifyAuth = async () => {
+      try {
+        const { isAuthenticated, userFullName, role } = await checkAuth();
+        setIsAuthenticated(isAuthenticated);
+        setUser({ name: userFullName, role: role?.toLowerCase() || "employee" });
+      } catch {
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    verifyAuth();
+  }, []);
 
-  const loginUser = (data) => {
-    setUser({ name: data.userFullName, role: data.role });
-    localStorage.setItem("accessToken", data.accessToken);
-    localStorage.setItem("refreshToken", data.refreshToken);
-  };
-
-  const logoutUser = () => {
-    setUser({ name: "User", role: "Guest" });
-    localStorage.clear();
+  const logout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    setIsAuthenticated(false);
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loginUser, logoutUser }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, logout }}>
       {children}
     </AuthContext.Provider>
   );
