@@ -76,4 +76,15 @@ export async function checkAuth() {
     return { isAuthenticated: false, userFullName: null, userRole: 'employee' };
   }
 }
+export const checkAuth = async () => {
+  const token = localStorage.getItem("accessToken");
+  const response = await axios.get("/api/auth/check", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};
+
+export const logoutApi = async ({ refreshToken }) => {
+  return axios.post("/api/auth/logout", { refreshToken });
+};
 export default api;

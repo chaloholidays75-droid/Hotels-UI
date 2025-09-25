@@ -22,11 +22,18 @@ const Sidebar = ({ onLogout }) => {
     document.body.classList.toggle('sb-collapsed', isCollapsed);
   }, [isCollapsed]);
 
-  const handleLogout = async () => {
-    if (logout) logout(); // logout from context
-    if (onLogout) onLogout();
+const handleLogout = async () => {
+  try {
+    await logout(); // revoke tokens + clear context
+    if (onLogout) onLogout(); // optional callback
     navigate('/backend/login', { replace: true });
-  };
+  } catch (err) {
+    console.error("Logout failed:", err);
+    // fallback: still redirect
+    navigate('/backend/login', { replace: true });
+  }
+};
+
   
 
   const menuItems = [
