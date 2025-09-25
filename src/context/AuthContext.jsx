@@ -9,20 +9,18 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-
 useEffect(() => {
   const verifyAuth = async () => {
     try {
-      const response = await checkAuth(); // call API
-      console.log("Raw user data from backend:", response); // ✅ log full response
+      const response = await checkAuth();
+      console.log("Raw user data from backend:", response);
 
-      const { isAuthenticated, user } = response;
+      const { isAuthenticated, userFullName, userRole } = response;
+
       setIsAuthenticated(isAuthenticated);
-
-      // Construct user object for frontend
       setUser({
-        name: `${user.firstName} ${user.lastName}`,
-        role: user.role || "Employee"
+        name: userFullName,
+        role: userRole || "Employee", // ✅ use userRole from backend
       });
 
     } catch (err) {
