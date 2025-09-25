@@ -14,7 +14,7 @@ export async function login(email, password) {
   }
 }
 // ✅ Logout
-export async function logout() {
+export async function logoutApi() {
   const refreshToken = localStorage.getItem('refreshToken');
 
   try {
@@ -76,5 +76,4 @@ export async function checkAuth() {
     return { isAuthenticated: false, userFullName: null, userRole: 'employee' };
   }
 }
-
 export default api;
