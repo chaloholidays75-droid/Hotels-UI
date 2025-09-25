@@ -105,15 +105,3 @@ const Sidebar = ({ onLogout }) => {
 };
 
 export default Sidebar;
-// --- IGNORE ---
-// Context for Auth
-// import { createContext, useState, useEffect } from 'react';
-// import { checkAuth } from '../api/authApi';
-// export const AuthContext = createContext();
-// export const AuthProvider = ({ children }) => {
-//   const [user, setUser] = useState(null); // { name, role }
-//   const [isAuthenticated, setIsAuthenticated] = useState(false);
-//   const [isLoading, setIsLoading] = useState(true);
-//   useEffect(() => {
-//     const verifyAuth = async () => {
-//       try {
