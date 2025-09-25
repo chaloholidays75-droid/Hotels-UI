@@ -85,6 +85,7 @@ export default function Register() {
           onChange={handleChange}
         />
         <select name="role" value={formData.role} onChange={handleChange}>
+          <option value="">Selecy an option</option>
           <option value="Employee">Employee</option>
           <option value="Admin">Admin</option>
         </select>
