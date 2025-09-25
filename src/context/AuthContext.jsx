@@ -10,24 +10,30 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
 
-    useEffect(() => {
-      const verifyAuth = async () => {
-        try {
-          const { isAuthenticated, user } = await checkAuth(); // get full user object
-          setIsAuthenticated(isAuthenticated);
-          setUser({
-            name: `${user.firstName} ${user.lastName}`, // combine names
-            role: user.role || "Employee"               // use actual role
-          });
-        } catch {
-          setIsAuthenticated(false);
-          setUser(null);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      verifyAuth();
-    }, []);
+useEffect(() => {
+  const verifyAuth = async () => {
+    try {
+      const response = await checkAuth(); // call API
+      console.log("Raw user data from backend:", response); // ✅ log full response
+
+      const { isAuthenticated, user } = response;
+      setIsAuthenticated(isAuthenticated);
+
+      // Construct user object for frontend
+      setUser({
+        name: `${user.firstName} ${user.lastName}`,
+        role: user.role || "Employee"
+      });
+
+    } catch (err) {
+      console.error("Auth check failed:", err);
+      setIsAuthenticated(false);
+      setUser(null);
+    }
+  };
+  verifyAuth();
+}, []);
+
 
 
 
