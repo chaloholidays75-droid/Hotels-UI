@@ -9,21 +9,27 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const verifyAuth = async () => {
-      try {
-        const { isAuthenticated, userFullName, role } = await checkAuth();
-        setIsAuthenticated(isAuthenticated);
-        setUser({ name: userFullName, role: role || "Employee" });
-      } catch {
-        setIsAuthenticated(false);
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    verifyAuth();
-  }, []);
+
+    useEffect(() => {
+      const verifyAuth = async () => {
+        try {
+          const { isAuthenticated, user } = await checkAuth(); // get full user object
+          setIsAuthenticated(isAuthenticated);
+          setUser({
+            name: `${user.firstName} ${user.lastName}`, // combine names
+            role: user.role || "Employee"               // use actual role
+          });
+        } catch {
+          setIsAuthenticated(false);
+          setUser(null);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      verifyAuth();
+    }, []);
+
+
 
   const logout = () => {
     localStorage.removeItem("accessToken");
