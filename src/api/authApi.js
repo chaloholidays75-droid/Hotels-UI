@@ -76,24 +76,5 @@ export async function checkAuth() {
     return { isAuthenticated: false, userFullName: null, userRole: 'employee' };
   }
 }
-// ✅ Logout
-export async function logout() {
-  const refreshToken = localStorage.getItem('refreshToken');
-
-  try {
-    // Attempt to revoke token on server
-    if (refreshToken) {
-      await api.post('/auth/logout', { refreshToken });
-    }
-  } catch (err) {
-    console.warn('Logout request failed (ignored):', err.response?.data || err.message);
-  } finally {
-    // Always clear tokens and user info
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userFullName');
-  }
-}
 
 export default api;
