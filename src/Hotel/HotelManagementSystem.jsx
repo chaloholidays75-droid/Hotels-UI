@@ -7,6 +7,8 @@ import ViewHotelModal from './ViewHotelModal';
 import EditHotelModal from './EditHotelModal';
 import { getHotelSales, toggleHotelStatus, updateHotelSale , getCountries, getCitiesByCountry  } from '../api/hotelApi';
 import Modal from './Modal';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 import './HotelManagementSystem.css';
 
 // Main Component
@@ -17,57 +19,60 @@ const HotelManagementSystem = () => {
   const [editModal, setEditModal] = useState({ isOpen: false, hotel: null });
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [userRole, setUserRole] = useState(''); // Will be populated from auth context or API
+  // const [userRole, setUserRole] = useState(''); // Will be populated from auth context or API
   const [isRoleLoaded, setIsRoleLoaded] = useState(false);
 
   // Simulate getting user role from authentication context
-  useEffect(() => {
-    const fetchUserRole = () => {
-      try {
-        // Check multiple possible storage locations and formats
-        let role = localStorage.getItem('userRole') || 
-                   localStorage.getItem('role') ||
-                   sessionStorage.getItem('userRole') ||
-                   sessionStorage.getItem('role');
+  const { user } = useContext(AuthContext);
+const userRole = user?.role || 'employee';
+const isAdmin = userRole.toLowerCase() === 'admin';
+  // useEffect(() => {
+  //   const fetchUserRole = () => {
+  //     try {
+  //       // Check multiple possible storage locations and formats
+  //       let role = localStorage.getItem('userRole') || 
+  //                  localStorage.getItem('role') ||
+  //                  sessionStorage.getItem('userRole') ||
+  //                  sessionStorage.getItem('role');
         
-        // If not found in storage, check if there's a user object
-        if (!role) {
-          const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
-          if (userData) {
-            try {
-              const user = JSON.parse(userData);
-              role = user.role || user.userRole;
-            } catch (e) {
-              console.error("Error parsing user data:", e);
-            }
-          }
-        }
+  //       // If not found in storage, check if there's a user object
+  //       if (!role) {
+  //         const userData = localStorage.getItem('user') || sessionStorage.getItem('user');
+  //         if (userData) {
+  //           try {
+  //             const user = JSON.parse(userData);
+  //             role = user.role || user.userRole;
+  //           } catch (e) {
+  //             console.error("Error parsing user data:", e);
+  //           }
+  //         }
+  //       }
         
-        // Default to employee if no role found
-        role = role || 'employee';
+  //       // Default to employee if no role found
+  //       role = role || 'employee';
         
-        // Normalize the role (case-insensitive)
-        const normalizedRole = role.toLowerCase().trim();
+  //       // Normalize the role (case-insensitive)
+  //       const normalizedRole = role.toLowerCase().trim();
         
-        // Map to expected values
-        if (normalizedRole.includes('admin')) {
-          role = 'admin';
-        } else if (normalizedRole.includes('employee')) {
-          role = 'employee';
-        }
+  //       // Map to expected values
+  //       if (normalizedRole.includes('admin')) {
+  //         role = 'admin';
+  //       } else if (normalizedRole.includes('employee')) {
+  //         role = 'employee';
+  //       }
         
-        console.log("Setting user role to:", role);
-        setUserRole(role);
-      } catch (error) {
-        console.error("Error fetching user role:", error);
-        setUserRole('employee');
-      } finally {
-        setIsRoleLoaded(true);
-      }
-    };
+  //       console.log("Setting user role to:", role);
+  //       setUserRole(role);
+  //     } catch (error) {
+  //       console.error("Error fetching user role:", error);
+  //       setUserRole('employee');
+  //     } finally {
+  //       setIsRoleLoaded(true);
+  //     }
+  //   };
     
-    fetchUserRole();
-  }, []);
+  //   fetchUserRole();
+  // }, []);
 
   const showNotification = useCallback((message, type) => {
     setNotification({ show: true, message, type });
