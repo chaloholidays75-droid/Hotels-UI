@@ -29,7 +29,7 @@ const HotelSalesList = ({
   const itemsPerPage = 10;
 
   // Check if user is admin
-  const isAdmin = userRole === 'admin';
+  const isAdmin = userRole === 'Admin';
 
   const handleSort = (field) => {
     if (sortField === field) {
