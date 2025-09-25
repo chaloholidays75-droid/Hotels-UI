@@ -18,12 +18,6 @@ const AgencyManagement = () => {
   const [loading, setLoading] = useState(false);
   
 
-  // Get user role from localStorage
-  useEffect(() => {
-    const role = localStorage.getItem('userRole') || 'employee';
-    console.log('Agency Management - User role:', role);
-    setUserRole(role);
-  }, []);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
