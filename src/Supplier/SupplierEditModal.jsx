@@ -376,8 +376,8 @@ closeEditModal();
                 <div className="form-row">
                     <div className="form-group">
                         <CategorySelector
-                        categoryId={editModal.supplier.supplierCategoryId}
-                        subCategoryId={editModal.supplier.supplierSubCategoryId}
+                        categoryId={editModal.supplier.supplierCategoryid}
+                        subCategoryId={editModal.supplier.supplierSubCategoryid}
                         onCategorySelect={(id) => {
                             setEditModal(prev => ({
                             ...prev,
