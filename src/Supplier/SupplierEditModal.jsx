@@ -404,7 +404,7 @@ closeEditModal();
                 <h3 className="section-title">Main User Details</h3>
 
                 <div className="form-row">
-                  <div className="form-group">
+                  {/* <div className="form-group">
                     <label className="form-label">Title</label>
                     <select
                       name="title"
@@ -418,7 +418,7 @@ closeEditModal();
                       <option value="Ms">Ms</option>
                       <option value="Dr">Dr</option>
                     </select>
-                  </div>
+                  </div> */}
 
                   <div className="form-group">
                     <label className="form-label required">First Name</label>
@@ -508,7 +508,7 @@ closeEditModal();
                   <>
                     <div className="form-row">
                       <div className="form-group">
-                        <label className="form-label required">Bank Name</label>
+                        <label className="form-label ">Bank Name</label>
                         <input
                           type="text"
                           name="bankName"
@@ -520,7 +520,7 @@ closeEditModal();
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label required">Bank Account Number</label>
+                        <label className="form-label ">Bank Account Number</label>
                         <input
                           type="text"
                           name="bankAccountNumber"
@@ -534,7 +534,7 @@ closeEditModal();
 
                     <div className="form-row">
                       <div className="form-group">
-                        <label className="form-label required">Bank SWIFT/BIC Code</label>
+                        <label className="form-label ">Bank SWIFT/BIC Code</label>
                         <input
                           type="text"
                           name="bankSwiftCode"
@@ -546,7 +546,7 @@ closeEditModal();
                       </div>
 
                       <div className="form-group">
-                        <label className="form-label required">Payment Terms</label>
+                        <label className="form-label ">Payment Terms</label>
                         <input
                           type="text"
                           name="paymentTerms"
@@ -560,7 +560,7 @@ closeEditModal();
 
                     <div className="form-row">
                       <div className="form-group">
-                        <label className="form-label required">Tax ID</label>
+                        <label className="form-label ">Tax ID</label>
                         <input
                           type="text"
                           name="taxId"
@@ -593,7 +593,7 @@ closeEditModal();
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label required">
+                    <label className="form-label ">
                       <input
                         type="checkbox"
                         name="acceptTerms"
