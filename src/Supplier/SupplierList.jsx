@@ -66,7 +66,7 @@ const SupplierList = ({
             <tr>
               <th>Name</th>
               <th>Email</th>
-              <th>Phone</th>
+              {/* <th>Phone</th> */}
               <th>Category</th>
               <th>SubCategory</th>
               <th>Country</th>
@@ -80,7 +80,7 @@ const SupplierList = ({
               <tr key={s.Id} className={!s.IsActive ? 'inactive' : ''}>
                 <td>{s.supplierName || "N/A"}</td>
                 <td>{s.emailId || "N/A"}</td>
-                <td>{s.phoneNo || "N/A"}</td>
+                {/* <td>{s.phoneNo || "N/A"}</td> */}
                 <td>{s.supplierCategoryName || "N/A"}</td>
                 <td>{s.supplierSubCategoryName || "N/A"}</td>
                 <td>{s.countryName}</td>
