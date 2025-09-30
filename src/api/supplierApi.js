@@ -98,27 +98,19 @@
 //   deleteSubCategoriesBatch,
 // // };
 // import api from './api';
+// src/api/supplierApi.js
+import api from './api'; // import your axios instance with interceptors
 
-import axios from "axios";
-
-const api = axios.create({
-  baseURL: 'http://localhost:5039/api' // <-- change for production
-});
 const supplierApi = {
   // Categories
   getCategories: async (page = 1, pageSize = 50, search = '') => {
-    const res = await api.get('/SupplierCategories', {
-      params: { page, pageSize, search }
-    });
-    // your backend returns { totalItems, page, pageSize, items }
+    const res = await api.get('/SupplierCategories', { params: { page, pageSize, search } });
     return res.data.items;
   },
   createCategory: async (data) => {
     const res = await api.post('/SupplierCategories', data);
     return res.data;
   },
-
-  // Subcategories
   getSubCategories: async (categoryOrId) => {
     const categoryId = typeof categoryOrId === "number" ? categoryOrId : categoryOrId.id;
     const res = await api.get(`/SupplierCategories/${categoryId}/subcategories`);
@@ -128,8 +120,6 @@ const supplierApi = {
     const res = await api.post(`/SupplierCategories/${categoryId}/subcategories`, { name });
     return res.data;
   },
-
-  // Optional extras:
   updateCategory: async (id, data) => {
     const res = await api.put(`/SupplierCategories/${id}`, data);
     return res.data;
@@ -146,55 +136,47 @@ const supplierApi = {
     const res = await api.delete(`/SupplierCategories/subcategories/${id}`);
     return res.data;
   },
-   getSuppliers: async () => {
-    const res = await api.get("/Suppliers");
-    return res.data; // [{...}, {...}]
-  },
 
-  // Fetch suppliers list (bare, no include)
+  // Suppliers
+  getSuppliers: async () => {
+    const res = await api.get("/Suppliers");
+    return res.data;
+  },
   getSuppliersList: async () => {
     const res = await api.get("/Suppliers/list");
-    return res.data; // [{...}, {...}]
+    return res.data;
   },
-
-  // Fetch single supplier by ID
   getSupplier: async (id) => {
     const res = await api.get(`/Suppliers/${id}`);
-    return res.data; // { message?, supplier? } or full supplier object
+    return res.data;
   },
-
-  // Create supplier
   createSupplier: async (data) => {
     const res = await api.post("/Suppliers", data);
-    return res.data; // { message, supplier }
+    return res.data;
   },
-
-  // Update supplier
   updateSupplier: async (id, data) => {
     const res = await api.put(`/Suppliers/${id}`, data);
-    return res.data; // { message }
+    return res.data;
   },
-
-  // Delete single supplier
   deleteSupplier: async (id) => {
     const res = await api.delete(`/Suppliers/${id}`);
-    return res.data; // { message }
+    return res.data;
   },
-
-  // Batch delete suppliers
   deleteSuppliers: async (ids) => {
     const res = await api.delete("/Suppliers", { data: ids });
-    return res.data; // { message, count }
-  },
-    getCountries: async () => {
-    const res = await api.get("/countries");
-    return res.data; // or res.data depending on your backend
+    return res.data;
   },
 
+  // Countries & Cities
+  getCountries: async () => {
+    const res = await api.get("/countries");
+    return res.data;
+  },
   getCities: async (countryId) => {
     if (!countryId) throw new Error("countryId is required for getCities");
     const res = await api.get(`/cities/by-country/${countryId}`);
-    return res.data; // adjust to your backend
+    return res.data;
   },
-}; 
+};
+
 export default supplierApi;
