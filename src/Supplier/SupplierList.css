@@ -1,0 +1,650 @@
+/* SupplierList.css - Professional Agency Style with Unique Class Names */
+
+.supplier-list-wrapper {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  font-family: "Inter", sans-serif;
+}
+
+/* List Header */
+.supplier-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.supplier-title-section h2 {
+  color: #2c3e50;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0 0 5px 0;
+}
+
+.supplier-title-section p {
+  color: #6c757d;
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Action Buttons */
+.supplier-action-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.supplier-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.supplier-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.supplier-action-btn:hover::before {
+  left: 100%;
+}
+
+.supplier-action-btn.export-btn {
+  background: #28a745;
+  color: white;
+}
+
+.supplier-action-btn.export-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.supplier-action-btn.refresh-btn {
+  background: #17a2b8;
+  color: white;
+}
+
+.supplier-action-btn.refresh-btn:hover {
+  background: #138496;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.supplier-action-btn.print-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.supplier-action-btn.print-btn:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* FML Icon Styling for Action Buttons */
+.supplier-action-btn fml-icon {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+}
+
+.supplier-action-btn:hover fml-icon {
+  transform: scale(1.1);
+}
+
+/* Search and Filter */
+.supplier-controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.supplier-search-box {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.supplier-search-input {
+  width: 100%;
+  padding: 10px 15px 10px 40px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  background: #fafafa;
+}
+
+.supplier-search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  background: white;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.supplier-search-box::before {
+  content: '🔍';
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  color: #6c757d;
+}
+
+.supplier-filter-select {
+  padding: 10px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: #fafafa;
+  cursor: pointer;
+  min-width: 150px;
+  transition: all 0.3s ease;
+}
+
+.supplier-filter-select:focus {
+  outline: none;
+  border-color: #007bff;
+  background: white;
+}
+
+/* Table Container */
+.supplier-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background: white;
+}
+
+.supplier-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  min-width: 1000px;
+}
+
+/* Table Header */
+.supplier-data-table thead {
+  background: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.supplier-data-table th {
+  padding: 15px 20px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Table Body */
+.supplier-data-table td {
+  padding: 15px 20px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+  color: #495057;
+  font-size: 0.95rem;
+}
+
+.supplier-data-table tbody tr {
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.supplier-data-table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.supplier-data-table tbody tr.supplier-inactive {
+  background-color: #f8f9fa;
+  opacity: 0.7;
+}
+
+/* Status Indicators */
+.supplier-status {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.supplier-status.active-status {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.supplier-status.inactive-status {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Table Actions */
+.supplier-action-cells {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.supplier-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.supplier-icon-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: currentColor;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  transform: translate(-50%, -50%);
+  opacity: 0.1;
+}
+
+.supplier-icon-btn:hover::before {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+.supplier-icon-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.supplier-icon-btn:active {
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* FML Icon Styling for Table Actions */
+.supplier-icon-btn fml-icon {
+  font-size: 1.3rem;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.supplier-icon-btn:hover fml-icon {
+  transform: scale(1.1);
+}
+
+/* View Icon */
+.supplier-view-btn {
+  color: #17a2b8;
+  border-color: rgba(23, 162, 184, 0.2);
+}
+
+.supplier-view-btn:hover {
+  color: #138496;
+  border-color: #17a2b8;
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.2);
+}
+
+/* Edit Icon */
+.supplier-edit-btn {
+  color: #ffc107;
+  border-color: rgba(255, 193, 7, 0.2);
+}
+
+.supplier-edit-btn:hover {
+  color: #e0a800;
+  border-color: #ffc107;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+}
+
+/* Toggle Status Icons */
+.supplier-toggle-btn.deactivate-btn {
+  color: #dc3545;
+  border-color: rgba(220, 53, 69, 0.2);
+}
+
+.supplier-toggle-btn.deactivate-btn:hover {
+  color: #c82333;
+  border-color: #dc3545;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+}
+
+.supplier-toggle-btn.activate-btn {
+  color: #28a745;
+  border-color: rgba(40, 167, 69, 0.2);
+}
+
+.supplier-toggle-btn.activate-btn:hover {
+  color: #218838;
+  border-color: #28a745;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+}
+
+/* Locked Icon for non-admin */
+.supplier-locked-btn {
+  color: #6c757d;
+  border-color: rgba(108, 117, 125, 0.2);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.supplier-locked-btn:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.supplier-locked-btn:hover::before {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.supplier-locked-btn:hover fml-icon {
+  transform: none !important;
+}
+
+/* Empty State */
+.supplier-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.supplier-empty-state p {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+.supplier-empty-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* Loading State */
+.supplier-loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  color: #6c757d;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.supplier-loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: supplierSpin 1s linear infinite;
+}
+
+.supplier-loading-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+@keyframes supplierSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Pagination */
+.supplier-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 25px;
+  padding: 20px 0;
+  border-top: 1px solid #e9ecef;
+}
+
+.supplier-pagination-info {
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+.supplier-pagination-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.supplier-page-btn {
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  background: white;
+  color: #007bff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  min-width: 40px;
+}
+
+.supplier-page-btn:hover:not(:disabled) {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.supplier-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.supplier-page-btn.active-page {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.supplier-page-dots {
+  padding: 8px;
+  color: #6c757d;
+}
+
+/* Print Styles */
+@media print {
+  .supplier-list-wrapper {
+    box-shadow: none;
+    background: white;
+    padding: 0;
+  }
+  
+  .supplier-list-header,
+  .supplier-controls,
+  .supplier-action-cells,
+  .supplier-pagination,
+  .supplier-action-buttons {
+    display: none !important;
+  }
+  
+  .supplier-table-wrapper {
+    box-shadow: none;
+    overflow: visible;
+  }
+  
+  .supplier-data-table {
+    min-width: auto;
+    border: 1px solid #000;
+  }
+  
+  .supplier-data-table th {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+    border: 1px solid #000;
+  }
+  
+  .supplier-data-table td {
+    border: 1px solid #000;
+    color: #000;
+  }
+  
+  .supplier-status.active-status {
+    background: #d4edda !important;
+    color: #155724 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .supplier-status.inactive-status {
+    background: #f8d7da !important;
+    color: #721c24 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .supplier-list-wrapper {
+    padding: 20px;
+  }
+  
+  .supplier-list-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .supplier-action-buttons {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+  
+  .supplier-action-btn {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+  }
+  
+  .supplier-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .supplier-search-box {
+    min-width: 100%;
+  }
+  
+  .supplier-table-wrapper {
+    border-radius: 4px;
+  }
+  
+  .supplier-data-table th,
+  .supplier-data-table td {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+  
+  .supplier-action-cells {
+    gap: 6px;
+  }
+  
+  .supplier-icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .supplier-icon-btn fml-icon {
+    font-size: 1.2rem;
+  }
+  
+  .supplier-empty-actions {
+    flex-direction: column;
+  }
+  
+  .supplier-empty-actions .btn {
+    width: 100%;
+  }
+  
+  .supplier-pagination {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+}
+
+/* Focus styles for accessibility */
+.supplier-icon-btn:focus,
+.supplier-action-btn:focus,
+.supplier-page-btn:focus {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* Animation for icon interactions */
+@keyframes supplierIconBounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: scale(1);
+  }
+  40%, 43% {
+    transform: scale(1.1);
+  }
+  70% {
+    transform: scale(1.05);
+  }
+  90% {
+    transform: scale(1.02);
+  }
+}
+
+.supplier-action-btn:active fml-icon,
+.supplier-icon-btn:active fml-icon {
+  animation: supplierIconBounce 0.5s ease;
+}
+
+/* Custom styling for specific FML icons */
+.supplier-icon-btn fml-icon[name="settings-outline"] {
+  color: inherit;
+}
+
+.supplier-icon-btn fml-icon[name="create-outline"] {
+  color: inherit;
+}
+
+.supplier-action-btn fml-icon[name="document-attach-outline"],
+.supplier-action-btn fml-icon[name="print-outline"] {
+  color: inherit;
+}
