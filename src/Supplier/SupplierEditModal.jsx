@@ -113,14 +113,22 @@ const SupplierEditModal = ({ editModal, setEditModal, closeEditModal, setSupplie
     if (!editModal.supplier.userName) formErrors.userName = 'Username is required';
 
     // Payment details validation if enabled
-    if (editModal.supplier.enablePaymentDetails) {
-      if (!editModal.supplier.bankName) formErrors.bankName = 'Bank name is required when payment details are enabled';
-      if (!editModal.supplier.bankAccountNumber) formErrors.bankAccountNumber = 'Bank account number is required when payment details are enabled';
-      if (!editModal.supplier.bankSwiftCode) formErrors.bankSwiftCode = 'SWIFT/BIC code is required when payment details are enabled';
-      if (!editModal.supplier.paymentTerms) formErrors.paymentTerms = 'Payment terms are required when payment details are enabled';
-      if (!editModal.supplier.taxId) formErrors.taxId = 'Tax ID is required when payment details are enabled';
-    }
-
+if (editModal.supplier.enablePaymentDetails) {
+  if (!editModal.supplier.bankName) 
+    formErrors.bankName = 'Payment details are enabled - bank name is required. Enter "N/A" if not available';
+  
+  if (!editModal.supplier.bankAccountNumber) 
+    formErrors.bankAccountNumber = 'Payment details are enabled - account number is required. Enter "N/A" if not available';
+  
+  if (!editModal.supplier.bankSwiftCode) 
+    formErrors.bankSwiftCode = 'Payment details are enabled - SWIFT code is required. Enter "N/A" if not available';
+  
+  if (!editModal.supplier.paymentTerms) 
+    formErrors.paymentTerms = 'Payment details are enabled - payment terms are required. Enter "N/A" if not specified';
+  
+  if (!editModal.supplier.taxId) 
+    formErrors.taxId = 'Payment details are enabled - tax ID is required. Enter "N/A" if not available';
+}
     // Terms acceptance validation
     if (!editModal.supplier.acceptTerms) formErrors.acceptTerms = 'You must accept the terms and conditions';
 
