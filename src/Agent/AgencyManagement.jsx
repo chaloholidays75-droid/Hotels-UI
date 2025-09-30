@@ -234,15 +234,15 @@ const toggleAgencyStatus = async (id) => {
         />
       )}
 
-      {editModal.isOpen && (
-        <AgencyEditModal
-          editModal={editModal}
-          setEditModal={setEditModal}  
-          closeEditModal={closeEditModal}
-          setAgencies={setAgencies}
-          agencies={agencies}
-          refreshAgencies={fetchAgencies} // Add refresh function
-        />
+        {editModal.isOpen && (
+          <AgencyEditModal
+            editModal={editModal}
+            setEditModal={setEditModal}  
+            closeEditModal={closeEditModal}
+            setAgencies={setAgencies}
+            agencies={agencies}
+            refreshAgencies={fetchAgencies} // Add refresh function
+          />
       )}
     </div>
   );
