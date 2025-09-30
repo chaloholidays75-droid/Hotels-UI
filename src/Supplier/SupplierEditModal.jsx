@@ -293,16 +293,7 @@ closeEditModal();
                 </div>
 
                 <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Website</label>
-                    <input
-                      type="text"
-                      name="website"
-                      value={editModal.supplier.website}
-                      onChange={handleEditChange}
-                      className="form-input"
-                    />
-                  </div>
+
 
                   <div className="form-group">
                     <label className="form-label required">Phone No</label>
