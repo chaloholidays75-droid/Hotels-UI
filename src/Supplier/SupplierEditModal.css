@@ -1,0 +1,126 @@
+.sem-modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.sem-modal-content {
+  background: #fff;
+  padding: 30px 35px;
+  border-radius: 16px;
+  width: 1000px;
+  max-width: 98%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+  display: flex; flex-direction: column;
+}
+
+.sem-modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid #e0e0e0; padding-bottom: 12px; margin-bottom: 20px;
+}
+
+.sem-close-btn {
+  background: transparent; border: none; font-size: 28px; font-weight: bold; cursor: pointer;
+}
+
+.sem-multi-column {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+}
+
+.sem-column {
+  display: flex; flex-direction: column;
+}
+
+.sem-section-title {
+  margin-bottom: 12px;
+  font-weight: 600; font-size: 16px; color: #007bff;
+  border-bottom: 1px solid #e0e0e0; padding-bottom: 5px;
+}
+
+/* Floating label inputs */
+.sem-input-group {
+  position: relative; margin-bottom: 18px;
+}
+
+.sem-input-group input {
+  width: 100%;
+  padding: 14px 12px 14px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: #f9f9f9;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.sem-input-group input:focus {
+  border-color: #007bff;
+  background: #fff;
+}
+
+.sem-input-group label {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  pointer-events: none;
+  transform: translateY(-50%);
+  color: #999;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.sem-input-group input:focus + label,
+.sem-input-group input:not(:placeholder-shown) + label {
+  top: -8px;
+  left: 10px;
+  font-size: 12px;
+  color: #007bff;
+  background: #fff;
+  padding: 0 4px;
+}
+
+/* Checkbox style */
+.sem-checkbox-group {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+}
+
+.sem-modal-footer {
+  display: flex; justify-content: flex-end; gap: 12px;
+  border-top: 1px solid #e0e0e0; padding-top: 18px; margin-top: 18px;
+}
+
+.sem-primary-btn {
+  background-color: #007bff; color: #fff;
+  padding: 12px 24px; border: none; border-radius: 10px; cursor: pointer;
+}
+
+.sem-secondary-btn {
+  background-color: #f1f1f1; color: #333;
+  padding: 12px 24px; border: none; border-radius: 10px; cursor: pointer;
+}
+
+@media (max-width: 1400px) {
+  .sem-multi-column {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .sem-multi-column {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 800px) {
+  .sem-multi-column {
+    grid-template-columns: 1fr;
+  }
+}

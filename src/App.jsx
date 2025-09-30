@@ -11,7 +11,7 @@ import { checkAuth } from './api/authApi';
 import Loader from './components/loader';
 import HotelSalesList from './Hotel/HotelSalesList';
 import Sidebar from './components/Sidebar';
-
+import SupplierManagement from './Supplier/SupplierManagement';
 import RecentActivityPage from './Pages/RecentActivityPage';
 import './App.css';
 
@@ -116,7 +116,16 @@ function App() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/backend/product/supplier"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Layout userName={userName} onLogout={handleLogout}>
+                <SupplierManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
         {/* Auth routes WITHOUT sidebar */}
         <Route
           path="/backend/login"

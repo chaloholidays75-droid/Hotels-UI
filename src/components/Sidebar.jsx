@@ -40,6 +40,8 @@ const handleLogout = async () => {
     { id: 1, name: 'Dashboard', icon: <fml-icon name="analytics-outline"></fml-icon>, path: '/backend/product/dashboard' },
     { id: 2, name: 'Hotel', icon: <fml-icon name="pricetag-outline"></fml-icon>, path: '/backend/product/hotel' },
     { id: 3, name: 'Agency', icon: <fml-icon name="people-outline"></fml-icon>, path: '/backend/product/agency' },
+    { id: 4, name: 'Supplier', icon: <fml-icon name="storefront-outline"></fml-icon>, path: '/backend/product/supplier' },
+    
   ];
 
   return (
