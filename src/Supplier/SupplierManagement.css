@@ -10,31 +10,106 @@
   min-height: 100vh;
 }
 
-/* Header */
-.header {
-  text-align: left;
+/* NEW: Combined Header and Tabs in one line */
+.sm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 30px;
   padding: 20px;
-  color: #342d5e;
-  border-radius: 10px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-.ag-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.header {
+  flex: 1;
+  min-width: 300px;
 }
 
 .header h1 {
   margin: 0;
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: 600;
+  color: #342d5e;
 }
 
 .header p {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   opacity: 0.9;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  color: #666;
+}
+
+.user-role-badge {
+  background: #f8f9fa;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  display: inline-block;
+}
+
+.role-admin { color: #667eea; }
+.role-employee { color: #28a745; }
+.role-manager { color: #ffc107; }
+
+/* Tabs - Updated for inline display */
+.tabs {
+  display: flex;
+  background: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  height: fit-content;
+}
+
+.tab {
+  padding: 12px 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.3s ease;
+  position: relative;
+  white-space: nowrap;
+}
+
+.tab.active {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #667eea;
+}
+
+.tab:hover:not(.active) {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+/* Tab Content */
+.tab-content {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.supplier-form-container,
+.suppliers-list-container {
+  padding: 0;
 }
 
 .user-role-badge {

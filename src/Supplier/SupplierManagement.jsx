@@ -23,33 +23,32 @@ const SupplierManagement = () => {
     if (activeTab === "view") fetchSuppliers();
   }, [activeTab]);
 
-const fetchSuppliers = async () => {
-  setLoading(true);
-  try {
-    const data = await supplierApi.getSuppliers();
+  const fetchSuppliers = async () => {
+    setLoading(true);
+    try {
+      const data = await supplierApi.getSuppliers();
 
-    // Map API fields to frontend expected fields
-    const mappedSuppliers = data.map(s => ({
-      id: s.id,
-      name: s.supplierName || "N/A",
-      email: s.contactEmail || "N/A",
-      phone: s.contactPhone || "N/A",
-      supplierCategory: { name: s.supplierCategoryName || "N/A" },
-      supplierSubCategory: { name: s.supplierSubCategoryName || "N/A" },
-      isActive: s.isActive,
-      createdAt: s.createdAt,
-      updatedAt: s.updatedAt,
-    }));
+      // Map API fields to frontend expected fields
+      const mappedSuppliers = data.map(s => ({
+        id: s.id,
+        name: s.supplierName || "N/A",
+        email: s.contactEmail || "N/A",
+        phone: s.contactPhone || "N/A",
+        supplierCategory: { name: s.supplierCategoryName || "N/A" },
+        supplierSubCategory: { name: s.supplierSubCategoryName || "N/A" },
+        isActive: s.isActive,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+      }));
 
-    setSuppliers(mappedSuppliers);
-  } catch (error) {
-    console.error("Error fetching suppliers:", error);
-    alert("Failed to fetch suppliers");
-  } finally {
-    setLoading(false);
-  }
-};
-
+      setSuppliers(mappedSuppliers);
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+      alert("Failed to fetch suppliers");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const openViewModal = (supplier) => setViewModal({ isOpen: true, supplier });
   const closeViewModal = () => setViewModal({ isOpen: false, supplier: null });
@@ -94,15 +93,19 @@ const fetchSuppliers = async () => {
 
   return (
     <div className="supplier-management-container">
-      <div className="sm-header">
-        <div className="header">
-          <h1>Supplier Management</h1>
-          <p>Manage suppliers and their categories/subcategories</p>
+      {/* Combined header and tabs in one line */}
+      <div className="sm-header-tabs-container">
+        <div className="header-section">
+          <div className="title-section">
+            <h1>Supplier Management</h1>
+            <p>Manage suppliers and their categories/subcategories</p>
+          </div>
           <div className="user-role-badge">
             Logged in as: <span className={`role-${userRole.toLowerCase()}`}>{userRole}</span>
           </div>
         </div>
-        <div className="tabs">
+        
+        <div className="tabs-section">
           <button
             className={activeTab === "add" ? "tab active" : "tab"}
             onClick={() => handleTabChange("add")}
@@ -145,16 +148,16 @@ const fetchSuppliers = async () => {
         <SupplierViewModal supplier={viewModal.supplier} onClose={closeViewModal} />
       )}
       
-        {editModal.isOpen && (
+      {editModal.isOpen && (
         <SupplierEditModal
-            editModal={editModal}
-            setEditModal={setEditModal}  
-            closeEditModal={closeEditModal}
-            setSuppliers={setSuppliers}
-            suppliers={suppliers}
-            refreshSuppliers={fetchSuppliers} // Add refresh function
+          editModal={editModal}
+          setEditModal={setEditModal}  
+          closeEditModal={closeEditModal}
+          setSuppliers={setSuppliers}
+          suppliers={suppliers}
+          refreshSuppliers={fetchSuppliers}
         />
-        )}
+      )}
     </div>
   );
 };
