@@ -136,7 +136,10 @@ const supplierApi = {
     const res = await api.delete(`/SupplierCategories/subcategories/${id}`);
     return res.data;
   },
-
+  toggleSupplierStatus: async (id) => {
+  const res = await api.patch(`/Suppliers/${id}/toggle`);
+  return res.data;
+},
   // Suppliers
   getSuppliers: async () => {
     const res = await api.get("/Suppliers");

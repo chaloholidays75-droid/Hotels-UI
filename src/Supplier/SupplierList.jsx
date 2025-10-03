@@ -6,7 +6,7 @@ const SupplierList = ({
   loading, 
   openViewModal, 
   openEditModal, 
-  toggleSupplierStatus,
+
   isAdmin,
   refreshSuppliers 
 }) => {
@@ -28,19 +28,24 @@ const SupplierList = ({
       console.error("Failed to fetch suppliers:", err);
     }
   };
+   const toggleSupplierStatusa = async (id) => {
+  console.log("Toggling supplier status, ID:", id);
+  try {
+    const response = await supplierApi.toggleSupplierStatus(id);
+    console.log("Backend response:", response);
 
-  const toggleSupplierStatusa = async (id, currentStatus) => {
-    try {
-      await supplierApi.updateSupplier(id, { isActive: !currentStatus });
-      setSuppliers((prev) =>
-        prev.map((s) =>
-          s.Id === id ? { ...s, isActive: !currentStatus } : s
-        )
-      );
-    } catch (err) {
-      console.error("Failed to toggle status:", err);
-    }
-  };
+    // Update isActive based on backend response message    
+    const newStatus = response.message.includes("inactive") ? false : true;
+
+    setSuppliers(prev =>
+      prev.map(s => s.id === id ? { ...s, isActive: newStatus } : s)
+    );
+  } catch (err) {
+    console.error("Failed to toggle status:", err);
+  }
+};
+
+
 
   // Filter suppliers based on search term and status
   const filteredSuppliers = suppliers.filter(supplier => {
@@ -50,9 +55,9 @@ const SupplierList = ({
       supplier.countryName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       supplier.cityName?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && supplier.isActive) ||
-                         (statusFilter === 'inactive' && !supplier.isActive);
+  const matchesStatus = statusFilter === 'all' 
+      ? true 
+      : (statusFilter === 'active' ? supplier.isActive : !supplier.isActive);
     
     return matchesSearch && matchesStatus;
   });
@@ -334,7 +339,7 @@ const SupplierList = ({
               </thead>
               <tbody>
                 {filteredSuppliers.map((s) => (
-                  <tr key={s.Id} className={!s.isActive ? 'supplier-inactive' : ''}>
+                  <tr key={s.id} className={!s.isActive ? 'supplier-inactive' : ''}>
                     <td>{s.supplierName || "N/A"}</td>
                     <td>{s.emailId || "N/A"}</td>
                     <td>{s.supplierCategoryName || "N/A"}</td>
@@ -367,9 +372,9 @@ const SupplierList = ({
                         </button>
 
                         {/* Toggle Status Icon */}
-                        {/* <button
+                        <button
                           className={`supplier-icon-btn supplier-toggle-btn ${s.isActive ? 'deactivate-btn' : 'activate-btn'}`}
-                          onClick={() => isAdmin && toggleSupplierStatus(s.Id, s.isActive)}
+                          onClick={() => isAdmin && toggleSupplierStatusa(s.id )}
                           title={isAdmin ? (s.isActive ? "Deactivate Supplier" : "Activate Supplier") : "No permission"}
                         >
                           {s.isActive ? (
@@ -377,7 +382,7 @@ const SupplierList = ({
                           ) : (
                             <fml-icon name="play-circle-outline"></fml-icon>
                           )}
-                        </button> */}
+                        </button>
                       </div>
                     </td>
                   </tr>

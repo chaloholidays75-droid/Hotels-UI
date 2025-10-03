@@ -610,14 +610,15 @@ closeEditModal();
                   <div className="form-group full-width">
                     <label className="form-label">Status</label>
                     <select
-                      name="status"
-                      value={editModal.supplier.isactive}
-                      onChange={handleEditChange}
-                      className="form-select"
+                    name="isactive"
+                    value={editModal.supplier.isactive || "Inactive"} 
+                    onChange={handleEditChange}
+                    className="form-select"
                     >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
                     </select>
+
                   </div>
                 </div>
               </div>
