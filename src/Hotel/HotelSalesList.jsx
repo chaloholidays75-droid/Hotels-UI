@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import HotelListSkeleton from '../components/HotelListSkeleton';
+import * as XLSX from 'xlsx';
 import { 
   FaSearch, FaFilter, FaSortUp, FaSortDown, FaEye, 
   FaEdit, FaToggleOn, FaToggleOff, FaPlus, FaEllipsisV, FaTimes,
-  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan, FaLock
+  FaCheckCircle, FaExclamationTriangle, FaSync, FaBan, FaLock,
+  FaFileExcel, FaPrint, FaRedo, FaMapMarkerAlt, FaEnvelope, FaPhone, 
+  FaUserTie, FaClipboardList, FaMoneyCheckAlt, FaReceipt, FaConciergeBell
 } from 'react-icons/fa';
 import './viewhotel.css';
 
@@ -30,6 +33,393 @@ const HotelSalesList = ({
 
   // Check if user is admin
   const isAdmin = userRole === 'Admin';
+
+  // Format contact persons for export
+  const formatContactPersons = (persons, type) => {
+    if (!persons || persons.length === 0) return 'No contacts';
+    
+    return persons.map(person => 
+      `${person.name || 'N/A'} (Email: ${person.email || 'N/A'}, Phone: ${person.contact || 'N/A'})`
+    ).join('; ');
+  };
+
+  // Export to Excel functionality with all details
+  const exportToExcel = () => {
+    const dataToExport = filteredHotels.map(hotel => ({
+      'Hotel Name': hotel.hotelName || 'No Name Provided',
+      'Hotel Chain': hotel.hotelChain || 'N/A',
+      'Address': hotel.address || 'N/A',
+      'City': hotel.city || 'N/A',
+      'Country': hotel.country || 'N/A',
+      'Contact Number': hotel.hotelContactNumber || 'N/A',
+      'Hotel Email': hotel.hotelEmail || 'N/A',
+      'Status': hotel.isActive ? 'Active' : 'Inactive',
+      
+      // Sales Persons
+      'Sales Persons Count': hotel.salesPersons?.length || 0,
+      'Sales Persons Details': formatContactPersons(hotel.salesPersons, 'Sales'),
+      
+      // Reservation Persons
+      'Reservation Persons Count': hotel.reservationPersons?.length || 0,
+      'Reservation Persons Details': formatContactPersons(hotel.reservationPersons, 'Reservation'),
+      
+      // Accounts Persons
+      'Accounts Persons Count': hotel.accountsPersons?.length || 0,
+      'Accounts Persons Details': formatContactPersons(hotel.accountsPersons, 'Accounts'),
+      
+      // Reception Persons
+      'Reception Persons Count': hotel.receptionPersons?.length || 0,
+      'Reception Persons Details': formatContactPersons(hotel.receptionPersons, 'Reception'),
+      
+      // Concierges
+      'Concierges Count': hotel.concierges?.length || 0,
+      'Concierges Details': formatContactPersons(hotel.concierges, 'Concierge'),
+      
+      // Special Remarks
+      'Special Remarks': hotel.specialRemarks || 'No remarks'
+    }));
+    
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    
+    // Auto-size columns
+    const colWidths = [
+      { wch: 20 }, // Hotel Name
+      { wch: 15 }, // Hotel Chain
+      { wch: 25 }, // Address
+      { wch: 15 }, // City
+      { wch: 15 }, // Country
+      { wch: 15 }, // Contact Number
+      { wch: 20 }, // Hotel Email
+      { wch: 10 }, // Status
+      { wch: 8 },  // Sales Persons Count
+      { wch: 40 }, // Sales Persons Details
+      { wch: 8 },  // Reservation Persons Count
+      { wch: 40 }, // Reservation Persons Details
+      { wch: 8 },  // Accounts Persons Count
+      { wch: 40 }, // Accounts Persons Details
+      { wch: 8 },  // Reception Persons Count
+      { wch: 40 }, // Reception Persons Details
+      { wch: 8 },  // Concierges Count
+      { wch: 40 }, // Concierges Details
+      { wch: 50 }  // Special Remarks
+    ];
+    worksheet['!cols'] = colWidths;
+    
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Hotels Detailed Data');
+    XLSX.writeFile(workbook, `hotels_detailed_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  // Print functionality in list/table form
+  const printHotels = () => {
+    const printContent = `
+      <html>
+        <head>
+          <title>Hotels Detailed List</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 20px; 
+              color: #333;
+              font-size: 12px;
+            }
+            h1 { 
+              text-align: center; 
+              color: #2c3e50;
+              margin-bottom: 10px;
+              border-bottom: 2px solid #3498db;
+              padding-bottom: 10px;
+            }
+            .print-info {
+              text-align: center;
+              margin-bottom: 20px;
+              color: #666;
+              font-size: 11px;
+            }
+            .summary-stats {
+              display: flex;
+              justify-content: center;
+              gap: 20px;
+              margin-bottom: 15px;
+              flex-wrap: wrap;
+            }
+            .stat-item {
+              background: #f8f9fa;
+              padding: 8px 15px;
+              border-radius: 5px;
+              border: 1px solid #dee2e6;
+            }
+            .hotels-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 15px;
+            }
+            .hotels-table th {
+              background-color: #2c3e50;
+              color: white;
+              padding: 10px 8px;
+              text-align: left;
+              font-weight: bold;
+              border: 1px solid #34495e;
+            }
+            .hotels-table td {
+              padding: 8px;
+              border: 1px solid #dee2e6;
+              vertical-align: top;
+            }
+            .hotel-row {
+              page-break-inside: avoid;
+            }
+            .hotel-row:nth-child(even) {
+              background-color: #f8f9fa;
+            }
+            .hotel-name {
+              font-weight: bold;
+              color: #2c3e50;
+            }
+            .hotel-chain {
+              font-size: 10px;
+              color: #6c757d;
+              margin-top: 2px;
+            }
+            .hotel-location {
+              font-size: 11px;
+              color: #6c757d;
+              margin-top: 3px;
+            }
+            .status-badge {
+              padding: 3px 8px;
+              border-radius: 10px;
+              font-size: 10px;
+              font-weight: bold;
+              display: inline-block;
+            }
+            .status-active {
+              background: #d4edda;
+              color: #155724;
+            }
+            .status-inactive {
+              background: #f8d7da;
+              color: #721c24;
+            }
+            .contact-section {
+              margin: 5px 0;
+            }
+            .contact-category {
+              margin-bottom: 8px;
+            }
+            .category-title {
+              font-weight: bold;
+              color: #495057;
+              font-size: 11px;
+              margin-bottom: 3px;
+              border-bottom: 1px solid #dee2e6;
+              padding-bottom: 2px;
+            }
+            .contact-person {
+              margin: 3px 0;
+              padding: 3px;
+              background: white;
+              border-radius: 3px;
+              font-size: 10px;
+            }
+            .contact-name {
+              font-weight: bold;
+              color: #343a40;
+            }
+            .contact-details {
+              color: #6c757d;
+              margin-left: 8px;
+            }
+            .remarks {
+              font-style: italic;
+              color: #6c757d;
+              background: #f8f9fa;
+              padding: 5px;
+              border-radius: 3px;
+              margin-top: 5px;
+              font-size: 11px;
+            }
+            .footer {
+              margin-top: 30px;
+              text-align: center;
+              color: #666;
+              font-size: 10px;
+              border-top: 1px solid #ddd;
+              padding-top: 10px;
+            }
+            @media print {
+              body { margin: 0.5in; }
+              .hotel-row { break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Hotels Detailed List</h1>
+          <div class="print-info">
+            Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+          </div>
+          
+          <div class="summary-stats">
+            <div class="stat-item">Total Hotels: <strong>${filteredHotels.length}</strong></div>
+            <div class="stat-item">Active: <strong>${filteredHotels.filter(h => h.isActive).length}</strong></div>
+            <div class="stat-item">Inactive: <strong>${filteredHotels.filter(h => !h.isActive).length}</strong></div>
+            <div class="stat-item">From Total: <strong>${hotels.length}</strong></div>
+          </div>
+          
+          <table class="hotels-table">
+            <thead>
+              <tr>
+                <th width="15%">Hotel Information</th>
+                <th width="8%">Status</th>
+                <th width="12%">Basic Contact</th>
+                <th width="15%">Sales Contacts</th>
+                <th width="15%">Reservation Contacts</th>
+                <th width="15%">Accounts Contacts</th>
+                <th width="10%">Other Contacts</th>
+                <th width="10%">Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredHotels.map(hotel => `
+                <tr class="hotel-row">
+                  <!-- Hotel Information -->
+                  <td>
+                    <div class="hotel-name">${hotel.hotelName || 'No Name Provided'}</div>
+                    ${hotel.hotelChain ? `<div class="hotel-chain">${hotel.hotelChain}</div>` : ''}
+                    <div class="hotel-location">
+                      ${[hotel.address, hotel.city, hotel.country].filter(Boolean).join(', ') || 'Location not specified'}
+                    </div>
+                  </td>
+                  
+                  <!-- Status -->
+                  <td>
+                    <span class="status-badge status-${hotel.isActive ? 'active' : 'inactive'}">
+                      ${hotel.isActive ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
+                  </td>
+                  
+                  <!-- Basic Contact -->
+                  <td>
+                    ${hotel.hotelContactNumber ? `<div>📞 ${hotel.hotelContactNumber}</div>` : ''}
+                    ${hotel.hotelEmail ? `<div>✉️ ${hotel.hotelEmail}</div>` : ''}
+                    ${!hotel.hotelContactNumber && !hotel.hotelEmail ? 'No contact info' : ''}
+                  </td>
+                  
+                  <!-- Sales Contacts -->
+                  <td>
+                    ${hotel.salesPersons && hotel.salesPersons.length > 0 ? `
+                      <div class="contact-category">
+                        <div class="category-title">Sales (${hotel.salesPersons.length})</div>
+                        ${hotel.salesPersons.map(person => `
+                          <div class="contact-person">
+                            <div class="contact-name">${person.name || 'N/A'}</div>
+                            <div class="contact-details">
+                              ${person.email ? `📧 ${person.email}` : ''}
+                              ${person.contact ? `<br>📞 ${person.contact}` : ''}
+                            </div>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : 'No sales contacts'}
+                  </td>
+                  
+                  <!-- Reservation Contacts -->
+                  <td>
+                    ${hotel.reservationPersons && hotel.reservationPersons.length > 0 ? `
+                      <div class="contact-category">
+                        <div class="category-title">Reservation (${hotel.reservationPersons.length})</div>
+                        ${hotel.reservationPersons.map(person => `
+                          <div class="contact-person">
+                            <div class="contact-name">${person.name || 'N/A'}</div>
+                            <div class="contact-details">
+                              ${person.email ? `📧 ${person.email}` : ''}
+                              ${person.contact ? `<br>📞 ${person.contact}` : ''}
+                            </div>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : 'No reservation contacts'}
+                  </td>
+                  
+                  <!-- Accounts Contacts -->
+                  <td>
+                    ${hotel.accountsPersons && hotel.accountsPersons.length > 0 ? `
+                      <div class="contact-category">
+                        <div class="category-title">Accounts (${hotel.accountsPersons.length})</div>
+                        ${hotel.accountsPersons.map(person => `
+                          <div class="contact-person">
+                            <div class="contact-name">${person.name || 'N/A'}</div>
+                            <div class="contact-details">
+                              ${person.email ? `📧 ${person.email}` : ''}
+                              ${person.contact ? `<br>📞 ${person.contact}` : ''}
+                            </div>
+                          </div>
+                        `).join('')}
+                      </div>
+                    ` : 'No accounts contacts'}
+                  </td>
+                  
+                  <!-- Other Contacts -->
+                  <td>
+                    ${(hotel.receptionPersons && hotel.receptionPersons.length > 0) || (hotel.concierges && hotel.concierges.length > 0) ? `
+                      ${hotel.receptionPersons && hotel.receptionPersons.length > 0 ? `
+                        <div class="contact-category">
+                          <div class="category-title">Reception (${hotel.receptionPersons.length})</div>
+                          ${hotel.receptionPersons.slice(0, 2).map(person => `
+                            <div class="contact-person">
+                              <div class="contact-name">${person.name || 'N/A'}</div>
+                            </div>
+                          `).join('')}
+                          ${hotel.receptionPersons.length > 2 ? `<div>+${hotel.receptionPersons.length - 2} more</div>` : ''}
+                        </div>
+                      ` : ''}
+                      ${hotel.concierges && hotel.concierges.length > 0 ? `
+                        <div class="contact-category">
+                          <div class="category-title">Concierge (${hotel.concierges.length})</div>
+                          ${hotel.concierges.slice(0, 2).map(person => `
+                            <div class="contact-person">
+                              <div class="contact-name">${person.name || 'N/A'}</div>
+                            </div>
+                          `).join('')}
+                          ${hotel.concierges.length > 2 ? `<div>+${hotel.concierges.length - 2} more</div>` : ''}
+                        </div>
+                      ` : ''}
+                    ` : 'No other contacts'}
+                  </td>
+                  
+                  <!-- Remarks -->
+                  <td>
+                    ${hotel.specialRemarks ? `
+                      <div class="remarks">${hotel.specialRemarks.length > 100 ? hotel.specialRemarks.substring(0, 100) + '...' : hotel.specialRemarks}</div>
+                    ` : 'No remarks'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="footer">
+            Generated by Hotel Management System • ${filteredHotels.length} hotels printed
+          </div>
+        </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // Add delay to ensure content is loaded before printing
+    setTimeout(() => {
+      printWindow.print();
+      // Don't close immediately to allow user to cancel print
+      setTimeout(() => {
+        printWindow.close();
+      }, 500);
+    }, 250);
+  };
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -96,7 +486,25 @@ const HotelSalesList = ({
   return (
     <div className="hsl-hotel-sales-list">
       <div className="hsl-card">
-        <h2 className="section-title">Registered Hotels</h2>
+        <div className="hsl-header-with-actions">
+          <h2 className="section-title">Registered Hotels</h2>
+          <div className="hsl-action-buttons">
+            <button 
+              className="hsl-btn hsl-btn-export" 
+              onClick={exportToExcel}
+              title="Export All Details to Excel"
+            >
+              <FaFileExcel /> Export Detailed
+            </button>
+            <button 
+              className="hsl-btn hsl-btn-print" 
+              onClick={printHotels}
+              title="Print Detailed List"
+            >
+              <FaPrint /> Print List
+            </button>
+          </div>
+        </div>
         
         {!isAdmin && (
           <div className="hsl-permission-notice">

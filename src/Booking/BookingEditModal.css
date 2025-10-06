@@ -1,0 +1,314 @@
+/* Booking Edit Modal Styles */
+.booking-edit-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.booking-edit-modal-content {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-edit-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 0;
+  border-bottom: none;
+}
+
+.booking-edit-modal-title {
+  margin: 0;
+  color: #1a202c;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.booking-edit-modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #718096;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.booking-edit-modal-close:hover:not(:disabled) {
+  background-color: #f7fafc;
+  color: #2d3748;
+}
+
+.booking-edit-modal-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.booking-edit-modal-body {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.booking-edit-modal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: #718096;
+}
+
+.booking-edit-modal-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e2e8f0;
+  border-top: 3px solid #4299e1;
+  border-radius: 50%;
+  animation: booking-edit-modal-spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes booking-edit-modal-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.booking-edit-modal-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.booking-edit-modal-form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-edit-modal-form-group label {
+  font-weight: 500;
+  color: #2d3748;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+
+.booking-edit-modal-form-group select,
+.booking-edit-modal-form-group input,
+.booking-edit-modal-form-group textarea {
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background-color: white;
+  font-family: inherit;
+}
+
+.booking-edit-modal-form-group select:focus,
+.booking-edit-modal-form-group input:focus,
+.booking-edit-modal-form-group textarea:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.booking-edit-modal-form-group select:disabled,
+.booking-edit-modal-form-group input:disabled,
+.booking-edit-modal-form-group textarea:disabled {
+  background-color: #f7fafc;
+  color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.booking-edit-modal-form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Hotel Search Styles */
+.booking-edit-modal-hotel-search {
+  position: relative;
+}
+
+.booking-edit-modal-hotel-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.booking-edit-modal-hotel-dropdown div {
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f7fafc;
+  transition: background-color 0.2s ease;
+}
+
+.booking-edit-modal-hotel-dropdown div:hover {
+  background-color: #edf2f7;
+}
+
+.booking-edit-modal-hotel-dropdown div:last-child {
+  border-bottom: none;
+}
+
+/* Guests Section */
+.booking-edit-modal-guests-section {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 20px;
+  align-items: end;
+  background-color: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.booking-edit-modal-total-people {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.booking-edit-modal-total-people span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #2d3748;
+}
+
+/* Children Ages Section */
+.booking-edit-modal-form-group div:not(.booking-edit-modal-error-message):not(.booking-edit-modal-warning-message) {
+  font-size: 0.8rem;
+  color: #718096;
+  margin-top: 4px;
+}
+
+/* Messages */
+.booking-edit-modal-error-message {
+  color: #e53e3e;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.booking-edit-modal-warning-message {
+  color: #d69e2e;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+/* Modal Footer */
+.booking-edit-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 0 24px 24px;
+  background: white;
+}
+
+.booking-edit-modal-footer button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.booking-edit-modal-footer button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.booking-edit-modal-footer button:first-child {
+  background-color: #e2e8f0;
+  color: #4a5568;
+}
+
+.booking-edit-modal-footer button:first-child:hover:not(:disabled) {
+  background-color: #cbd5e0;
+}
+
+.booking-edit-modal-footer button:last-child {
+  background-color: #4299e1;
+  color: white;
+}
+
+.booking-edit-modal-footer button:last-child:hover:not(:disabled) {
+  background-color: #3182ce;
+  transform: translateY(-1px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .booking-edit-modal-content {
+    margin: 10px;
+    max-height: 95vh;
+  }
+
+  .booking-edit-modal-form-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .booking-edit-modal-guests-section {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .booking-edit-modal-total-people {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .booking-edit-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .booking-edit-modal-footer button {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .booking-edit-modal-body {
+    padding: 16px;
+  }
+
+  .booking-edit-modal-header,
+  .booking-edit-modal-footer {
+    padding: 16px;
+  }
+}

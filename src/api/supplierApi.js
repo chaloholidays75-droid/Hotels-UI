@@ -180,6 +180,13 @@ const supplierApi = {
     const res = await api.get(`/cities/by-country/${countryId}`);
     return res.data;
   },
+  
+getSuppliersByCategory: async (categoryId, subCategoryId = null) => {
+  const res = await api.get("/Suppliers/by-category", { params: { categoryId, subCategoryId } });
+  return res.data;
+}
+
+
 };
 
 export default supplierApi;

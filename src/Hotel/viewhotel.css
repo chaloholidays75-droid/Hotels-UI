@@ -781,3 +781,67 @@ body {
   margin-bottom: 15px;
   font-size: 0.9rem;
 }
+/* Add these styles to your existing viewhotel.css */
+
+.hsl-header-with-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.hsl-action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.hsl-btn.hsl-btn-export {
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.hsl-btn.hsl-btn-export:hover {
+  background-color: #219a52;
+}
+
+.hsl-btn.hsl-btn-print {
+  background-color: #95a5a6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.hsl-btn.hsl-btn-print:hover {
+  background-color: #7f8c8d;
+}
+
+/* Responsive design for action buttons */
+@media (max-width: 768px) {
+  .hsl-header-with-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .hsl-action-buttons {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

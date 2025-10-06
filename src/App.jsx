@@ -13,6 +13,7 @@ import HotelSalesList from './Hotel/HotelSalesList';
 import Sidebar from './components/Sidebar';
 import SupplierManagement from './Supplier/SupplierManagement';
 import RecentActivityPage from './Pages/RecentActivityPage';
+import BookingManagement from './Booking/BookingManagement';
 import './App.css';
 
 // Layout for authenticated pages
@@ -126,6 +127,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/backend/product/booking"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Layout userName={userName} onLogout={handleLogout}>
+                <BookingManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
         {/* Auth routes WITHOUT sidebar */}
         <Route
           path="/backend/login"

@@ -1,0 +1,540 @@
+/* BookingManagement.css */
+
+/* Main Container */
+.booking-management-container {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: "Poppins", sans-serif;
+  background-color: #f5f7f9;
+  min-height: 100vh;
+}
+
+/* NEW: Combined Header and Tabs Container */
+.booking-management-header-tabs-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding: 25px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.booking-management-header-content {
+  flex: 1;
+  min-width: 400px;
+}
+
+.booking-management-title-section h1 {
+  margin: 0 0 8px 0;
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: #342d5e;
+}
+
+.booking-management-title-section p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 1rem;
+  color: #666;
+}
+
+.booking-management-user-role-badge {
+  background: #f8f9fa;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-top: 12px;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.booking-management-role-admin { color: #667eea; }
+.booking-management-role-employee { color: #28a745; }
+.booking-management-role-manager { color: #ffc107; }
+
+/* Tabs Section - Updated for inline display */
+.booking-management-tabs-section {
+  display: flex;
+  background: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  height: fit-content;
+  align-self: center;
+}
+
+.booking-management-tabs-section .booking-management-tab {
+  padding: 14px 28px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #666;
+  transition: all 0.3s ease;
+  position: relative;
+  white-space: nowrap;
+}
+
+.booking-management-tabs-section .booking-management-tab.booking-management-tab-active {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.1);
+}
+
+.booking-management-tabs-section .booking-management-tab.booking-management-tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #667eea;
+}
+
+.booking-management-tabs-section .booking-management-tab:hover:not(.booking-management-tab-active) {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+/* Tab Content */
+.booking-management-tab-content {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  animation: booking-management-fadeIn 0.5s ease-in;
+}
+
+.booking-management-form-container,
+.booking-management-list-container {
+  padding: 0;
+}
+
+/* View Controls */
+.booking-management-view-controls {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.booking-management-search-box {
+  position: relative;
+}
+
+.booking-management-form-input {
+  width: 300px;
+  padding: 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.booking-management-form-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.booking-management-form-select {
+  padding: 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+}
+
+.booking-management-form-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.booking-management-action-btn.booking-management-refresh {
+  background: #667eea;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.booking-management-action-btn.booking-management-refresh:hover {
+  background: #5a6fd8;
+  transform: translateY(-1px);
+}
+
+/* Notification System */
+.booking-management-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 15px 20px;
+  border-radius: 8px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  animation: booking-management-slideIn 0.3s ease-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+}
+
+.booking-management-notification.booking-management-success { background: #28a745; }
+.booking-management-notification.booking-management-error { background: #dc3545; }
+.booking-management-notification.booking-management-warning { background: #ffc107; color: #212529; }
+.booking-management-notification.booking-management-info { background: #17a2b8; }
+
+.booking-management-notification-icon {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.booking-management-notification-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  margin-left: auto;
+  opacity: 0.8;
+}
+
+.booking-management-notification-close:hover {
+  opacity: 1;
+}
+
+@keyframes booking-management-slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Form Styles (for BookingForm component) */
+.booking-management-form {
+  padding: 30px;
+}
+
+.booking-management-form-section {
+  margin-bottom: 40px;
+  padding: 30px;
+  border-radius: 15px;
+  border-bottom: 2px solid #e9ecef;
+  background: #f8f9fa;
+}
+
+.booking-management-form-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 20px;
+}
+
+.booking-management-section-title {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  margin-bottom: 25px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #667eea;
+  font-weight: 600;
+}
+
+.booking-management-form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.booking-management-form-group {
+  flex: 1;
+  min-width: 250px;
+}
+
+.booking-management-form-group.booking-management-full-width {
+  flex: 100%;
+}
+
+.booking-management-form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.booking-management-form-label.booking-management-required::after {
+  content: '*';
+  color: #e74c3c;
+  margin-left: 4px;
+}
+
+.booking-management-error-message {
+  display: block;
+  color: #e74c3c;
+  font-size: 0.9rem;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.booking-management-form-actions {
+  text-align: center;
+  margin-top: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+}
+
+.booking-management-submit-button {
+  background: #667eea;
+  color: white;
+  padding: 15px 40px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.booking-management-submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.booking-management-submit-button:active {
+  transform: translateY(0);
+}
+
+.booking-management-secondary-button {
+  background: #6c757d;
+  color: white;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+}
+
+.booking-management-secondary-button:hover {
+  background: #5a6268;
+}
+
+/* List Styles (for BookingList component) */
+.booking-management-list {
+  padding: 30px;
+}
+
+.booking-management-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.booking-management-list-title {
+  color: #2c3e50;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.booking-management-list-stats {
+  color: #6c757d;
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .booking-management-header-tabs-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 25px;
+  }
+  
+  .booking-management-header-content {
+    min-width: 100%;
+  }
+  
+  .booking-management-tabs-section {
+    align-self: stretch;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .booking-management-container {
+    padding: 10px;
+  }
+  
+  .booking-management-header-tabs-container {
+    padding: 20px;
+  }
+  
+  .booking-management-title-section h1 {
+    font-size: 2rem;
+  }
+  
+  .booking-management-tabs-section {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .booking-management-tabs-section .booking-management-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 20px;
+  }
+  
+  .booking-management-view-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .booking-management-form-input {
+    width: 100%;
+  }
+  
+  .booking-management-action-btn.booking-management-refresh {
+    width: 100%;
+  }
+  
+  .booking-management-form-row {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .booking-management-form-group {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .booking-management-header-tabs-container {
+    padding: 15px;
+  }
+  
+  .booking-management-title-section h1 {
+    font-size: 1.8rem;
+  }
+  
+  .booking-management-form,
+  .booking-management-list {
+    padding: 20px;
+  }
+  
+  .booking-management-section-title {
+    font-size: 1.3rem;
+  }
+  
+  .booking-management-submit-button,
+  .booking-management-secondary-button {
+    width: 100%;
+    margin: 5px 0;
+  }
+  
+  .booking-management-tabs-section .booking-management-tab {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Animation for content changes */
+@keyframes booking-management-fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Loading state */
+.booking-management-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px;
+  color: #6c757d;
+}
+
+.booking-management-loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: booking-management-spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+@keyframes booking-management-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Focus styles for accessibility */
+.booking-management-button:focus,
+.booking-management-form-input:focus,
+.booking-management-form-select:focus {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* Subtle hover effects */
+.booking-management-form-input:hover {
+  border-color: #cbd5e1;
+}
+
+/* Remove default browser styling noise */
+.booking-management-form-input option {
+  padding: 8px 12px;
+  background: white;
+  color: #1a202c;
+}
+
+/* Compact version for tight spaces */
+.booking-management-form-input.booking-management-compact {
+  padding: 8px 32px 8px 12px;
+  font-size: 13px;
+}
+
+/* Borderless version for minimal design */
+.booking-management-form-input.booking-management-borderless {
+  border: 1px solid transparent;
+  background-color: #f8fafc;
+}
+
+/* Additional responsive improvements */
+@media (max-width: 1200px) {
+  .booking-management-container {
+    max-width: 100%;
+    padding: 15px;
+  }
+}
+
+/* Print styles */
+@media print {
+  .booking-management-header-tabs-container,
+  .booking-management-view-controls,
+  .booking-management-table-actions {
+    display: none;
+  }
+  
+  .booking-management-container {
+    background: white;
+    padding: 0;
+  }
+  
+  .booking-management-tab-content {
+    box-shadow: none;
+  }
+}

@@ -57,6 +57,25 @@ export async function updateHotelSale(id, data) {
     throw error;
   }
 }
+/**
+ * Search hotels by name, country, and city
+ * @param {Object} params - Search parameters
+ * @param {string} params.name - Hotel name (partial match)
+ * @param {number} params.countryId - Country ID
+ * @param {number} params.cityId - City ID
+ * @returns {Promise<Array>} - List of matching hotels
+ */
+export async function searchHotels({ name = '', countryId, cityId }) {
+  try {
+    const res = await api.get('/hotels/search', {
+      params: { name, countryId, cityId }
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Failed to search hotels:', error.response?.status, error.message);
+    throw error;
+  }
+}
 
 // Delete hotel
 export async function deleteHotelSale(id) {
