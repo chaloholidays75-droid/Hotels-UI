@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import BookingForm from "./BookingForm";
+import BookingCreateForm from "./BookingCreateForm";
 import BookingList from "./BookingList";
 import BookingViewModal from "./BookingViewModal";
 import BookingEditModal from "./BookingEditModal";
@@ -125,8 +125,7 @@ const BookingManagement = () => {
 
       <div className="booking-management-tab-content">
         {activeTab === "add" ? (
-          <BookingForm
-            booking={null}
+          <BookingCreateForm
             onSaved={() => {
               fetchBookings();
               setActiveTab("view");
