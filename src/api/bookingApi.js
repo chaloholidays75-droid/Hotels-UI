@@ -32,15 +32,25 @@ const bookingApi = {
   },
 
   // Search hotels (autocomplete)
-  searchHotels: async (query) => {
+  searchHotels: async (query, config = {}) => {
     if (!query || query.length < 2) return [];
-    const res = await api.get('/Booking/hotels-autocomplete', { params: { query } });
-    return (res.data || []).map(h => ({
-      id: h.id || null,
-      hotelName: h.hotelName || "",
-      cityName: h.CityName || "",
-      countryName: h.CountryName || ""
+    const res = await api.get('/Booking/hotels-autocomplete', {
+      params: { query },
+      ...config,
+    });
+    return (res.data || []).map((hotel) => ({
+      id: hotel.id ?? null,
+      hotelName: hotel.hotelName ?? "",
+      cityName: hotel.cityName ?? hotel.CityName ?? "",
+      countryName: hotel.countryName ?? hotel.CountryName ?? "",
     }));
+  },
+
+  // Retrieve room types for a hotel
+  getRoomTypesForHotel: async (hotelId) => {
+    if (!hotelId) return [];
+    const res = await api.get(`/booktype/roomtypes/${hotelId}`);
+    return res.data;
   }
 };
 
