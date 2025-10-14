@@ -9,7 +9,7 @@ export default function Register() {
     lastName: "",
     email: "",
     password: "",
-    role: " ", // default role
+    role: "", // default role
   });
 
   const [error, setError] = useState("");
