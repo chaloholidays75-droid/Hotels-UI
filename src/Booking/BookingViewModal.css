@@ -23,7 +23,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   border: 2px solid #e2e8f0;
   position: relative;
-  /* font-family: 'Courier New', monospace; */
+  font-family: 'Courier New', monospace;
 }
 
 .booking-view-modal-content-ticket::before {
