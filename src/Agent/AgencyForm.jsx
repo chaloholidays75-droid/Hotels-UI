@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AgencyDetailsForm from './AgencyDetailsForm';
 import UserDetailsForm from './UserDetailsForm';
 import agencyApi from '../api/agencyApi';
+import AgencyStaffStep from './AgencyStaffStep';
 
 // Message Box Component
 const MessageBox = ({ type, message, onClose, isVisible }) => {
@@ -136,40 +137,61 @@ const AgencyForm = ({ setActiveTab, setAgencies, agencies }) => {
         <div className={`progress-step ${currentPage === 'agency' ? 'active' : 'completed'}`}>
           <span className="step-number">1</span>
         </div>
-        <div className={`progress-step ${currentPage === 'user' ? 'active' : ''}`}>
+        <div className={`progress-step ${currentPage === 'user' ? 'active' : currentPage === 'staff' ? 'completed' : ''}`}>
           <span className="step-number">2</span>
+        </div>
+        <div className={`progress-step ${currentPage === 'staff' ? 'active' : ''}`}>
+          <span className="step-number">3</span>
         </div>
       </div>
 
-      {currentPage === 'agency' ? (
-        <AgencyDetailsForm
-          formData={formData}
-          setFormData={setFormData}
-          errors={errors}
-          setErrors={setErrors}
-          handleChange={handleChange}
-          setCurrentPage={setCurrentPage}
-        />
-      ) : (
-        <UserDetailsForm
-          formData={formData}
-          setFormData={setFormData}
-          errors={errors}
-          setErrors={setErrors}
-          passwordStrength={passwordStrength}
-          passwordMatch={passwordMatch}
-          existingEmail={existingEmail}
-          existingUsername={existingUsername}
-          handleChange={handleChange}
-          setCurrentPage={setCurrentPage}
-          setActiveTab={setActiveTab}
-          setAgencies={setAgencies}
-          agencies={agencies}
-          setShowSuccessMessage={setShowSuccessMessage}
-          setShowErrorMessage={setShowErrorMessage}
-          setMessageBoxContent={setMessageBoxContent}
-        />
-      )}
+
+    {currentPage === 'agency' && (
+      <AgencyDetailsForm
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+        setErrors={setErrors}
+        handleChange={handleChange}
+        setCurrentPage={setCurrentPage}
+      />
+    )}
+
+    {currentPage === 'user' && (
+      <UserDetailsForm
+        formData={formData}
+        setFormData={setFormData}
+        errors={errors}
+        setErrors={setErrors}
+        passwordStrength={passwordStrength}
+        passwordMatch={passwordMatch}
+        existingEmail={existingEmail}
+        existingUsername={existingUsername}
+        handleChange={handleChange}
+        setCurrentPage={setCurrentPage} 
+        setActiveTab={setActiveTab}
+        setAgencies={setAgencies}
+        agencies={agencies}
+        setShowSuccessMessage={setShowSuccessMessage}
+        setShowErrorMessage={setShowErrorMessage}
+        setMessageBoxContent={setMessageBoxContent}
+      />
+    )}
+
+    {currentPage === 'staff' && (
+      <AgencyStaffStep
+        formData={formData}
+        setFormData={setFormData}
+        setCurrentPage={setCurrentPage}
+        setActiveTab={setActiveTab}
+        setAgencies={setAgencies}
+        agencies={agencies}
+        setShowSuccessMessage={setShowSuccessMessage}
+        setShowErrorMessage={setShowErrorMessage}
+        setMessageBoxContent={setMessageBoxContent}
+      />
+    )}
+
       
       {/* Message Boxes */}
       <MessageBox 

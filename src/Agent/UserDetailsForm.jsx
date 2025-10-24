@@ -81,62 +81,63 @@ const handleUserSubmit = async (e) => {
   e.preventDefault();
   if (!validateUserForm()) return;
 
-  const newAgency = {
-    agencyName: formData.agencyName,
-    countryId: formData.countryId,
-    cityId: formData.cityId,
-    postCode: formData.postCode,
-    address: formData.address,
-    website: formData.website,
-    phoneNo: formData.phoneNo,
-    emailId: formData.emailId,
-    businessCurrency: formData.businessCurrency,
-    title: formData.title,
-    firstName: formData.firstName,
-    lastName: formData.lastName,
-    userEmailId: formData.userEmailId,
-    designation: formData.designation,
-    mobileNo: formData.mobileNo,
-    userName: formData.userName,
-    password: formData.password,
-    acceptTerms: formData.acceptTerms
-  };
+  // const newAgency = {
+  //   agencyName: formData.agencyName,
+  //   countryId: formData.countryId,
+  //   cityId: formData.cityId,
+  //   postCode: formData.postCode,
+  //   address: formData.address,
+  //   website: formData.website,
+  //   phoneNo: formData.phoneNo,
+  //   emailId: formData.emailId,
+  //   businessCurrency: formData.businessCurrency,
+  //   title: formData.title,
+  //   firstName: formData.firstName,
+  //   lastName: formData.lastName,
+  //   userEmailId: formData.userEmailId,
+  //   designation: formData.designation,
+  //   mobileNo: formData.mobileNo,
+  //   userName: formData.userName,
+  //   password: formData.password,
+  //   acceptTerms: formData.acceptTerms
+  // };
 
-  try {
-    const createdAgency = await agencyApi.createAgency(newAgency);
+  // try {
+  //   const createdAgency = await agencyApi.createAgency(newAgency);
 
-    setAgencies([...agencies, createdAgency]);
-    setActiveTab('view');
-    setMessageBoxContent('Agency registered successfully!');
-    setShowSuccessMessage(true);
+  //   setAgencies([...agencies, createdAgency]);
+  //   setActiveTab('view');
+  //   setMessageBoxContent('Agency registered successfully!');
+  //   setShowSuccessMessage(true);
 
-    setFormData({
-      agencyName: '',
-      countryId: '',
-      cityId: '',
-      postCode: '',
-      address: '',
-      website: '',
-      phoneNo: '',
-      emailId: '',
-      businessCurrency: 'USD',
-      title: '',
-      firstName: '',
-      lastName: '',
-      userEmailId: '',
-      designation: '',
-      mobileNo: '',
-      userName: '',
-      password: '',
-      confirmPassword: '',
-      acceptTerms: false
-    });
+  //   setFormData({
+  //     agencyName: '',
+  //     countryId: '',
+  //     cityId: '',
+  //     postCode: '',
+  //     address: '',
+  //     website: '',
+  //     phoneNo: '',
+  //     emailId: '',
+  //     businessCurrency: 'USD',
+  //     title: '',
+  //     firstName: '',
+  //     lastName: '',
+  //     userEmailId: '',
+  //     designation: '',
+  //     mobileNo: '',
+  //     userName: '',
+  //     password: '',
+  //     confirmPassword: '',
+  //     acceptTerms: false
+  //   });
 
-  } catch (error) {
-    console.error("Error submitting to backend:", error);
-    setMessageBoxContent(error.response?.data?.title || "An error occurred while registering the agency");
-    setShowErrorMessage(true);
-  }
+  // } catch (error) {
+  //   console.error("Error submitting to backend:", error);
+  //   setMessageBoxContent(error.response?.data?.title || "An error occurred while registering the agency");
+  //   setShowErrorMessage(true);
+  // }
+    setCurrentPage('staff');
 };
 
   return (
@@ -340,7 +341,7 @@ const handleUserSubmit = async (e) => {
         >
           Back to Agency Details
         </button>
-        <button type="submit" className="submit-button">Register Agency</button>
+        <button type="submit" className="submit-button">Next: Add Staff</button>
       </div>
     </form>
   );

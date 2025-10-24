@@ -327,3 +327,12 @@ body:not(.sb-collapsed) {
     width: 100% !important;
   }
 }
+.sb-active-indicator {
+  position: absolute;
+  left: 0;
+  width: 3px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 0 4px 4px 0;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+}

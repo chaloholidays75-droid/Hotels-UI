@@ -579,6 +579,7 @@ const LocationSelector = forwardRef(
           const res = await fetch(`${API_BASE}/countries`);
           if (!res.ok) throw new Error("Failed to fetch countries");
           const data = await res.json();
+         
           setCountries(data || []);
           const mapping = {};
           (data || []).forEach((c) => {
@@ -667,36 +668,79 @@ const LocationSelector = forwardRef(
       onCitySelect?.({ name: "", id: null });
     }, [onCitySelect]);
 
+    // const handleCountrySelect = useCallback(
+    //   (country) => {
+    //     const code = country.code || getCode(country.name) || country.name.slice(0, 2).toUpperCase();
+    //     let phoneCode = "+1"; // default +1
+    //     try {
+    //       phoneCode = code ? `+${getCountryCallingCode(code)}` : "+1";
+    //     } catch (e) {
+    //       console.warn("Could not get calling code for", code);
+    //     }
+
+    //     const flag = code
+    //       ? String.fromCodePoint(...[...code.toUpperCase()].map((c) => 0x1f1e6 - 65 + c.charCodeAt(0)))
+    //       : "";
+        
+    //     const enrichedCountry = { ...country, code, phoneCode, flag ,   region: country.region  };
+    //     console.log("Enriched Country ✅:", enrichedCountry);
+    //     setSelectedCountry(enrichedCountry);
+    //     setCountrySearch(enrichedCountry.name);
+    //     setShowCountryDropdown(false);
+    //     setHighlightedIndex((prev) => ({ ...prev, country: 0 }));
+    //     clearCitySelection();
+
+    //     if (!citiesByCountry[enrichedCountry.id]) {
+    //       fetchCitiesForCountry(enrichedCountry.id);
+    //     }
+
+    //     onCountrySelect?.(enrichedCountry); 
+    //     setTimeout(() => cityInputRef.current?.focus(), 0);
+    //   },
+    //   [citiesByCountry, clearCitySelection, fetchCitiesForCountry, onCountrySelect]
+    // );
     const handleCountrySelect = useCallback(
-      (country) => {
-        const code = country.code || getCode(country.name) || country.name.slice(0, 2).toUpperCase();
-        let phoneCode = "+1"; // default +1
-        try {
-          phoneCode = code ? `+${getCountryCallingCode(code)}` : "+1";
-        } catch (e) {
-          console.warn("Could not get calling code for", code);
-        }
+  (country) => {
+    const code =
+      country.code || getCode(country.name) || country.name.slice(0, 2).toUpperCase();
 
-        const flag = code
-          ? String.fromCodePoint(...[...code.toUpperCase()].map((c) => 0x1f1e6 - 65 + c.charCodeAt(0)))
-          : "";
+    let phoneCode = "+1"; // default if missing
+    try {
+      phoneCode = `+${getCountryCallingCode(code)}`;
+    } catch (e) {
+      console.warn("Could not get calling code for", code);
+    }
 
-        const enrichedCountry = { ...country, code, phoneCode, flag };
-        setSelectedCountry(enrichedCountry);
-        setCountrySearch(enrichedCountry.name);
-        setShowCountryDropdown(false);
-        setHighlightedIndex((prev) => ({ ...prev, country: 0 }));
-        clearCitySelection();
+    const flag = code
+      ? String.fromCodePoint(...[...code.toUpperCase()].map((c) => 0x1f1e6 - 65 + c.charCodeAt(0)))
+      : "";
 
-        if (!citiesByCountry[enrichedCountry.id]) {
-          fetchCitiesForCountry(enrichedCountry.id);
-        }
+    // ✅ Preserve backend data without overwriting
+    const enrichedCountry = {
+      ...country,
+      code,
+      phoneCode,
+      flag,
+      region: country.region || "N/A",
+      phoneNumberDigits: country.phoneNumberDigits || 10
+    };
 
-        onCountrySelect?.(enrichedCountry); // send phoneCode
-        setTimeout(() => cityInputRef.current?.focus(), 0);
-      },
-      [citiesByCountry, clearCitySelection, fetchCitiesForCountry, onCountrySelect]
-    );
+    console.log("✅ Enriched Country:", enrichedCountry);
+
+    setSelectedCountry(enrichedCountry);
+    setCountrySearch(enrichedCountry.name);
+    setShowCountryDropdown(false);
+    clearCitySelection();
+
+    if (!citiesByCountry[enrichedCountry.id]) {
+      fetchCitiesForCountry(enrichedCountry.id);
+    }
+
+    onCountrySelect?.(enrichedCountry);
+    setTimeout(() => cityInputRef.current?.focus(), 0);
+  },
+  [citiesByCountry, clearCitySelection, fetchCitiesForCountry, onCountrySelect]
+);
 
     const handleCitySelect = useCallback(
       (city) => {

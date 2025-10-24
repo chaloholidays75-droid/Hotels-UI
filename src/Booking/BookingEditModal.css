@@ -18,13 +18,21 @@
   border-radius: 12px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   width: 100%;
-  max-width: 700px;
+  max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
-
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: white;
+}
 .booking-edit-modal-header {
   display: flex;
   justify-content: space-between;
@@ -91,12 +99,36 @@
   100% { transform: rotate(360deg); }
 }
 
-.booking-edit-modal-form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+/* Form Sections */
+.booking-edit-modal-form-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
+.booking-edit-modal-section {
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 20px;
+  background: white;
+}
+
+.booking-edit-modal-section-title {
+  margin: 0 0 16px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2d3748;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.booking-edit-modal-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* Form Groups & Inputs - Consistent Professional Styling */
 .booking-edit-modal-form-group {
   display: flex;
   flex-direction: column;
@@ -109,9 +141,11 @@
   font-size: 0.9rem;
 }
 
+/* Consistent input styling for all form elements */
 .booking-edit-modal-form-group select,
 .booking-edit-modal-form-group input,
 .booking-edit-modal-form-group textarea {
+  /* width: 100%; */
   padding: 10px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
@@ -119,6 +153,7 @@
   transition: all 0.2s ease;
   background-color: white;
   font-family: inherit;
+  box-sizing: border-box;
 }
 
 .booking-edit-modal-form-group select:focus,
@@ -135,16 +170,50 @@
   background-color: #f7fafc;
   color: #a0aec0;
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
-.booking-edit-modal-form-group textarea {
-  resize: vertical;
-  min-height: 80px;
+.booking-edit-modal-form-group select:hover:not(:disabled),
+.booking-edit-modal-form-group input:hover:not(:disabled),
+.booking-edit-modal-form-group textarea:hover:not(:disabled) {
+  border-color: #cbd5e0;
+}
+
+/* Enhanced Select Dropdown Styling */
+.booking-edit-modal-form-group select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'><path fill='%236B7280' d='M2 0L0 2h4zm0 5L0 3h4z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  cursor: pointer;
+  padding-right: 36px;
+}
+
+.booking-edit-modal-form-group select option {
+  padding: 12px;
+  font-size: 0.95rem;
+  color: #2d3748;
+  background-color: white;
+}
+
+.booking-edit-modal-form-group select option:hover {
+  background-color: #edf2f7 !important;
+}
+
+.booking-edit-modal-form-group select option:checked {
+  background-color: #4299e1;
+  color: white;
 }
 
 /* Hotel Search Styles */
 .booking-edit-modal-hotel-search {
   position: relative;
+  width: 100%;
+}
+
+.booking-edit-modal-hotel-search input {
+  padding-right: 12px;
 }
 
 .booking-edit-modal-hotel-dropdown {
@@ -155,7 +224,8 @@
   max-height: 200px;
   overflow-y: auto;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
   background-color: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   z-index: 1000;
@@ -166,6 +236,8 @@
   cursor: pointer;
   border-bottom: 1px solid #f7fafc;
   transition: background-color 0.2s ease;
+  font-size: 0.95rem;
+  color: #2d3748;
 }
 
 .booking-edit-modal-hotel-dropdown div:hover {
@@ -176,40 +248,67 @@
   border-bottom: none;
 }
 
-/* Guests Section */
-.booking-edit-modal-guests-section {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
-  gap: 20px;
-  align-items: end;
-  background-color: #f8fafc;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
+/* Textarea specific styling */
+.booking-edit-modal-form-group textarea {
+  resize: vertical;
+  min-height: 80px;
 }
 
-.booking-edit-modal-total-people {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px;
-  background: white;
+/* Rooms Section */
+.booking-edit-modal-rooms-section {
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  padding: 16px;
+  background-color: #f8fafc;
 }
 
-.booking-edit-modal-total-people span {
-  font-size: 0.9rem;
+.booking-edit-modal-rooms-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
   font-weight: 500;
   color: #2d3748;
 }
 
-/* Children Ages Section */
-.booking-edit-modal-form-group div:not(.booking-edit-modal-error-message):not(.booking-edit-modal-warning-message) {
-  font-size: 0.8rem;
+.booking-edit-modal-room-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.booking-edit-modal-add-room,
+.booking-edit-modal-remove-room {
+  padding: 8px 16px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.booking-edit-modal-add-room:hover,
+.booking-edit-modal-remove-room:hover {
+  background-color: #edf2f7;
+  border-color: #4299e1;
+}
+
+.booking-edit-modal-room-list {
+  min-height: 60px;
+  background-color: white;
+  border-radius: 4px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.booking-edit-modal-room-item {
+  padding: 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  margin-bottom: 8px;
   color: #718096;
-  margin-top: 4px;
+  font-style: italic;
 }
 
 /* Messages */
@@ -221,6 +320,12 @@
 
 .booking-edit-modal-warning-message {
   color: #d69e2e;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.booking-edit-modal-hint {
+  color: #718096;
   font-size: 0.8rem;
   margin-top: 4px;
 }
@@ -269,6 +374,25 @@
   transform: translateY(-1px);
 }
 
+/* Scrollbar styling for dropdown */
+.booking-edit-modal-hotel-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.booking-edit-modal-hotel-dropdown::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 0 0 6px 0;
+}
+
+.booking-edit-modal-hotel-dropdown::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.booking-edit-modal-hotel-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .booking-edit-modal-content {
@@ -276,20 +400,26 @@
     max-height: 95vh;
   }
 
-  .booking-edit-modal-form-grid {
+  .booking-edit-modal-section-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
 
-  .booking-edit-modal-guests-section {
-    grid-template-columns: 1fr;
+  .booking-edit-modal-rooms-header {
+    flex-direction: column;
     gap: 12px;
+    align-items: flex-start;
   }
 
-  .booking-edit-modal-total-people {
-    flex-direction: row;
+  .booking-edit-modal-room-actions {
+    width: 100%;
     justify-content: space-between;
-    align-items: center;
+  }
+
+  .booking-edit-modal-add-room,
+  .booking-edit-modal-remove-room {
+    flex: 1;
+    text-align: center;
   }
 
   .booking-edit-modal-footer {
@@ -310,5 +440,474 @@
   .booking-edit-modal-header,
   .booking-edit-modal-footer {
     padding: 16px;
+  }
+
+  .booking-edit-modal-section {
+    padding: 16px;
+  }
+}
+/* Enhanced Agency & Supplier Dropdown Styles - Matching Hotel Style */
+.booking-edit-modal-form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background-color: white;
+  font-family: inherit;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  cursor: pointer;
+  padding-right: 36px;
+}
+
+.booking-edit-modal-form-group select:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.booking-edit-modal-form-group select:disabled {
+  background-color: #f7fafc;
+  color: #a0aec0;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.booking-edit-modal-form-group select:hover:not(:disabled) {
+  border-color: #cbd5e0;
+}
+
+/* Custom dropdown arrow animation */
+.booking-edit-modal-form-group select:focus {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%234299e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* Remove default browser styling and add custom styling */
+.booking-edit-modal-form-group select option {
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  color: #2d3748;
+  background-color: white;
+  border-bottom: 1px solid #f7fafc;
+}
+
+.booking-edit-modal-form-group select option:hover {
+  background-color: #edf2f7 !important;
+}
+
+.booking-edit-modal-form-group select option:checked {
+  background-color: #4299e1;
+  color: white;
+}
+
+.booking-edit-modal-form-group select option:focus {
+  background-color: #e2e8f0;
+}
+
+/* For browsers that support styling the dropdown itself */
+.booking-edit-modal-form-group select::-ms-expand {
+  display: none;
+}
+
+/* Focus state for accessibility */
+.booking-edit-modal-form-group select:focus-visible {
+  outline: 2px solid #4299e1;
+  outline-offset: 2px;
+}
+
+/* Custom styling for the dropdown in different browsers */
+@supports (-webkit-appearance: none) or (-moz-appearance: none) {
+  .booking-edit-modal-form-group select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+  }
+}
+
+/* Firefox specific fixes */
+@-moz-document url-prefix() {
+  .booking-edit-modal-form-group select {
+    text-indent: 0;
+    padding-right: 36px;
+  }
+}
+
+/* IE 10/11 fixes */
+@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+  .booking-edit-modal-form-group select {
+    padding-right: 36px;
+    background: none;
+    padding-right: 12px;
+  }
+}
+/* Search Dropdown Styles for Agency, Supplier, and Hotel */
+.booking-edit-modal-search-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.booking-edit-modal-search-dropdown input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  background-color: white;
+  font-family: inherit;
+}
+
+.booking-edit-modal-search-dropdown input:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.booking-edit-modal-search-dropdown input:disabled {
+  background-color: #f7fafc;
+  color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.booking-edit-modal-search-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.booking-edit-modal-search-dropdown-list div {
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f7fafc;
+  transition: background-color 0.2s ease;
+  font-size: 0.95rem;
+  color: #2d3748;
+}
+
+.booking-edit-modal-search-dropdown-list div:hover {
+  background-color: #edf2f7;
+}
+
+.booking-edit-modal-search-dropdown-list div:last-child {
+  border-bottom: none;
+}
+
+/* Scrollbar styling */
+.booking-edit-modal-search-dropdown-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.booking-edit-modal-search-dropdown-list::-webkit-scrollbar-track {
+  background: #f7fafc;
+  border-radius: 0 0 6px 0;
+}
+
+.booking-edit-modal-search-dropdown-list::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.booking-edit-modal-search-dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+/* Total People Display Styles */
+.booking-edit-modal-total-display {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.booking-edit-modal-total-display:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.booking-edit-modal-form-group .booking-edit-modal-hint {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #4a5568;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Room Grid Styles for individual room items */
+.booking-edit-modal-room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.booking-edit-modal-room-item {
+  padding: 20px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.booking-edit-modal-room-item:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e0;
+}
+
+.booking-edit-modal-room-item h4 {
+  margin: 0 0 16px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2d3748;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+/* Room action buttons styling */
+.booking-edit-modal-add-room,
+.booking-edit-modal-remove-room {
+  padding: 10px 16px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  color: #4a5568;
+}
+
+.booking-edit-modal-add-room:hover:not(:disabled) {
+  background-color: #48bb78;
+  color: white;
+  border-color: #48bb78;
+  transform: translateY(-1px);
+}
+
+.booking-edit-modal-remove-room:hover:not(:disabled) {
+  background-color: #f56565;
+  color: white;
+  border-color: #f56565;
+  transform: translateY(-1px);
+}
+
+.booking-edit-modal-add-room:disabled,
+.booking-edit-modal-remove-room:disabled {
+  background-color: #f7fafc;
+  color: #a0aec0;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive design for room grid */
+@media (max-width: 768px) {
+  .booking-edit-modal-room-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .booking-edit-modal-room-item {
+    padding: 16px;
+  }
+  
+  .booking-edit-modal-total-display {
+    font-size: 1rem;
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .booking-edit-modal-room-grid {
+    gap: 10px;
+  }
+  
+  .booking-edit-modal-room-item {
+    padding: 12px;
+  }
+  
+  .booking-edit-modal-room-item h4 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+  }
+  
+  .booking-edit-modal-total-display {
+    font-size: 0.95rem;
+    padding: 8px 10px;
+  }
+}
+/* Tab Styles for Booking Edit Modal */
+.booking-edit-modal-tabs {
+  display: flex;
+  border-bottom: 2px solid #e2e8f0;
+  background: #f8fafc;
+  padding: 0 20px;
+}
+
+.booking-edit-modal-tab {
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+  position: relative;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.booking-edit-modal-tab:hover {
+  color: #334155;
+  background: #f1f5f9;
+}
+
+.booking-edit-modal-tab.active {
+  color: #28a745;
+  border-bottom-color: #28a745;
+  background: white;
+}
+
+/* Commercial Data Specific Styles */
+.booking-edit-modal-subsection {
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.booking-edit-modal-subsection-title {
+  margin: 0 0 20px 0;
+  color: #2d3748;
+  font-size: 16px;
+  font-weight: 600;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.booking-edit-modal-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.booking-edit-modal-array-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.booking-edit-modal-array-header label {
+  margin: 0;
+  font-weight: 600;
+  color: #374151;
+}
+
+.booking-edit-modal-add-item {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.booking-edit-modal-add-item:hover {
+  background: #218838;
+}
+
+.booking-edit-modal-array-item {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px;
+  background: white;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+}
+
+.booking-edit-modal-array-item input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+
+.booking-edit-modal-array-item input:first-child {
+  flex: 2;
+}
+
+.booking-edit-modal-remove-item {
+  background: #dc3545;
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.booking-edit-modal-remove-item:hover {
+  background: #c82333;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .booking-edit-modal-tabs {
+    padding: 0 10px;
+  }
+  
+  .booking-edit-modal-tab {
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+  
+  .booking-edit-modal-array-item {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .booking-edit-modal-array-item input {
+    width: 100%;
   }
 }

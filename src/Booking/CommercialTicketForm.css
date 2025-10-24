@@ -1,0 +1,1141 @@
+.commercial-form-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  
+}
+
+/* Header Styles */
+.commercial-form-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 25px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.commercial-form-header h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.commercial-form-header p {
+  margin: 8px 0 0 0;
+  opacity: 0.9;
+  font-size: 16px;
+}
+
+/* Main Grid Layout */
+.commercial-form-main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-bottom: 25px;
+  display: flex;
+}
+
+/* Section Styles */
+.commercial-form-section {
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Section Headers */
+.commercial-form-section-header {
+  padding: 18px;
+  border-radius: 8px;
+  margin-bottom: 25px;
+  text-align: center;
+  color: white;
+}
+
+.commercial-form-buying-header {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.commercial-form-selling-header {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+}
+
+.commercial-form-section-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.commercial-form-section-header p {
+  margin: 5px 0 0 0;
+  opacity: 0.9;
+  font-size: 14px;
+}
+
+/* Input Grid */
+.commercial-form-input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+/* Labels */
+.commercial-form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555;
+  font-size: 14px;
+}
+
+.commercial-form-sublabel {
+  display: block;
+  margin-bottom: 6px;
+  color: #555;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+/* Inputs and Selects */
+.commercial-form-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.commercial-form-input:focus {
+  border-color: #667eea;
+  outline: none;
+}
+
+.commercial-form-select {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.commercial-form-select:focus {
+  border-color: #667eea;
+  outline: none;
+}
+
+/* Currency Input */
+.commercial-form-currency-input {
+  position: relative;
+}
+
+.commercial-form-currency-symbol {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  font-weight: bold;
+}
+
+.commercial-form-currency-input .commercial-form-input {
+  padding-left: 35px;
+}
+
+/* Checkbox Styles */
+.commercial-form-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  cursor: pointer;
+}
+
+.commercial-form-checkbox {
+  transform: scale(1.3);
+}
+
+.commercial-form-checkbox-text {
+  font-weight: bold;
+  color: #555;
+  font-size: 15px;
+}
+
+.commercial-form-checkbox-description {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.commercial-form-incentive-description {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Commission and Incentive Sections */
+.commercial-form-commission-section,
+.commercial-form-incentive-section {
+  margin-bottom: 20px;
+}
+
+.commercial-form-commission-box,
+.commercial-form-incentive-box {
+  background: #f8f9fa;
+  padding: 18px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.commercial-form-commission-box {
+  border: 2px dashed #28a745;
+}
+
+.commercial-form-incentive-box {
+  border: 2px dashed #dc3545;
+}
+
+.commercial-form-commission-select,
+.commercial-form-incentive-select {
+  border-color: #28a745;
+  background: #f0fff4;
+}
+
+.commercial-form-incentive-select {
+  border-color: #dc3545;
+  background: #fff5f5;
+}
+
+.commercial-form-commission-input,
+.commercial-form-incentive-input {
+  border-color: #28a745;
+  background: #f0fff4;
+}
+
+.commercial-form-incentive-input {
+  border-color: #dc3545;
+  background: #fff5f5;
+}
+
+.commercial-form-commission-amount {
+  margin-top: 10px;
+  padding: 8px;
+  background: #d4edda;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: bold;
+  color: #155724;
+}
+
+.commercial-form-incentive-amount {
+  margin-top: 10px;
+  padding: 8px;
+  background: #f8d7da;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: bold;
+  color: #721c24;
+}
+
+/* Additional Costs/Discounts */
+.commercial-form-additional-section {
+  margin-bottom: 20px;
+}
+
+.commercial-form-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.commercial-form-section-title h4 {
+  margin: 0;
+  color: #555;
+  font-size: 16px;
+}
+
+.commercial-form-add-button {
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.commercial-form-add-cost {
+  background: #dc3545;
+}
+
+.commercial-form-add-discount {
+  background: #28a745;
+}
+
+.commercial-form-additional-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+
+.commercial-form-small-input,
+.commercial-form-small-select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 12px;
+}
+
+.commercial-form-remove-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* VAT Section */
+.commercial-form-vat-section {
+  margin-bottom: 20px;
+}
+
+.commercial-form-vat-input {
+  border-color: #007bff;
+}
+
+.commercial-form-vat-amount-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e7f3ff;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.commercial-form-vat-label {
+  font-size: 12px;
+  color: #0066cc;
+}
+
+.commercial-form-vat-value {
+  font-weight: bold;
+  color: #0066cc;
+}
+
+/* Summary Sections */
+.commercial-form-summary {
+  padding: 20px;
+  border-radius: 8px;
+  border: 2px solid;
+}
+
+.commercial-form-buying-summary {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-color: #ffd700;
+}
+
+.commercial-form-selling-summary {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-color: #28a745;
+}
+
+.commercial-form-summary h4 {
+  margin: 0 0 15px 0;
+  text-align: center;
+}
+
+.commercial-form-buying-summary h4 {
+  color: #856404;
+}
+
+.commercial-form-selling-summary h4 {
+  color: #155724;
+}
+
+.commercial-form-summary-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.commercial-form-summary-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.commercial-form-cost-row {
+  color: #dc3545;
+}
+
+.commercial-form-subtotal-row {
+  color: #0066cc;
+  font-weight: bold;
+}
+
+.commercial-form-commission-row {
+  color: #28a745;
+}
+
+.commercial-form-amount-before-vat {
+  color: #17a2b8;
+  font-weight: bold;
+}
+
+.commercial-form-vat-row {
+  color: #6f42c1;
+}
+
+.commercial-form-incentive-row,
+.commercial-form-discount-row {
+  color: #dc3545;
+}
+
+.commercial-form-gross-after-incentives {
+  color: #17a2b8;
+  font-weight: bold;
+}
+
+.commercial-form-summary-divider {
+  margin: 8px 0;
+  border: none;
+  border-top: 2px solid;
+}
+
+.commercial-form-buying-summary .commercial-form-summary-divider {
+  border-color: #ffd700;
+}
+
+.commercial-form-selling-summary .commercial-form-summary-divider {
+  border-color: #28a745;
+}
+
+.commercial-form-net-payment,
+.commercial-form-net-receivable {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.commercial-form-net-payment {
+  color: #856404;
+}
+
+.commercial-form-net-receivable {
+  color: #155724;
+}
+
+/* Exchange Rate Section */
+.commercial-form-exchange-section {
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.commercial-form-exchange-section h3 {
+  margin-top: 0;
+  color: #555;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.commercial-form-exchange-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  align-items: center;
+}
+
+.commercial-form-exchange-input {
+  border-color: #007bff;
+}
+
+.commercial-form-exchange-rate-display {
+  text-align: center;
+  margin-top: 8px;
+  font-weight: bold;
+  color: #007bff;
+}
+
+.commercial-form-auto-rate {
+  text-align: center;
+}
+
+.commercial-form-auto-rate-label {
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.commercial-form-auto-rate-description {
+  color: #666;
+  display: block;
+}
+
+.commercial-form-converted-cost {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  padding: 15px;
+  border-radius: 8px;
+  border: 2px solid #ffd700;
+  text-align: center;
+}
+
+.commercial-form-converted-label {
+  font-size: 14px;
+  color: #856404;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.commercial-form-converted-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: #856404;
+}
+
+/* Profit Section */
+.commercial-form-profit-section {
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.commercial-form-profit-section h3 {
+  margin-top: 0;
+  color: #555;
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.commercial-form-profit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 25px;
+  display: flex;
+}
+
+.commercial-form-profit-card {
+  padding: 25px;
+  border-radius: 10px;
+  border: 3px solid;
+  text-align: center;
+}
+
+.commercial-form-profit-positive {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-color: #28a745;
+}
+
+.commercial-form-profit-negative {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border-color: #dc3545;
+}
+
+.commercial-form-margin-positive {
+  background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+  border-color: #17a2b8;
+}
+
+.commercial-form-margin-negative {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  border-color: #dc3545;
+}
+
+.commercial-form-markup-card {
+  background: linear-gradient(135deg, #e2e3e5 0%, #d6d8db 100%);
+  border-color: #6c757d;
+}
+
+.commercial-form-profit-title {
+  font-size: 16px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.commercial-form-profit-positive .commercial-form-profit-title,
+.commercial-form-profit-negative .commercial-form-profit-title {
+  color: #155724;
+}
+
+.commercial-form-margin-positive .commercial-form-profit-title,
+.commercial-form-margin-negative .commercial-form-profit-title {
+  color: #0c5460;
+}
+
+.commercial-form-markup-card .commercial-form-profit-title {
+  color: #383d41;
+}
+
+.commercial-form-profit-amount {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.commercial-form-profit-positive .commercial-form-profit-amount {
+  color: #155724;
+}
+
+.commercial-form-profit-negative .commercial-form-profit-amount {
+  color: #721c24;
+}
+
+.commercial-form-margin-positive .commercial-form-profit-amount {
+  color: #0c5460;
+}
+
+.commercial-form-margin-negative .commercial-form-profit-amount {
+  color: #721c24;
+}
+
+.commercial-form-markup-card .commercial-form-profit-amount {
+  color: #383d41;
+}
+
+.commercial-form-profit-status {
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.commercial-form-profit-positive .commercial-form-profit-status {
+  color: #155724;
+}
+
+.commercial-form-profit-negative .commercial-form-profit-status {
+  color: #721c24;
+}
+
+.commercial-form-margin-positive .commercial-form-profit-status {
+  color: #0c5460;
+}
+
+.commercial-form-margin-negative .commercial-form-profit-status {
+  color: #721c24;
+}
+
+.commercial-form-markup-card .commercial-form-profit-status {
+  color: #383d41;
+}
+
+/* Breakdown Grid */
+.commercial-form-breakdown-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  
+}
+
+.commercial-form-breakdown-grid h4 {
+  color: #555;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.commercial-form-breakdown-card {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  /* border: 1px solid #e1e5e9; */
+}
+
+.commercial-form-breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #dee2e6;
+  font-weight: bold;
+}
+
+.commercial-form-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.commercial-form-breakdown-cost {
+  color: #dc3545;
+}
+
+.commercial-form-breakdown-gross {
+  color: #0066cc;
+  font-weight: bold;
+}
+
+.commercial-form-breakdown-commission {
+  color: #28a745;
+}
+
+.commercial-form-breakdown-gross-after {
+  color: #17a2b8;
+  font-weight: bold;
+}
+
+.commercial-form-breakdown-vat {
+  color: #6f42c1;
+}
+
+.commercial-form-breakdown-incentive,
+.commercial-form-breakdown-discount {
+  color: #dc3545;
+}
+
+.commercial-form-breakdown-total {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 2px solid;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.commercial-form-breakdown-cost-total {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.commercial-form-breakdown-revenue-total {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .commercial-form-main-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .commercial-form-profit-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .commercial-form-breakdown-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .commercial-form-exchange-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+}
+
+@media (max-width: 768px) {
+  .commercial-form-input-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .commercial-form-additional-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .commercial-form-container {
+    padding: 10px;
+  }
+  
+  .commercial-form-section {
+    padding: 15px;
+  }
+}
+/* Container Styles */
+.booking-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Booking Selection Card */
+.booking-selection {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 20px 24px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.booking-selection:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Dropdown Wrapper */
+.dropdown-wrapper {
+  flex: 1;
+  margin-right: 24px;
+  position: relative;
+ 
+}
+
+
+/* Label Styling */
+.booking-label {
+  font-weight: 600;
+  color: #2d3748;
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+}
+
+/* Custom Dropdown */
+.custom-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-trigger {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: white;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  min-height: 44px;
+   margin-bottom: 25px;
+}
+
+.dropdown-trigger:hover {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.dropdown-trigger:focus {
+  outline: none;
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.dropdown-placeholder {
+  color: #a0aec0;
+}
+
+.selected-value {
+  color: #2d3748;
+  font-weight: 500;
+}
+
+.dropdown-arrow {
+  color: #718096;
+  transition: transform 0.2s ease;
+  font-size: 12px;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 4px;
+  max-height: 280px;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Search Input */
+.search-container {
+  padding: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafbfc;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.search-input:focus {
+  border-color: #4299e1;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.search-input::placeholder {
+  color: #a0aec0;
+}
+
+/* Options List */
+.options-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.options-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.options-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.options-list::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.options-list::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Option Items */
+.option-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f7fafc;
+  transition: all 0.15s ease;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.option-item:hover {
+  background-color: #f0f9ff;
+  border-left: 3px solid #4299e1;
+}
+
+.option-item.highlighted {
+  background-color: #ebf8ff;
+  border-left: 3px solid #3182ce;
+  font-weight: 500;
+}
+
+.option-item.selected {
+  background-color: #e6fffa;
+  border-left: 3px solid #38b2ac;
+  color: #234e52;
+}
+
+.option-item:last-child {
+  border-bottom: none;
+}
+
+/* No Results State */
+.no-results {
+  padding: 20px 16px;
+  text-align: center;
+  color: #a0aec0;
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .booking-selection {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+  
+  .dropdown-wrapper {
+    margin-right: 0;
+    margin-bottom: 16px;
+  }
+  
+  .dropdown-menu {
+    position: fixed;
+    top: 50%;
+    left: 16px;
+    right: 16px;
+    transform: translateY(-50%);
+    max-height: 60vh;
+  }
+}
+/* Save Button Styles */
+.booking-save-button {
+  /* background: linear-gradient(135deg, #007bff 0%, #0056b3 100%); */
+  background-color: #6e58ea;
+  color: white;
+  margin: 40px 40%;
+  border: none;
+  padding: 14px 38px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+  min-width: 160px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 1s ease;
+}
+
+.booking-save-button:hover:not(:disabled) {
+  /* background: linear-gradient(135deg, #0056b3 0%, #004085 100%); */
+  transform: translateY(-2px);
+  border-radius: 50px;
+  color: #6e58ea;
+  background-color: white;
+  /* box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4); */
+}
+
+.booking-save-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 123, 255, 0.3);
+}
+
+.booking-save-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.3), 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.booking-save-button:disabled {
+  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+/* Loading state animation */
+.booking-save-button.loading {
+  color: transparent;
+}
+
+.booking-save-button.loading::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  top: 50%;
+  left: 50%;
+  margin-left: -10px;
+  margin-top: -10px;
+  border: 2px solid transparent;
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: button-spinner 0.8s linear infinite;
+}
+
+@keyframes button-spinner {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Success state */
+.booking-save-button.success {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.booking-save-button.success:hover {
+  background: linear-gradient(135deg, #218838 0%, #1c7430 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+/* Error state */
+.booking-save-button.error {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+.booking-save-button.error:hover {
+  background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+/* Button container for positioning */
+.button-container {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 15px;
+  margin-top: 25px;
+  padding: 20px 0;
+  border-top: 1px solid #e9ecef;
+}
+
+/* Secondary button styles */
+.secondary-button {
+  background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+.secondary-button:hover {
+  background: linear-gradient(135deg, #545b62 0%, #3d4246 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .button-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .booking-save-button,
+  .secondary-button {
+    width: 100%;
+    justify-content: center;
+  }
+}

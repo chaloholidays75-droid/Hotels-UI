@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import bookingApi from "../api/bookingApi";
 import supplierApi from "../api/supplierApi";
 import agencyApi from "../api/agencyApi";
 import "./BookingForm.css";
+import RoomTypeSelector from "../components/RoomTypeSelector";
+import CommercialForm from "./CommercialForm";
 
 const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
-  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [ageWarnings, setAgeWarnings] = useState({});
-
   const [booking, setBooking] = useState(
     initialBooking || {
       agencyId: null,
@@ -25,7 +24,7 @@ const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
       numberOfRooms: 0,
       adults: 0,
       children: 0,
-      totalPeople: 0, // New field for automatic calculation
+      totalPeople: 0,
       childrenAges: [],
       status: "Pending",
       specialRequest: ""
@@ -38,83 +37,128 @@ const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
   const [suppliers, setSuppliers] = useState([]);
   const [hotels, setHotels] = useState([]);
   const [hotelQuery, setHotelQuery] = useState("");
+  const [selectedHotel, setSelectedHotel] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [rooms, setRooms] = useState(() => booking.bookingRooms || []);
+  const [showHotelResults, setShowHotelResults] = useState(false);
+
+  // Search states
+  const [agentSearch, setAgentSearch] = useState("");
+  const [categorySearch, setCategorySearch] = useState("");
+  const [subCategorySearch, setSubCategorySearch] = useState("");
+  const [supplierSearch, setSupplierSearch] = useState("");
+  const [showAgentDropdown, setShowAgentDropdown] = useState(false);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showSubCategoryDropdown, setShowSubCategoryDropdown] = useState(false);
+  const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
+
+  // Refs for date inputs
+  const checkInRef = useRef(null);
+  const checkOutRef = useRef(null);
 
   const today = new Date().toISOString().split("T")[0];
-  // Add these state variables
-const [searchFocused, setSearchFocused] = useState(false);
-const [selectedHotel, setSelectedHotel] = useState(null);
-const [hoveredHotel, setHoveredHotel] = useState(null);
-const [showHotelsList, setShowHotelsList] = useState(false);
-const [mapCenter, setMapCenter] = useState({ lat: 51.5074, lng: -0.1278 });
-const [mapLoaded, setMapLoaded] = useState(false);
-const [mapView, setMapView] = useState(false);
-const [searchLoading, setSearchLoading] = useState(false);
 
-// Add this function for hotel selection
-const handleHotelSelect = (hotel) => {
-  setSelectedHotel(hotel);
-  setBooking({ 
-    ...booking, 
-    hotelId: hotel.id, 
-    hotelName: hotel.hotelName 
-  });
-  setHotelQuery(hotel.hotelName);
-  setSearchFocused(false);
+  // Filtered data based on search
+  const filteredAgents = agents.filter(agent => 
+    agent.agencyName.toLowerCase().includes(agentSearch.toLowerCase())
+  );
   
-  // Center map on selected hotel
-  if (hotel.latitude && hotel.longitude) {
-    setMapCenter({ lat: hotel.latitude, lng: hotel.longitude });
-  }
-};
+  const filteredCategories = categories.filter(category => 
+    category.name.toLowerCase().includes(categorySearch.toLowerCase())
+  );
+  
+  const filteredSubCategories = subCategories.filter(subCat => 
+    subCat.name.toLowerCase().includes(subCategorySearch.toLowerCase())
+  );
+  
+  const filteredSuppliers = suppliers.filter(supplier => 
+    supplier.supplierName.toLowerCase().includes(supplierSearch.toLowerCase())
+  );
 
-// Update your hotel search useEffect with loading state
-useEffect(() => {
-  if (hotelQuery.length < 2) {
-    setHotels([]);
-    setSearchLoading(false);
-    return;
-  }
-
-  const fetchHotels = async () => {
-    setSearchLoading(true);
-    try {
-      const hotelList = await bookingApi.searchHotels(hotelQuery);
-      setHotels(Array.isArray(hotelList) ? hotelList : []);
-    } catch (err) {
-      console.error(err);
-      setHotels([]);
-    } finally {
-      setSearchLoading(false);
+  const buildRooms = (count, existing = []) => {
+    const next = [...existing];
+    if (count > next.length) {
+      for (let i = next.length; i < count; i++) {
+        next.push({
+          roomTypeId: null,
+          adults: 2,
+          children: 0,
+          childrenAges: [],
+        });
+      }
+    } else if (count < next.length) {
+      next.length = count;
     }
+    next.forEach(r => {
+      const c = r.children || 0;
+      if (r.childrenAges.length !== c) {
+        r.childrenAges = Array.from({ length: c }, (_, i) => r.childrenAges[i] ?? 0);
+      }
+    });
+    return next;
   };
 
-  const debounceTimer = setTimeout(fetchHotels, 300);
-  return () => clearTimeout(debounceTimer);
-}, [hotelQuery]);
+  const totalPeople = rooms.reduce((sum, r) => sum + (Number(r.adults || 0) + Number(r.children || 0)), 0);
+  const totalAdults = rooms.reduce((sum, r) => sum + Number(r.adults || 0), 0);
+  const totalChildren = rooms.reduce((sum, r) => sum + Number(r.children || 0), 0);
 
-  // --- Calculate total people whenever adults or children change ---
   useEffect(() => {
-    const totalPeople = booking.adults + booking.children;
-    setBooking(prev => ({ ...prev, totalPeople }));
-  }, [booking.adults, booking.children]);
+    setBooking(prev => ({ ...prev, bookingRooms: rooms }));
+  }, [rooms]);
 
-  // --- Fetch agents and categories ---
+  useEffect(() => {
+    const count = Number(booking.numberOfRooms || 0);
+    setRooms(prev => buildRooms(count, prev));
+  }, [booking.numberOfRooms]);
+
+  // Hotel search
+  useEffect(() => {
+    if (hotelQuery.length < 2) {
+      setHotels([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    const fetchHotels = async () => {
+      setSearchLoading(true);
+      try {
+        const hotelList = await bookingApi.searchHotels(hotelQuery);
+        setHotels(Array.isArray(hotelList) ? hotelList : []);
+        setShowHotelResults(true);
+      } catch (err) {
+        console.error(err);
+        setHotels([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(fetchHotels, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [hotelQuery]);
+
+  // Fetch initial data
   useEffect(() => {
     const fetchData = async () => {
-      const agentList = await agencyApi.getAgencies();
-      setAgents(agentList || []);
-
-      const categoryList = await supplierApi.getCategories();
-      setCategories(categoryList || []);
+      try {
+        const [agentList, categoryList] = await Promise.all([
+          agencyApi.getAgencies(),
+          supplierApi.getCategories()
+        ]);
+        setAgents(agentList || []);
+        setCategories(categoryList || []);
+      } catch (err) {
+        console.error("Failed to fetch initial data:", err);
+      }
     };
     fetchData();
   }, []);
 
-  // --- Fetch subcategories ---
+  // Fetch subcategories when category changes
   useEffect(() => {
     if (!booking.supplierCategoryId) {
       setSubCategories([]);
-      setSuppliers([]);
+      setSubCategorySearch("");
       setBooking(prev => ({
         ...prev,
         supplierSubCategoryId: null,
@@ -125,67 +169,39 @@ useEffect(() => {
     }
 
     const fetchSubCategories = async () => {
-      const subcats = await supplierApi.getSubCategories(booking.supplierCategoryId);
-      setSubCategories(subcats || []);
-
-      setBooking(prev => ({
-        ...prev,
-        supplierSubCategoryId: subcats && subcats.length === 1 ? subcats[0].id : null,
-        supplierId: null,
-        supplierName: ""
-      }));
+      try {
+        const subcats = await supplierApi.getSubCategories(booking.supplierCategoryId);
+        setSubCategories(subcats || []);
+      } catch (err) {
+        console.error("Failed fetching subcategories:", err);
+      }
     };
     fetchSubCategories();
   }, [booking.supplierCategoryId]);
 
-  // --- Fetch suppliers ---
+  // Fetch suppliers when category or subcategory changes
   useEffect(() => {
     if (!booking.supplierCategoryId) {
       setSuppliers([]);
-      setBooking(prev => ({ ...prev, supplierId: null, supplierName: "" }));
+      setSupplierSearch("");
       return;
     }
 
     const fetchSuppliers = async () => {
-      const supplierList = await supplierApi.getSuppliersByCategory(
-        booking.supplierCategoryId,
-        booking.supplierSubCategoryId
-      );
-      setSuppliers(supplierList || []);
-
-      if (supplierList && supplierList.length === 1) {
-        setBooking(prev => ({
-          ...prev,
-          supplierId: supplierList[0].id,
-          supplierName: supplierList[0].supplierName
-        }));
-      } else {
-        setBooking(prev => ({ ...prev, supplierId: null, supplierName: "" }));
+      try {
+        const supplierList = await supplierApi.getSuppliersByCategory(
+          booking.supplierCategoryId,
+          booking.supplierSubCategoryId
+        );
+        setSuppliers(supplierList || []);
+      } catch (err) {
+        console.error("Failed fetching suppliers:", err);
       }
     };
     fetchSuppliers();
   }, [booking.supplierCategoryId, booking.supplierSubCategoryId]);
 
-  // --- Hotel autocomplete ---
-  useEffect(() => {
-    if (hotelQuery.length < 2) {
-      setHotels([]);
-      return;
-    }
-
-    const fetchHotels = async () => {
-      try {
-        const hotelList = await bookingApi.searchHotels(hotelQuery);
-        setHotels(Array.isArray(hotelList) ? hotelList : []);
-      } catch (err) {
-        console.error(err);
-        setHotels([]);
-      }
-    };
-    fetchHotels();
-  }, [hotelQuery]);
-
-  // --- Calculate nights ---
+  // Calculate nights
   useEffect(() => {
     if (booking.checkIn && booking.checkOut) {
       const nights = (new Date(booking.checkOut) - new Date(booking.checkIn)) / (1000 * 60 * 60 * 24);
@@ -193,685 +209,556 @@ useEffect(() => {
     }
   }, [booking.checkIn, booking.checkOut]);
 
-  // --- Child age handler ---
-  const handleChildAgeChange = (index, value) => {
-    const ageValue = value === "" ? "" : parseInt(value || 0);
-    const ages = [...booking.childrenAges];
-    ages[index] = ageValue;
-
-    let adults = booking.adults;
-    let children = 0;
-    const newWarnings = { ...ageWarnings };
-
-    ages.forEach((age, i) => {
-      if (age > 12) {
-        adults += 1;
-        newWarnings[i] = "Age above 12 will be counted as adult";
-      } else if (age > 0) {
-        children += 1;
-        delete newWarnings[i];
-      } else {
-        delete newWarnings[i];
-      }
+  const handleHotelSelect = (hotel) => {
+    setSelectedHotel(hotel);
+    setBooking({ 
+      ...booking, 
+      hotelId: hotel.id, 
+      hotelName: hotel.hotelName 
     });
-
-    const totalPeople = adults + children;
-    
-    setAgeWarnings(newWarnings);
-    setBooking({ ...booking, childrenAges: ages, adults, children, totalPeople });
+    setHotelQuery(hotel.hotelName);
+    setShowHotelResults(false);
   };
 
-  // --- Navigation ---
-  const handleNext = () => setStep(prev => Math.min(prev + 1, 5));
-  const handlePrev = () => setStep(prev => Math.max(prev - 1, 1));
-
-  // --- Save booking ---
-  const handleSave = async () => {
-    try {
-      const payload = {
-        agencyId: booking.agencyId,
-        supplierCategoryId: booking.supplierCategoryId,
-        supplierSubCategoryId: booking.supplierSubCategoryId,
-        supplierId: booking.supplierId,
-        hotelId: booking.hotelId,
-        checkIn: booking.checkIn,
-        checkOut: booking.checkOut,
-        adults: booking.adults,
-        children: booking.children,
-        totalPeople: booking.totalPeople, // Include total people in payload
-        childrenAges: booking.childrenAges ? booking.childrenAges.join(",") : "",
-        numberOfRooms: booking.numberOfRooms,
-        specialRequest: booking.specialRequest,
-        status: booking.status || "Pending"
-      };
-
-      console.log("Sending payload:", payload);
-
-      const response = await bookingApi.createBooking(payload);
-      console.log("Booking created:", response.data);
-      alert("Booking created successfully!");
-
-    } catch (error) {
-      console.error("Failed to create booking:", error);
-      alert("Failed to create booking. Please try again.")
+  // Function to open calendar when clicking on date input
+  const openCalendar = (type) => {
+    if (type === 'checkin' && checkInRef.current) {
+      checkInRef.current.showPicker();
+    } else if (type === 'checkout' && checkOutRef.current) {
+      checkOutRef.current.showPicker();
     }
   };
 
-  // Step titles for progress bar
-  const stepTitles = [
-    "Agent & Supplier",
-    "Hotel Search",
-    "Dates & Duration",
-    "Rooms & Guests",
-    "Special Requests & Summary"
-  ];
+  const handleSave = async () => {
+    try {
+      if (!booking.hotelId) { 
+        alert("Please select a hotel."); 
+        return; 
+      }
+      if (!booking.checkIn || !booking.checkOut) { 
+        alert("Please select check-in and check-out dates."); 
+        return; 
+      }
+      if (!rooms.length) { 
+        alert("Please add at least one room."); 
+        return; 
+      }
+
+      const payload = {
+        agencyId: booking.agencyId,
+        supplierId: booking.supplierId,
+        hotelId: booking.hotelId,
+        checkIn: new Date(booking.checkIn).toISOString(),
+        checkOut: new Date(booking.checkOut).toISOString(),
+        specialRequest: booking.specialRequest,
+        bookingRooms: rooms.map(r => ({
+          roomTypeId: r.roomTypeId,
+          adults: Number(r.adults),
+          children: Number(r.children),
+          childrenAges: r.childrenAges
+        }))
+      };
+
+      setLoading(true);
+      const res = await bookingApi.createBooking(payload);
+      onSaved?.(res);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to save booking. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isFormValid = () => {
+    return booking.agencyId && 
+           booking.supplierCategoryId && 
+           booking.supplierId && 
+           booking.hotelId && 
+           booking.checkIn && 
+           booking.checkOut && 
+           rooms.length > 0;
+  };
 
   return (
-    <div className="booking-form-container">
-      <div className="booking-form-header">
-        <h2 className="booking-form-title">Create New Booking</h2>
-        <p className="booking-form-subtitle">Fill in the details to create a new booking</p>
-      </div>
+     <div className="booking-form-container">
+      {/* <div className="booking-form-header">
+        <h2>Quick Booking</h2>
+        <p>Fill all details in one go</p>
+      </div> */}
 
-      {/* Progress Bar */}
-      <div className="booking-form-progress-container">
-        <div className="booking-form-progress-bar">
-          <div 
-            className="booking-form-progress-fill" 
-            style={{ width: `${(step / 5) * 100}%` }}
-          ></div>
-        </div>
-        <div className="booking-form-step-indicators">
-          {stepTitles.map((title, index) => (
-            <div 
-              key={index + 1}
-              className={`booking-form-step-indicator ${step === index + 1 ? 'booking-form-step-active' : ''} ${step > index + 1 ? 'booking-form-step-completed' : ''}`}
-            >
-              <div className="booking-form-step-number">{index + 1}</div>
-              <span className="booking-form-step-title">{title}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Step 1: Agent & Supplier */}
-      {step === 1 && (
-        <div className="booking-form-step">
-          <div className="booking-form-step-header">
-            <h3>Agent & Supplier Information</h3>
-            <p>Select the agent and supplier details for this booking</p>
+      <div className="booking-form-grid">
+        {/* Agent Search */}
+        <div className="booking-form-box">
+          <label>Agent *</label>
+          <div className="booking-searchable-dropdown">
+            <input
+              type="text"
+              placeholder="Search agent..."
+              value={agentSearch}
+              onChange={(e) => setAgentSearch(e.target.value)}
+              onFocus={() => setShowAgentDropdown(true)}
+              onBlur={() => setTimeout(() => setShowAgentDropdown(false), 200)}
+              className="booking-search-input"
+            />
+            {showAgentDropdown && filteredAgents.length > 0 && (
+              <div className="booking-dropdown-list">
+                {filteredAgents.map(agent => (
+                  <div
+                    key={agent.id}
+                    className="booking-dropdown-item"
+                    onClick={() => {
+                      setBooking({ 
+                        ...booking, 
+                        agencyId: agent.id, 
+                        agencyName: agent.agencyName 
+                      });
+                      setAgentSearch(agent.agencyName);
+                      setShowAgentDropdown(false);
+                    }}
+                  >
+                    {agent.agencyName}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          
-          <div className="booking-form-grid">
-            <div className="booking-form-group">
-              <label className="booking-form-label">Agent *</label>
-              <select
-                className="booking-form-select"
-                value={booking.agencyId || ""}
-                onChange={e => {
-                  const selected = agents.find(a => a.id === parseInt(e.target.value));
-                  setBooking({ ...booking, agencyId: selected?.id || null, agencyName: selected?.agencyName || "" });
-                }}
-              >
-                <option value="">Select an agent</option>
-                {agents.map(a => <option key={a.id} value={a.id}>{a.agencyName}</option>)}
-              </select>
-            </div>
-
-            <div className="booking-form-group">
-              <label className="booking-form-label">Supplier Category *</label>
-              <select
-                className="booking-form-select"
-                value={booking.supplierCategoryId || ""}
-                onChange={e => setBooking({ ...booking, supplierCategoryId: parseInt(e.target.value) })}
-              >
-                <option value="">Select Category</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-
-            <div className="booking-form-group">
-              <label className="booking-form-label">Supplier Subcategory *</label>
-              <select
-                className="booking-form-select"
-                value={booking.supplierSubCategoryId || ""}
-                disabled={!booking.supplierCategoryId || subCategories.length === 0}
-                onChange={e => setBooking({ ...booking, supplierSubCategoryId: parseInt(e.target.value) })}
-              >
-                <option value="">Select Subcategory</option>
-                {subCategories.map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
-              </select>
-            </div>
-
-            <div className="booking-form-group">
-              <label className="booking-form-label">Supplier *</label>
-              <select
-                className="booking-form-select"
-                value={booking.supplierId || ""}
-                disabled={!booking.supplierCategoryId || suppliers.length === 0}
-                onChange={e => {
-                  const selected = suppliers.find(s => s.id === parseInt(e.target.value));
-                  setBooking({ ...booking, supplierId: selected?.id || null, supplierName: selected?.supplierName || "" });
-                }}
-              >
-                <option value="">Select Supplier</option>
-                {suppliers.map(s => <option key={s.id} value={s.id}>{s.supplierName}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="booking-form-actions">
-            <button className="booking-form-btn booking-form-btn-secondary" onClick={onCancel}>Cancel</button>
-            <button className="booking-form-btn booking-form-btn-primary" onClick={handleNext} disabled={!booking.supplierId}>
-              Next →
-            </button>
-          </div>
+          {booking.agencyName && (
+            <div className="booking-selected-badge"> {booking.agencyName}</div>
+          )}
         </div>
-      )}
 
-{step === 2 && (
-  <div className="hotel-search-step">
-    <div className="booking-form-step-header">
-      <h3>Find Your Perfect Hotel</h3>
-      <p>Search from thousands of hotels worldwide</p>
-    </div>
-    
-    <div className="hotel-search-layout">
-      {/* Left Panel - Search & Results */}
-      <div className="hotel-search-panel">
-        {/* Enhanced Search Bar */}
-        <div className="enhanced-search-container">
-          <div className="search-bar-with-filters">
-            <div className="search-input-group">
-              <div className="search-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#5f6368">
+        {/* Category Search */}
+        <div className="booking-form-box">
+          <label>Category *</label>
+          <div className="booking-searchable-dropdown">
+            <input
+              type="text"
+              placeholder="Search category..."
+              value={categorySearch}
+              onChange={(e) => setCategorySearch(e.target.value)}
+              onFocus={() => setShowCategoryDropdown(true)}
+              onBlur={() => setTimeout(() => setShowCategoryDropdown(false), 200)}
+              className="booking-search-input"
+            />
+            {showCategoryDropdown && filteredCategories.length > 0 && (
+              <div className="booking-dropdown-list">
+                {filteredCategories.map(category => (
+                  <div
+                    key={category.id}
+                    className="booking-dropdown-item"
+                    onClick={() => {
+                      setBooking({ 
+                        ...booking, 
+                        supplierCategoryId: category.id,
+                        supplierSubCategoryId: null,
+                        supplierId: null,
+                        supplierName: ""
+                      });
+                      setCategorySearch(category.name);
+                      setShowCategoryDropdown(false);
+                    }}
+                  >
+                    {category.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {booking.supplierCategoryId && (
+            <div className="booking-selected-badge">
+               {categories.find(c => c.id === booking.supplierCategoryId)?.name}
+            </div>
+          )}
+        </div>
+
+        {/* Subcategory Search */}
+        <div className="booking-form-box">
+          <label>Subcategory</label>
+          <div className="booking-searchable-dropdown">
+            <input
+              type="text"
+              placeholder={booking.supplierCategoryId ? "Search subcategory..." : "Select category first"}
+              value={subCategorySearch}
+              onChange={(e) => setSubCategorySearch(e.target.value)}
+              onFocus={() => booking.supplierCategoryId && setShowSubCategoryDropdown(true)}
+              onBlur={() => setTimeout(() => setShowSubCategoryDropdown(false), 200)}
+              className="booking-search-input"
+              disabled={!booking.supplierCategoryId}
+            />
+            {showSubCategoryDropdown && filteredSubCategories.length > 0 && (
+              <div className="booking-dropdown-list">
+                {filteredSubCategories.map(subCat => (
+                  <div
+                    key={subCat.id}
+                    className="booking-dropdown-item"
+                    onClick={() => {
+                      setBooking({ 
+                        ...booking, 
+                        supplierSubCategoryId: subCat.id,
+                        supplierId: null,
+                        supplierName: ""
+                      });
+                      setSubCategorySearch(subCat.name);
+                      setShowSubCategoryDropdown(false);
+                    }}
+                  >
+                    {subCat.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {booking.supplierSubCategoryId && (
+            <div className="booking-selected-badge">
+               {subCategories.find(sc => sc.id === booking.supplierSubCategoryId)?.name}
+            </div>
+          )}
+        </div>
+
+        {/* Supplier Search */}
+        <div className="booking-form-box">
+          <label>Supplier *</label>
+          <div className="booking-searchable-dropdown">
+            <input
+              type="text"
+              placeholder={booking.supplierCategoryId ? "Search supplier..." : "Select category first"}
+              value={supplierSearch}
+              onChange={(e) => setSupplierSearch(e.target.value)}
+              onFocus={() => booking.supplierCategoryId && setShowSupplierDropdown(true)}
+              onBlur={() => setTimeout(() => setShowSupplierDropdown(false), 200)}
+              className="booking-search-input"
+              disabled={!booking.supplierCategoryId}
+            />
+            {showSupplierDropdown && filteredSuppliers.length > 0 && (
+              <div className="booking-dropdown-list">
+                {filteredSuppliers.map(supplier => (
+                  <div
+                    key={supplier.id}
+                    className="booking-dropdown-item"
+                    onClick={() => {
+                      setBooking({ 
+                        ...booking, 
+                        supplierId: supplier.id,
+                        supplierName: supplier.supplierName
+                      });
+                      setSupplierSearch(supplier.supplierName);
+                      setShowSupplierDropdown(false);
+                    }}
+                  >
+                    {supplier.supplierName}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {booking.supplierName && (
+            <div className="booking-selected-badge"> {booking.supplierName}</div>
+          )}
+        </div>
+
+        {/* Hotel Search */}
+        <div className="booking-form-box full-width">
+          <label>Hotel *</label>
+          <div className="booking-hotel-search-container">
+            <div className="booking-search-input-wrapper">
+              <div className="booking-search-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#64748b">
                   <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                 </svg>
               </div>
               <input
                 type="text"
-                className="enhanced-search-input"
-                placeholder="Where do you want to stay? Search hotels, cities, or landmarks..."
+                placeholder="Search hotels, cities, or landmarks..."
                 value={hotelQuery}
-                onChange={e => setHotelQuery(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
+                onChange={(e) => setHotelQuery(e.target.value)}
+                onFocus={() => setShowHotelResults(true)}
+                className="booking-hotel-search-input"
               />
               {hotelQuery && (
-                <button className="clear-search-btn" onClick={() => setHotelQuery("")}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="#5f6368">
+                <button 
+                  className="booking-clear-search"
+                  onClick={() => {
+                    setHotelQuery("");
+                    setSelectedHotel(null);
+                    setBooking(prev => ({ ...prev, hotelId: null, hotelName: "" }));
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#64748b">
                     <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
                   </svg>
                 </button>
               )}
-              <button className="search-action-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="#1a73e8">
-                  <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
-                </svg>
-              </button>
             </div>
             
-            {/* Quick Filters */}
-            <div className="quick-filters">
-              <button className="filter-btn active">All</button>
-              <button className="filter-btn">⭐ 4+ Stars</button>
-              <button className="filter-btn">🏨 Luxury</button>
-              <button className="filter-btn">💰 Budget</button>
-              <button className="filter-btn">🏖️ Beach</button>
-            </div>
-          </div>
-        </div>
-
-        {/* Search Results */}
-        <div className="search-results-container">
-          {searchLoading ? (
-            <div className="loading-results">
-              <div className="loading-spinner"></div>
-              <p>Searching hotels...</p>
-            </div>
-          ) : hotels.length > 0 ? (
-            <>
-              <div className="results-header">
-                <h4>Available Hotels</h4>
-                <span className="results-count">{hotels.length} properties found</span>
-              </div>
-              
-              <div className="hotels-list">
-                {hotels.map((hotel, index) => (
-                  <div
-                    key={hotel.id}
-                    className={`hotel-result-card ${selectedHotel?.id === hotel.id ? 'selected' : ''} ${index < 3 ? 'featured' : ''}`}
-                    onClick={() => handleHotelSelect(hotel)}
-                  >
-                    {/* Hotel Image */}
-                    <div className="hotel-image">
-                      <div className="image-placeholder">
-                        🏨
-                      </div>
-                      {index < 2 && <div className="featured-badge">Featured</div>}
-                      <div className="hotel-rating-badge">
-                        ⭐ {hotel.StarRating || '4.2'}
-                      </div>
-                    </div>
-                    
-                    {/* Hotel Info */}
-                    <div className="hotel-info">
-                      <div className="hotel-header">
-                        <h4 className="hotel-name">{hotel.hotelName}</h4>
-                        <div className="price-indicator">
-                          ${Math.floor(120 + index * 25)}/night
-                        </div>
-                      </div>
-                      
-                      <div className="hotel-location">
-                        <span className="location-pin">📍</span>
-                        {hotel.CityName}, {hotel.CountryName}
-                      </div>
-                      
-                      <div className="hotel-features">
-                        <span className="feature-tag">Free WiFi</span>
-                        <span className="feature-tag">Swimming Pool</span>
-                        <span className="feature-tag">Spa</span>
-                      </div>
-                      
-                      <div className="hotel-reviews">
-                        <div className="review-score">
-                          <span className="score">8.5</span>
-                          <span className="score-label">Excellent</span>
-                        </div>
-                        <div className="review-count">1,247 reviews</div>
-                      </div>
-                      
-                      <div className="hotel-actions">
-                        <button className={`select-btn ${selectedHotel?.id === hotel.id ? 'selected' : ''}`}>
-                          {selectedHotel?.id === hotel.id ? '✓ Selected' : 'Select Hotel'}
-                        </button>
-                        <button className="view-details-btn">View Details</button>
-                      </div>
-                    </div>
+            {showHotelResults && (
+              <div className="booking-search-results-panel">
+                {searchLoading ? (
+                  <div className="booking-loading-results">
+                    <div className="booking-spinner"></div>
+                    Searching hotels...
                   </div>
-                ))}
+                ) : hotels.length > 0 ? (
+                  <div className="booking-hotel-results">
+                    {hotels.map(hotel => (
+                      <div
+                        key={hotel.id}
+                        className={`booking-hotel-result ${selectedHotel?.id === hotel.id ? 'selected' : ''}`}
+                        onClick={() => handleHotelSelect(hotel)}
+                      >
+                        <div className="booking-hotel-icon">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="#64748b">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                          </svg>
+                        </div>
+                        <div className="booking-hotel-info">
+                          <div className="booking-hotel-name">{hotel.hotelName}</div>
+                          <div className="booking-hotel-location">{hotel.cityName}, {hotel.countryName}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : hotelQuery.length >= 2 ? (
+                  <div className="booking-no-results">
+                    No hotels found for "{hotelQuery}"
+                  </div>
+                ) : null}
               </div>
-            </>
-          ) : hotelQuery.length >= 2 ? (
-            <div className="no-results-state">
-              <div className="no-results-icon">🔍</div>
-              <h4>No hotels found</h4>
-              <p>We couldn't find any hotels matching "<strong>{hotelQuery}</strong>"</p>
-              <div className="suggestions">
-                <p>Try these suggestions:</p>
-                <ul>
-                  <li>Check your spelling</li>
-                  <li>Try a different city or landmark</li>
-                  <li>Search with fewer keywords</li>
-                </ul>
-              </div>
-            </div>
-          ) : (
-            <div className="empty-state">
-              <div className="empty-icon">🏨</div>
-              <h4>Find your perfect stay</h4>
-              <p>Search for hotels by name, city, or popular landmark to get started</p>
-              <div className="popular-searches">
-                <p>Popular searches:</p>
-                <div className="popular-tags">
-                  <button className="popular-tag" onClick={() => setHotelQuery("New York")}>New York</button>
-                  <button className="popular-tag" onClick={() => setHotelQuery("Paris")}>Paris</button>
-                  <button className="popular-tag" onClick={() => setHotelQuery("London")}>London</button>
-                  <button className="popular-tag" onClick={() => setHotelQuery("Dubai")}>Dubai</button>
-                </div>
+            )}
+          </div>
+          {selectedHotel && (
+            <div className="booking-selected-hotel-display">
+              <div className="booking-selected-hotel-badge"> Selected</div>
+              <div className="booking-selected-hotel-info">
+                <strong>{selectedHotel.hotelName}</strong>
+                <span>{selectedHotel.cityName}, {selectedHotel.countryName}</span>
               </div>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Right Panel - Map & Selected Hotel */}
-      <div className="hotel-details-panel">
-        {/* Interactive Map */}
-        <div className="interactive-map-section">
-          <div className="map-header">
-            <h4>Hotel Locations</h4>
-            <div className="map-controls">
-              <button className="map-control-btn">🗺️</button>
-              <button className="map-control-btn">🌍</button>
-              <button className="map-control-btn">📍</button>
-            </div>
-          </div>
-          
-          <div className="map-container">
-            {/* Map Visualization with Hotel Markers */}
-            <div className="dynamic-map">
-              {hotels.slice(0, 6).map((hotel, index) => (
-                <div
-                  key={hotel.id}
-                  className={`map-marker ${selectedHotel?.id === hotel.id ? 'active' : ''} ${hoveredHotel === hotel.id ? 'hovered' : ''}`}
-                  style={{
-                    left: `${20 + (index * 15)}%`,
-                    top: `${30 + (index % 3 * 20)}%`
-                  }}
-                  onMouseEnter={() => setHoveredHotel(hotel.id)}
-                  onMouseLeave={() => setHoveredHotel(null)}
-                  onClick={() => handleHotelSelect(hotel)}
-                >
-                  <div className="marker-pin"></div>
-                  <div className="marker-pulse"></div>
-                  <div className="marker-tooltip">
-                    <strong>{hotel.hotelName}</strong>
-                    <br />
-                    ⭐ {hotel.StarRating || '4.2'}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Selected Hotel Details */}
-        {selectedHotel && (
-          <div className="selected-hotel-details">
-            <div className="selected-hotel-header">
-              <h4>Selected Hotel</h4>
-              <div className="selection-badge">✓</div>
-            </div>
-            
-            <div className="selected-hotel-card">
-              <div className="selected-hotel-image">
-                <div className="hotel-type-badge">🏨 Hotel</div>
-              </div>
-              
-              <div className="selected-hotel-content">
-                <h5>{selectedHotel.hotelName}</h5>
-                <div className="selected-location">
-                  📍 {selectedHotel.CityName}, {selectedHotel.CountryName}
-                </div>
-                
-                <div className="selected-rating">
-                  <div className="stars">
-                    {"★".repeat(Math.floor(selectedHotel.StarRating || 4))}
-                    <span style={{opacity: 0.5}}>
-                      {"★".repeat(5 - Math.floor(selectedHotel.StarRating || 4))}
-                    </span>
-                  </div>
-                  <span className="rating-text">{selectedHotel.StarRating || '4.2'} / 5</span>
-                </div>
-                
-                <div className="selected-features">
-                  <div className="feature">🛌 2 Guests</div>
-                  <div className="feature">🛁 Private Bath</div>
-                  <div className="feature">📶 Free WiFi</div>
-                </div>
-                
-                <div className="selected-price">
-                  <span className="price">$145</span>
-                  <span className="price-period">/ night</span>
-                </div>
-              </div>
-            </div>
-            
+        {/* Dates Section */}
+        <div className="booking-form-box">
+          <label>Check-In *</label>
+          <div className="booking-date-input-container">
+            <input 
+              type="text"
+              value={booking.checkIn} 
+              readOnly
+              placeholder="Select date"
+              className="booking-clickable-date-input"
+              onClick={() => openCalendar('checkin')}
+            />
             <button 
-              className="change-selection-btn"
-              onClick={() => {
-                setSelectedHotel(null);
-                setBooking(prev => ({ ...prev, hotelId: null, hotelName: "" }));
-              }}
+              className="booking-calendar-button"
+              onClick={() => openCalendar('checkin')}
             >
-              Change Selection
+              📅
             </button>
+            <input 
+              ref={checkInRef}
+              type="date" 
+              value={booking.checkIn} 
+              min={today} 
+              onChange={e => setBooking({ ...booking, checkIn: e.target.value })} 
+              className="booking-hidden-date-input"
+            />
           </div>
-        )}
+        </div>
+
+        <div className="booking-form-box">
+          <label>Check-Out *</label>
+          <div className="booking-date-input-container">
+            <input 
+              type="text"
+              value={booking.checkOut} 
+              readOnly
+              placeholder="Select date"
+              className="booking-clickable-date-input"
+              onClick={() => openCalendar('checkout')}
+            />
+            <button 
+              className="booking-calendar-button"
+              onClick={() => openCalendar('checkout')}
+            >
+              📅
+            </button>
+            <input 
+              ref={checkOutRef}
+              type="date" 
+              value={booking.checkOut} 
+              min={booking.checkIn || today} 
+              onChange={e => setBooking({ ...booking, checkOut: e.target.value })} 
+              className="booking-hidden-date-input"
+            />
+          </div>
+        </div>
+
+        {/* Nights Display - Square Box */}
+        <div className="booking-form-box">
+          <label>Nights</label>
+          <div className="booking-nights-display">{booking.nights}</div>
+        </div>
+
+        {/* Rooms & Totals Section */}
+        <div className="booking-form-box">
+          <label>Rooms *</label>
+          <input
+            type="text"
+            min={0}
+            value={booking.numberOfRooms || ""}
+            onChange={e =>
+              setBooking(prev => ({
+                ...prev,
+                numberOfRooms: Math.max(1, parseInt(e.target.value || "1", 10)),
+              }))
+            }
+            className="booking-number-input"
+            placeholder="1"
+          />
+        </div>
+
+ 
       </div>
-    </div>
 
-    <div className="booking-form-actions">
-      <button className="booking-form-btn booking-form-btn-secondary" onClick={handlePrev}>← Back</button>
-      <button className="booking-form-btn booking-form-btn-primary" onClick={handleNext} disabled={!booking.hotelId}>
-        Continue to Dates & Guests →
-      </button>
-    </div>
-  </div>
-)}
-      {/* Step 3: Dates */}
-      {step === 3 && (
-        <div className="booking-form-step">
-          <div className="booking-form-step-header">
-            <h3>Dates & Duration</h3>
-            <p>Select check-in and check-out dates for your stay</p>
-          </div>
-          
-          <div className="booking-form-grid">
-            <div className="booking-form-group">
-              <label className="booking-form-label">Check-In Date *</label>
-              <input 
-                type="date" 
-                className="booking-form-input"
-                value={booking.checkIn} 
-                min={today} 
-                onChange={e => setBooking({ ...booking, checkIn: e.target.value })} 
-              />
-            </div>
-
-            <div className="booking-form-group">
-              <label className="booking-form-label">Check-Out Date *</label>
-              <input 
-                type="date" 
-                className="booking-form-input"
-                value={booking.checkOut} 
-                min={booking.checkIn || today} 
-                onChange={e => setBooking({ ...booking, checkOut: e.target.value })} 
-              />
-            </div>
-          </div>
-
-          <div className="booking-form-duration-display">
-            <div className="booking-form-duration-card">
-              <div className="booking-form-duration-label">Total Nights</div>
-              <div className="booking-form-duration-value">{booking.nights}</div>
-            </div>
-          </div>
-
-          <div className="booking-form-actions">
-            <button className="booking-form-btn booking-form-btn-secondary" onClick={handlePrev}>← Back</button>
-            <button className="booking-form-btn booking-form-btn-primary" onClick={handleNext} disabled={!booking.checkIn || !booking.checkOut}>
-              Next →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 4: Rooms & Guests */}
-      {step === 4 && (
-        <div className="booking-form-step">
-          <div className="booking-form-step-header">
-            <h3>Rooms & Guests</h3>
-            <p>Configure room and guest details</p>
-          </div>
-          
-          <div className="booking-form-grid">
-            <div className="booking-form-group">
-              <label className="booking-form-label">Number of Rooms *</label>
-              <input 
-                type="text" 
-                className="booking-form-input"
-                min="0" 
-                value={booking.numberOfRooms} 
-                onChange={e => setBooking({ ...booking, numberOfRooms: parseInt(e.target.value) || 1 })} 
-              />
-            </div>
-
-            <div className="booking-form-group">
-              <label className="booking-form-label">Adults *</label>
-              <input 
-                type="text" 
-                className="booking-form-input"
-                min="0" 
-                value={booking.adults} 
-                onChange={e => setBooking({ ...booking, adults: parseInt(e.target.value) || 1 })} 
-              />
-            </div>
-
-            <div className="booking-form-group">
-              <label className="booking-form-label">Children</label>
-              <input 
-                type="text" 
-                className="booking-form-input"
-                min="0" 
-                value={booking.children} 
-                onChange={e => {
-                  const count = parseInt(e.target.value) || 0;
-                  setBooking({ ...booking, children: count, childrenAges: Array(count).fill("") });
-                }} 
-              />
-            </div>
-
-            {/* NEW: Automatic Total People Field */}
-            <div className="booking-form-group">
-              <label className="booking-form-label">Total People</label>
-              <div className="total-people-display">
-                <span className="total-people-value">{booking.totalPeople}</span>
-                <span className="total-people-label">person{booking.totalPeople !== 1 ? 's' : ''}</span>
-              </div>
-              <div className="total-people-breakdown">
-                {booking.adults > 0 && (
-                  <span className="breakdown-item">{booking.adults} adult{booking.adults !== 1 ? 's' : ''}</span>
-                )}
-                {booking.children > 0 && (
-                  <span className="breakdown-item">{booking.children} child{booking.children !== 1 ? 'ren' : ''}</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {booking.children > 0 && (
-            <div className="booking-form-children-section">
-              <h4 className="booking-form-children-title">Children Ages</h4>
-              <div className="booking-form-children-grid">
-                {booking.childrenAges.map((age, i) => (
-                  <div key={i} className="booking-form-group">
-                    <label className="booking-form-label">Child {i + 1} Age *</label>
-                    <input 
-                      type="text" 
-                      className={`booking-form-input ${ageWarnings[i] ? 'booking-form-input-warning' : ''}`}
-                      min="0" 
-                      max="17" 
-                      value={age} 
-                      placeholder="Enter age"
-                      onChange={e => handleChildAgeChange(i, e.target.value)} 
+      {/* Room Details */}
+      {rooms.length > 0 && (
+        <div className="booking-rooms-section">
+          <h4>Room Details</h4>
+          <div className="booking-rooms-grid">
+            {rooms.map((room, idx) => (
+              <div className="booking-room-box" key={idx}>
+                <div className="booking-room-header">Room {idx + 1}</div>
+                
+                <div className="booking-room-fields">
+                  <div className="booking-field-box">
+                    <label>Type *</label>
+                    <RoomTypeSelector
+                      hotelId={booking.hotelId}
+                      value={room.roomTypeId}
+                      onSelect={(roomTypeId) => {
+                        const next = [...rooms];
+                        next[idx] = { ...room, roomTypeId };
+                        setRooms(next);
+                      }}
+                      placeholder="Select type"
+                      compact
+                      disabled={!booking.hotelId}
                     />
-                    {ageWarnings[i] && (
-                      <div className="booking-form-age-warning">
-                        ⚠️ {ageWarnings[i]}
-                      </div>
-                    )}
-                    {age === "" && (
-                      <div className="booking-form-age-required">
-                        * Age is required
-                      </div>
-                    )}
                   </div>
-                ))}
+
+                  <div className="booking-field-box">
+                    <label>Adults *</label>
+                    <input
+                      type="text"
+                      min={1}
+                      value={room.adults}
+                      onChange={(e) => {
+                        const next = [...rooms];
+                        next[idx] = { ...room, adults: Math.max(1, parseInt(e.target.value || "1", 10)) };
+                        setRooms(next);
+                      }}
+                      className="booking-small-input"
+                      
+                    />
+                  </div>
+
+                  <div className="booking-field-box">
+                    <label>Children</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={room.children}
+                      onChange={(e) => {
+                        const count = Math.max(0, parseInt(e.target.value || "0", 12));
+                        const next = [...rooms];
+                        next[idx] = {
+                          ...room,
+                          children: count,
+                          childrenAges: Array.from({ length: count }, (_, i) => room.childrenAges[i] ?? 0),
+                        };
+                        setRooms(next);
+                      }}
+                      className="booking-small-input"
+                    />
+                  </div>
+
+                  {room.children > 0 && (
+                    <div className="booking-field-box booking-ages-box">
+                      <label>Children Ages</label>
+                      <div className="booking-ages-grid">
+                        {room.childrenAges.map((age, aidx) => (
+                          <input
+                            key={aidx}
+                            type="number"
+                            min={0}
+                            max={12}
+                            value={age}
+                            onChange={(e) => {
+                              const v = Math.max(0, Math.min(17, parseInt(e.target.value || "0", 10)));
+                              const next = [...rooms];
+                              const ages = [...room.childrenAges];
+                              ages[aidx] = v;
+                              next[idx] = { ...room, childrenAges: ages };
+                              setRooms(next);
+                            }}
+                            className="booking-age-input"
+                            placeholder="Age"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      )}
+      <div className="viewonly">
+                     {/* Total People Display - Square Box */}
+        <div className="booking-form-box">
+          <label>Total People</label>
+          <div className="booking-total-display">{totalPeople}</div>
+        </div>
+
+        {/* Adults Display - Square Box */}
+        <div className="booking-form-box">
+          <label>Adults</label>
+          <div className="booking-total-display booking-adults-display">{totalAdults}</div>
+        </div>
+
+        {/* Children Display - Square Box */}
+        <div className="booking-form-box">
+          <label>Children</label>
+          <div className="booking-total-display booking-children-display">{totalChildren}</div>
+        </div>
+        
+      </div>
+
+      {/* Special Request */}
+      
+
+      {/* Actions */}
+      <div className="booking-actions-section">
+        <button className="booking-btn-cancel" onClick={onCancel}>Cancel</button>
+        <button 
+          className="booking-btn-save" 
+          onClick={handleSave} 
+          disabled={loading || !isFormValid()}
+        >
+          {loading ? (
+            <>
+              <div className="booking-spinner"></div>
+              Saving...
+            </>
+          ) : (
+            "Save Booking"
           )}
-
-          <div className="booking-form-actions">
-            <button className="booking-form-btn booking-form-btn-secondary" onClick={handlePrev}>← Back</button>
-            <button className="booking-form-btn booking-form-btn-primary" onClick={handleNext} disabled={!booking.numberOfRooms || booking.childrenAges.some(age => age === "")}>
-              Next →
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 5: Special Request & Summary */}
-      {step === 5 && (
-        <div className="booking-form-step">
-          <div className="booking-form-step-header">
-            <h3>Special Requests & Summary</h3>
-            <p>Review your booking details and add any special requests</p>
-          </div>
-          
-          <div className="booking-form-group">
-            <label className="booking-form-label">Special Requests</label>
-            <textarea 
-              className="booking-form-textarea"
-              value={booking.specialRequest} 
-              onChange={e => setBooking({ ...booking, specialRequest: e.target.value })}
-              placeholder="Any special requirements or requests..."
-              rows="4"
-            ></textarea>
-          </div>
-
-          <div className="booking-form-summary">
-            <h4 className="booking-form-summary-title">Booking Summary</h4>
-            <div className="booking-form-summary-grid">
-              <div className="booking-form-summary-item">
-                <span className="booking-form-summary-label">Agent:</span>
-                <span className="booking-form-summary-value">{booking.agencyName || "Not selected"}</span>
-              </div>
-              <div className="booking-form-summary-item">
-                <span className="booking-form-summary-label">Supplier:</span>
-                <span className="booking-form-summary-value">{booking.supplierName || "Not selected"}</span>
-              </div>
-              <div className="booking-form-summary-item">
-                <span className="booking-form-summary-label">Hotel:</span>
-                <span className="booking-form-summary-value">{booking.hotelName || "Not selected"}</span>
-              </div>
-              <div className="booking-form-summary-item">
-                <span className="booking-form-summary-label">Dates:</span>
-                <span className="booking-form-summary-value">{booking.checkIn || "Not set"} → {booking.checkOut || "Not set"} ({booking.nights} nights)</span>
-              </div>
-              <div className="booking-form-summary-item">
-                <span className="booking-form-summary-label">Rooms:</span>
-                <span className="booking-form-summary-value">{booking.numberOfRooms}</span>
-              </div>
-              <div className="booking-form-summary-item">
-                <span className="booking-form-summary-label">Adults:</span>
-                <span className="booking-form-summary-value">{booking.adults}</span>
-              </div>
-              <div className="booking-form-summary-item">
-                <span className="booking-form-summary-label">Children:</span>
-                <span className="booking-form-summary-value">{booking.children}</span>
-              </div>
-              {/* NEW: Total People in Summary */}
-              <div className="booking-form-summary-item">
-                <span className="booking-form-summary-label">Total People:</span>
-                <span className="booking-form-summary-value booking-form-total-people">{booking.totalPeople}</span>
-              </div>
-              {booking.children > 0 && (
-                <div className="booking-form-summary-item">
-                  <span className="booking-form-summary-label">Child Ages:</span>
-                  <span className="booking-form-summary-value">{booking.childrenAges.join(", ")}</span>
-                </div>
-              )}
-              <div className="booking-form-summary-item">
-                <span className="booking-form-summary-label">Status:</span>
-                <span className="booking-form-summary-value booking-form-status-badge">{booking.status}</span>
-              </div>
-              {booking.specialRequest && (
-                <div className="booking-form-summary-item booking-form-summary-full-width">
-                  <span className="booking-form-summary-label">Special Requests:</span>
-                  <span className="booking-form-summary-value">{booking.specialRequest}</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="booking-form-actions">
-            <button className="booking-form-btn booking-form-btn-secondary" onClick={handlePrev}>← Back</button>
-            <button className="booking-form-btn booking-form-btn-success" onClick={handleSave} disabled={loading}>
-              {loading ? (
-                <>
-                  <span className="booking-form-spinner"></span>
-                  Saving...
-                </>
-              ) : (
-                "Save Booking"
-              )}
-            </button>
-            <button className="booking-form-btn booking-form-btn-outline" onClick={onCancel}>Cancel</button>
-          </div>
-        </div>
-      )}
+        </button>
+      
+      </div>
+  
     </div>
   );
 };

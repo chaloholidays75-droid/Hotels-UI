@@ -14,7 +14,7 @@ const BookingEditModal = ({ editModal, setEditModal, closeEditModal, refreshBook
     numberOfRooms: 1,
     adults: 1,
     children: 0,
-    totalPeople: 1,
+    totalPeople: 1, // New field for automatic calculation
     childrenAges: "",
     specialRequest: "",
   });
@@ -22,21 +22,19 @@ const BookingEditModal = ({ editModal, setEditModal, closeEditModal, refreshBook
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [ageWarnings, setAgeWarnings] = useState([]);
+  
+  // New state for dropdown data
   const [agencies, setAgencies] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [fetchLoading, setFetchLoading] = useState(true);
 
-  const today = new Date().toISOString().slice(0, 16);
-
   // Calculate total people whenever adults or children change
   useEffect(() => {
-    setBookingData(prev => ({
-      ...prev,
-      totalPeople: (parseInt(prev.adults) || 0) + (parseInt(prev.children) || 0)
-    }));
+    const totalPeople = parseInt(bookingData.adults || 0) + parseInt(bookingData.children || 0);
+    setBookingData(prev => ({ ...prev, totalPeople }));
   }, [bookingData.adults, bookingData.children]);
 
-  // Fetch dropdown data and pre-fill booking
+  // Fetch dropdown data and pre-fill form
   useEffect(() => {
     const fetchDropdownData = async () => {
       try {
@@ -45,38 +43,45 @@ const BookingEditModal = ({ editModal, setEditModal, closeEditModal, refreshBook
           agencyApi.getAgencies(),
           supplierApi.getSuppliers()
         ]);
-
+        
         setAgencies(agencyList || []);
         setSuppliers(supplierList || []);
-
+        
+        // Pre-fill form with existing booking data
         if (editModal.booking) {
-          const b = editModal.booking;
+          const totalPeople = (editModal.booking.adults || 0) + (editModal.booking.children || 0);
+          
           setBookingData({
-            agencyId: b.agencyId?.toString() || "",
-            supplierId: b.supplierId?.toString() || "",
-            hotelId: b.hotelId?.toString() || "",
-            checkIn: b.checkIn ? b.checkIn.slice(0, 16) : "",
-            checkOut: b.checkOut ? b.checkOut.slice(0, 16) : "",
-            numberOfRooms: b.numberOfRooms || 1,
-            adults: b.adults || 1,
-            children: b.children || 0,
-            totalPeople: (b.adults || 1) + (b.children || 0),
-            childrenAges: b.childrenAges || "",
-            specialRequest: b.specialRequest || "",
+            agencyId: editModal.booking.agencyId?.toString() || "",
+            supplierId: editModal.booking.supplierId?.toString() || "",
+            hotelId: editModal.booking.hotelId?.toString() || "",
+            checkIn: editModal.booking.checkIn ? editModal.booking.checkIn.slice(0, 16) : "",
+            checkOut: editModal.booking.checkOut ? editModal.booking.checkOut.slice(0, 16) : "",
+            numberOfRooms: editModal.booking.numberOfRooms || 1,
+            adults: editModal.booking.adults || 1,
+            children: editModal.booking.children || 0,
+            totalPeople: totalPeople, // Set calculated total
+            childrenAges: editModal.booking.childrenAges || "",
+            specialRequest: editModal.booking.specialRequest || "",
           });
 
-          if (b.childrenAges) {
-            const ages = b.childrenAges.split(",").map(a => a.trim()).filter(a => a !== '');
+          // Generate age warnings for existing data
+          if (editModal.booking.childrenAges) {
+            const ages = editModal.booking.childrenAges.split(',').map(age => age.trim()).filter(age => age !== '');
             const warnings = [];
-            ages.forEach((age, i) => {
+            ages.forEach((age, index) => {
               const ageNum = parseInt(age);
-              if (isNaN(ageNum)) warnings.push(`Child ${i + 1} has invalid age`);
-              else if (ageNum > 12) warnings.push(`Child ${i + 1} (age ${age}) will be counted as adult`);
-              else if (ageNum < 0) warnings.push(`Child ${i + 1} age cannot be negative`);
+              if (isNaN(ageNum)) {
+                warnings.push(`Child ${index + 1} has invalid age`);
+              } else if (ageNum > 12) {
+                warnings.push(`Child ${index + 1} (age ${age}) will be counted as adult`);
+              } else if (ageNum < 0) {
+                warnings.push(`Child ${index + 1} age cannot be negative`);
+              } else if (ageNum > 17) {
+                warnings.push(`Child ${index + 1} (age ${age}) is too old to be considered a child`);
+              }
             });
             setAgeWarnings(warnings);
-          } else {
-            setAgeWarnings([]);
           }
         }
       } catch (error) {
@@ -86,36 +91,14 @@ const BookingEditModal = ({ editModal, setEditModal, closeEditModal, refreshBook
       }
     };
 
-    if (editModal.isOpen) fetchDropdownData();
-  }, [editModal.isOpen, editModal.booking]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setBookingData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
-  };
-
-  const handleChildrenAgesChange = (e) => {
-    const value = e.target.value;
-    setBookingData(prev => ({ ...prev, childrenAges: value }));
-
-    if (value) {
-      const ages = value.split(",").map(a => a.trim()).filter(a => a !== '');
-      const warnings = [];
-      ages.forEach((age, i) => {
-        const ageNum = parseInt(age);
-        if (isNaN(ageNum)) warnings.push(`Child ${i + 1} has invalid age`);
-        else if (ageNum > 12) warnings.push(`Child ${i + 1} (age ${age}) will be counted as adult`);
-        else if (ageNum < 0) warnings.push(`Child ${i + 1} age cannot be negative`);
-      });
-      setAgeWarnings(warnings);
-    } else {
-      setAgeWarnings([]);
+    if (editModal.isOpen && editModal.booking) {
+      fetchDropdownData();
     }
-  };
+  }, [editModal.isOpen, editModal.booking]);
 
   const validateForm = () => {
     const newErrors = {};
+
     if (!bookingData.agencyId) newErrors.agencyId = "Please select an agency";
     if (!bookingData.supplierId) newErrors.supplierId = "Please select a supplier";
     if (!bookingData.hotelId) newErrors.hotelId = "Hotel ID is required";
@@ -125,21 +108,83 @@ const BookingEditModal = ({ editModal, setEditModal, closeEditModal, refreshBook
     if (bookingData.adults < 1) newErrors.adults = "At least 1 adult is required";
     if (bookingData.children < 0) newErrors.children = "Children cannot be negative";
     if (bookingData.totalPeople < 1) newErrors.totalPeople = "At least 1 guest is required";
-    if (bookingData.children > 0 && !bookingData.childrenAges) newErrors.childrenAges = "Children ages are required";
+
+    // Validate children ages
+    if (bookingData.children > 0 && !bookingData.childrenAges) {
+      newErrors.childrenAges = "Children ages are required when children count is more than 0";
+    }
 
     if (bookingData.childrenAges) {
-      const ages = bookingData.childrenAges.split(",").map(a => a.trim()).filter(a => a !== '');
-      if (ages.length !== parseInt(bookingData.children || 0)) newErrors.childrenAges = `Number of ages (${ages.length}) must match children count (${bookingData.children})`;
+      const ages = bookingData.childrenAges.split(',').map(age => age.trim()).filter(age => age !== '');
+      if (ages.length !== bookingData.children) {
+        newErrors.childrenAges = `Number of ages (${ages.length}) must match children count (${bookingData.children})`;
+      }
+      
+      // Check for ages above 12
+      const warnings = [];
+      ages.forEach((age, index) => {
+        const ageNum = parseInt(age);
+        if (isNaN(ageNum)) {
+          warnings.push(`Child ${index + 1} has invalid age`);
+        } else if (ageNum > 12) {
+          warnings.push(`Child ${index + 1} (age ${age}) will be counted as adult`);
+        } else if (ageNum < 0) {
+          warnings.push(`Child ${index + 1} age cannot be negative`);
+        } else if (ageNum > 17) {
+          warnings.push(`Child ${index + 1} (age ${age}) is too old to be considered a child`);
+        }
+      });
+      setAgeWarnings(warnings);
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setBookingData((prev) => ({ ...prev, [name]: value }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const handleChildrenAgesChange = (e) => {
+    const value = e.target.value;
+    setBookingData(prev => ({ ...prev, childrenAges: value }));
+    
+    // Clear warnings when ages change
+    if (value) {
+      const ages = value.split(',').map(age => age.trim()).filter(age => age !== '');
+      const warnings = [];
+      ages.forEach((age, index) => {
+        const ageNum = parseInt(age);
+        if (isNaN(ageNum)) {
+          warnings.push(`Child ${index + 1} has invalid age`);
+        } else if (ageNum > 12) {
+          warnings.push(`Child ${index + 1} (age ${age}) will be counted as adult`);
+        } else if (ageNum < 0) {
+          warnings.push(`Child ${index + 1} age cannot be negative`);
+        } else if (ageNum > 17) {
+          warnings.push(`Child ${index + 1} (age ${age}) is too old to be considered a child`);
+        }
+      });
+      setAgeWarnings(warnings);
+    } else {
+      setAgeWarnings([]);
+    }
+  };
+
   const handleSave = async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
     try {
+      // Convert string IDs back to numbers for the API
       const payload = {
         ...bookingData,
         agencyId: parseInt(bookingData.agencyId),
@@ -148,15 +193,17 @@ const BookingEditModal = ({ editModal, setEditModal, closeEditModal, refreshBook
         numberOfRooms: parseInt(bookingData.numberOfRooms),
         adults: parseInt(bookingData.adults),
         children: parseInt(bookingData.children),
-        totalPeople: parseInt(bookingData.totalPeople),
+        totalPeople: parseInt(bookingData.totalPeople), // Include total people
       };
+
       await bookingApi.updateBooking(editModal.booking.id, payload);
       refreshBookings();
       closeEditModal();
+      // Show success message
       alert("Booking updated successfully!");
     } catch (error) {
-      console.error(error);
-      alert("Error updating booking");
+      console.error("Failed to update booking:", error);
+      alert("Error updating booking. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -164,97 +211,326 @@ const BookingEditModal = ({ editModal, setEditModal, closeEditModal, refreshBook
 
   if (!editModal.isOpen) return null;
 
-  const selectedAgency = agencies.find(a => a.id === parseInt(bookingData.agencyId));
-  const selectedSupplier = suppliers.find(s => s.id === parseInt(bookingData.supplierId));
+  const today = new Date().toISOString().slice(0, 16);
+
+  // Get selected agency and supplier names for display
+  const selectedAgency = agencies.find(agency => agency.id === parseInt(bookingData.agencyId));
+  const selectedSupplier = suppliers.find(supplier => supplier.id === parseInt(bookingData.supplierId));
 
   return (
     <div className="booking-edit-modal-overlay">
       <div className="booking-edit-modal-content">
         <div className="booking-edit-modal-header">
-          <h2>Edit Booking</h2>
-          <button onClick={closeEditModal} disabled={loading}>×</button>
+          <div className="booking-edit-modal-title-section">
+            <h2 className="booking-edit-modal-title">Edit Booking</h2>
+            {editModal.booking && (
+              <div className="booking-edit-ticket-info">
+                <span className="booking-edit-ticket-label">Ticket #</span>
+                <span className="booking-edit-ticket-number">{editModal.booking.ticketNumber}</span>
+              </div>
+            )}
+          </div>
+          <button 
+            className="booking-edit-modal-close"
+            onClick={closeEditModal}
+            disabled={loading}
+            aria-label="Close modal"
+          >
+            ×
+          </button>
         </div>
 
         <div className="booking-edit-modal-body">
-          {/* Agency & Supplier */}
-          <div>
-            <label>Agency *</label>
-            {fetchLoading ? <div>Loading agencies...</div> : (
-              <select name="agencyId" value={bookingData.agencyId} onChange={handleChange} disabled={loading}>
-                <option value="">Select an agency</option>
-                {agencies.map(a => <option key={a.id} value={a.id}>{a.agencyName}</option>)}
-              </select>
-            )}
-            {errors.agencyId && <span>{errors.agencyId}</span>}
-            {selectedAgency && <div>Currently: {selectedAgency.agencyName}</div>}
-          </div>
+          <div className="booking-edit-form">
+            <div className="booking-edit-form-grid">
+              {/* Agency & Supplier Section */}
+              <div className="booking-edit-form-section">
+                <h3 className="booking-edit-section-title">Agency & Supplier</h3>
+                
+                {/* Agency Selection */}
+                <div className="booking-edit-form-group">
+                  <label className="booking-edit-label">
+                    Agency *
+                    {errors.agencyId && <span className="booking-edit-error"> - {errors.agencyId}</span>}
+                  </label>
+                  {fetchLoading ? (
+                    <div className="booking-edit-loading">Loading agencies...</div>
+                  ) : (
+                    <select
+                      name="agencyId"
+                      className={`booking-edit-select ${errors.agencyId ? 'booking-edit-input-error' : ''}`}
+                      value={bookingData.agencyId}
+                      onChange={handleChange}
+                      disabled={loading}
+                    >
+                      <option value="">Select an agency</option>
+                      {agencies.map(agency => (
+                        <option key={agency.id} value={agency.id}>
+                          {agency.agencyName} {agency.id ? `(ID: ${agency.id})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {selectedAgency && (
+                    <div className="booking-edit-selected-info">
+                      Currently selected: <strong>{selectedAgency.agencyName}</strong>
+                    </div>
+                  )}
+                </div>
 
-          <div>
-            <label>Supplier *</label>
-            {fetchLoading ? <div>Loading suppliers...</div> : (
-              <select name="supplierId" value={bookingData.supplierId} onChange={handleChange} disabled={loading}>
-                <option value="">Select a supplier</option>
-                {suppliers.map(s => <option key={s.id} value={s.id}>{s.supplierName}</option>)}
-              </select>
-            )}
-            {errors.supplierId && <span>{errors.supplierId}</span>}
-            {selectedSupplier && <div>Currently: {selectedSupplier.supplierName}</div>}
-          </div>
+                {/* Supplier Selection */}
+                <div className="booking-edit-form-group">
+                  <label className="booking-edit-label">
+                    Supplier *
+                    {errors.supplierId && <span className="booking-edit-error"> - {errors.supplierId}</span>}
+                  </label>
+                  {fetchLoading ? (
+                    <div className="booking-edit-loading">Loading suppliers...</div>
+                  ) : (
+                    <select
+                      name="supplierId"
+                      className={`booking-edit-select ${errors.supplierId ? 'booking-edit-input-error' : ''}`}
+                      value={bookingData.supplierId}
+                      onChange={handleChange}
+                      disabled={loading}
+                    >
+                      <option value="">Select a supplier</option>
+                      {suppliers.map(supplier => (
+                        <option key={supplier.id} value={supplier.id}>
+                          {supplier.supplierName} {supplier.id ? `(ID: ${supplier.id})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {selectedSupplier && (
+                    <div className="booking-edit-selected-info">
+                      Currently selected: <strong>{selectedSupplier.supplierName}</strong>
+                    </div>
+                  )}
+                </div>
 
-          <div>
-            <label>Hotel ID *</label>
-            <input type="number" name="hotelId" value={bookingData.hotelId} onChange={handleChange} min="1" disabled={loading}/>
-            {errors.hotelId && <span>{errors.hotelId}</span>}
-          </div>
+                {/* Hotel ID */}
+                <div className="booking-edit-form-group">
+                  <label className="booking-edit-label">
+                    Hotel ID *
+                    {errors.hotelId && <span className="booking-edit-error"> - {errors.hotelId}</span>}
+                  </label>
+                  <input
+                    type="number"
+                    name="hotelId"
+                    className={`booking-edit-input ${errors.hotelId ? 'booking-edit-input-error' : ''}`}
+                    value={bookingData.hotelId}
+                    onChange={handleChange}
+                    min="1"
+                    placeholder="Enter hotel ID"
+                    disabled={loading}
+                  />
+                  <div className="booking-edit-helper-text">
+                    Current hotel ID: {editModal.booking?.hotelId}
+                  </div>
+                </div>
+              </div>
 
-          <div>
-            <label>Check-In *</label>
-            <input type="datetime-local" name="checkIn" value={bookingData.checkIn} min={today} onChange={handleChange} disabled={loading}/>
-            {errors.checkIn && <span>{errors.checkIn}</span>}
-          </div>
+              {/* Dates Section */}
+              <div className="booking-edit-form-section">
+                <h3 className="booking-edit-section-title">Dates</h3>
+                <div className="booking-edit-form-group">
+                  <label className="booking-edit-label">
+                    Check-In Date & Time *
+                    {errors.checkIn && <span className="booking-edit-error"> - {errors.checkIn}</span>}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="checkIn"
+                    className={`booking-edit-input ${errors.checkIn ? 'booking-edit-input-error' : ''}`}
+                    value={bookingData.checkIn}
+                    onChange={handleChange}
+                    min={today}
+                    disabled={loading}
+                  />
+                  <div className="booking-edit-helper-text">
+                    Original: {editModal.booking?.checkIn ? new Date(editModal.booking.checkIn).toLocaleString() : 'N/A'}
+                  </div>
+                </div>
 
-          <div>
-            <label>Check-Out *</label>
-            <input type="datetime-local" name="checkOut" value={bookingData.checkOut} min={bookingData.checkIn || today} onChange={handleChange} disabled={loading}/>
-            {errors.checkOut && <span>{errors.checkOut}</span>}
-          </div>
+                <div className="booking-edit-form-group">
+                  <label className="booking-edit-label">
+                    Check-Out Date & Time *
+                    {errors.checkOut && <span className="booking-edit-error"> - {errors.checkOut}</span>}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="checkOut"
+                    className={`booking-edit-input ${errors.checkOut ? 'booking-edit-input-error' : ''}`}
+                    value={bookingData.checkOut}
+                    onChange={handleChange}
+                    min={bookingData.checkIn || today}
+                    disabled={loading}
+                  />
+                  <div className="booking-edit-helper-text">
+                    Original: {editModal.booking?.checkOut ? new Date(editModal.booking.checkOut).toLocaleString() : 'N/A'}
+                  </div>
+                </div>
+              </div>
 
-          <div>
-            <label>Number of Rooms *</label>
-            <input type="number" name="numberOfRooms" value={bookingData.numberOfRooms} min="1" onChange={handleChange} disabled={loading}/>
-            {errors.numberOfRooms && <span>{errors.numberOfRooms}</span>}
-          </div>
+              {/* Guests & Rooms Section */}
+              <div className="booking-edit-form-section">
+                <h3 className="booking-edit-section-title">Guests & Rooms</h3>
+                
+                {/* Total People Display */}
+                <div className="booking-edit-total-guests-card">
+                  <div className="booking-edit-total-guests-header">
+                    <span className="booking-edit-total-icon">👥</span>
+                    <span className="booking-edit-total-label">Total Guests</span>
+                  </div>
+                  <div className="booking-edit-total-count">{bookingData.totalPeople}</div>
+                  <div className="booking-edit-guest-breakdown">
+                    {bookingData.adults > 0 && (
+                      <span className="booking-edit-breakdown-item">
+                        {bookingData.adults} adult{bookingData.adults !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                    {bookingData.children > 0 && (
+                      <span className="booking-edit-breakdown-item">
+                        {bookingData.children} child{bookingData.children !== 1 ? 'ren' : ''}
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-          <div>
-            <label>Adults *</label>
-            <input type="number" name="adults" value={bookingData.adults} min="1" onChange={handleChange} disabled={loading}/>
-            {errors.adults && <span>{errors.adults}</span>}
-          </div>
+                <div className="booking-edit-form-row">
+                  <div className="booking-edit-form-group">
+                    <label className="booking-edit-label">
+                      Number of Rooms *
+                      {errors.numberOfRooms && <span className="booking-edit-error"> - {errors.numberOfRooms}</span>}
+                    </label>
+                    <input
+                      type="number"
+                      name="numberOfRooms"
+                      className={`booking-edit-input ${errors.numberOfRooms ? 'booking-edit-input-error' : ''}`}
+                      value={bookingData.numberOfRooms}
+                      onChange={handleChange}
+                      min="1"
+                      max="20"
+                      disabled={loading}
+                    />
+                  </div>
 
-          <div>
-            <label>Children</label>
-            <input type="number" name="children" value={bookingData.children} min="0" onChange={handleChange} disabled={loading}/>
-            {errors.children && <span>{errors.children}</span>}
-          </div>
+                  <div className="booking-edit-form-group">
+                    <label className="booking-edit-label">
+                      Adults *
+                      {errors.adults && <span className="booking-edit-error"> - {errors.adults}</span>}
+                    </label>
+                    <input
+                      type="number"
+                      name="adults"
+                      className={`booking-edit-input ${errors.adults ? 'booking-edit-input-error' : ''}`}
+                      value={bookingData.adults}
+                      onChange={handleChange}
+                      min="1"
+                      max="50"
+                      disabled={loading}
+                    />
+                  </div>
 
-          {bookingData.children > 0 && (
-            <div>
-              <label>Children Ages *</label>
-              <input type="text" name="childrenAges" value={bookingData.childrenAges} onChange={handleChildrenAgesChange} placeholder="e.g., 5,8" disabled={loading}/>
-              {errors.childrenAges && <span>{errors.childrenAges}</span>}
-              {ageWarnings.map((w, i) => <div key={i}>⚠️ {w}</div>)}
+                  <div className="booking-edit-form-group">
+                    <label className="booking-edit-label">
+                      Children
+                      {errors.children && <span className="booking-edit-error"> - {errors.children}</span>}
+                    </label>
+                    <input
+                      type="number"
+                      name="children"
+                      className={`booking-edit-input ${errors.children ? 'booking-edit-input-error' : ''}`}
+                      value={bookingData.children}
+                      onChange={handleChange}
+                      min="0"
+                      max="20"
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+
+                {bookingData.children > 0 && (
+                  <div className="booking-edit-form-group">
+                    <label className="booking-edit-label">
+                      Children Ages (comma separated) *
+                      {errors.childrenAges && <span className="booking-edit-error"> - {errors.childrenAges}</span>}
+                    </label>
+                    <input
+                      type="text"
+                      name="childrenAges"
+                      className={`booking-edit-input ${errors.childrenAges ? 'booking-edit-input-error' : ''}`}
+                      value={bookingData.childrenAges}
+                      onChange={handleChildrenAgesChange}
+                      placeholder="e.g., 5, 8, 12"
+                      disabled={loading}
+                    />
+                    <div className="booking-edit-helper-text">
+                      Enter ages separated by commas. Children above 12 years will be counted as adults.
+                    </div>
+                    
+                    {ageWarnings.length > 0 && (
+                      <div className="booking-edit-warnings">
+                        {ageWarnings.map((warning, index) => (
+                          <div key={index} className="booking-edit-warning">
+                            ⚠️ {warning}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Special Requests Section */}
+              <div className="booking-edit-form-section booking-edit-form-full-width">
+                <h3 className="booking-edit-section-title">Special Requests</h3>
+                <div className="booking-edit-form-group">
+                  <label className="booking-edit-label">Special Request</label>
+                  <textarea
+                    name="specialRequest"
+                    className="booking-edit-textarea"
+                    value={bookingData.specialRequest}
+                    onChange={handleChange}
+                    placeholder="Any special requirements or requests..."
+                    rows="4"
+                    disabled={loading}
+                  />
+                  <div className="booking-edit-helper-text">
+                    {editModal.booking?.specialRequest ? 
+                      `Original: ${editModal.booking.specialRequest}` : 
+                      'No special requests originally'
+                    }
+                  </div>
+                </div>
+              </div>
             </div>
-          )}
-
-          <div>
-            <label>Special Request</label>
-            <textarea name="specialRequest" value={bookingData.specialRequest} onChange={handleChange} disabled={loading}/>
           </div>
         </div>
 
-        <div>
-          <button onClick={closeEditModal} disabled={loading}>Cancel</button>
-          <button onClick={handleSave} disabled={loading || fetchLoading}>{loading ? "Saving..." : "Save Changes"}</button>
+        <div className="booking-edit-modal-actions">
+          <button 
+            className="booking-edit-btn booking-edit-btn-cancel"
+            onClick={closeEditModal}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button 
+            className="booking-edit-btn booking-edit-btn-save"
+            onClick={handleSave}
+            disabled={loading || fetchLoading}
+          >
+            {loading ? (
+              <>
+                <span className="booking-edit-spinner"></span>
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </button>
         </div>
       </div>
     </div>

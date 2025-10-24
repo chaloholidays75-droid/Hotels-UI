@@ -14,7 +14,6 @@ import Sidebar from './components/Sidebar';
 import SupplierManagement from './Supplier/SupplierManagement';
 import RecentActivityPage from './Pages/RecentActivityPage';
 import BookingManagement from './Booking/BookingManagement';
-import CommercialForm from './Booking/CommercialForm';
 import './App.css';
 
 // Layout for authenticated pages
@@ -134,16 +133,6 @@ function App() {
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
                 <BookingManagement />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/backend/product/booking/commercial"
-          element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
-                <CommercialForm />
               </Layout>
             </ProtectedRoute>
           }

@@ -93,14 +93,32 @@ const AgencyDetailsForm = ({ formData, setFormData, errors, setErrors, handleCha
           </div>
           
           <div className="form-group">
-            <LocationSelector
-              countryId={formData.countryId}
-              cityId={formData.cityId}
-              onCountrySelect={({ name, id }) => setFormData({ ...formData, countryId: id, country: name })}
-              onCitySelect={({ name, id }) => setFormData({ ...formData, cityId: id, city: name })}
-              errors={errors}
-              showNotification={showNotification}
-            />
+              <LocationSelector
+                countryId={formData.countryId}
+                cityId={formData.cityId}
+                onCountrySelect={(country) => {
+                  console.log("✅ Country Selected:", country);
+
+                  setFormData(prev => ({
+                    ...prev,
+                    countryId: country.id,
+                    country: country.name,
+                    countryPhoneCode: country.phoneCode,
+                    region: country.region  // ✅ AUTO FILL REGION
+                  }));
+
+                  // Clear any previous error
+                  if (errors.region) {
+                    setErrors(prev => ({ ...prev, region: "" }));
+                  }
+                }}
+                onCitySelect={({ name, id }) =>
+                  setFormData(prev => ({ ...prev, cityId: id, city: name }))
+                }
+                errors={errors}
+                showNotification={showNotification}
+              />
+
           </div>
             <div className="form-group">
             <label htmlFor="region" className="form-label required">Region</label>
@@ -108,10 +126,11 @@ const AgencyDetailsForm = ({ formData, setFormData, errors, setErrors, handleCha
               type="text"
               id="region"
               name="region"
-              value={formData.region}
-              onChange={handleChange}
-              className={errors.region ? 'form-input error' : 'form-input'}
-              placeholder="Enter region"
+              value={formData.region || ""}
+              disabled
+              // onChange={handleChange}
+              className="form-input"
+              placeholder="Autofilled"
             />
             {errors.region && <span className="error-message">{errors.region}</span>}
           </div>
@@ -168,10 +187,16 @@ const AgencyDetailsForm = ({ formData, setFormData, errors, setErrors, handleCha
               id="phoneNo"
               name="phoneNo"
               value={formData.phoneNo}
-              onChange={handleChange}
-              className={errors.phoneNo ? 'form-input error' : 'form-input'}
-              placeholder="Enter phone number"
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, "");
+                setFormData({
+                  ...formData,
+                  phoneNo: `${formData.countryPhoneCode || ""}${raw}`
+                });
+              }}
+              placeholder={`e.g. ${formData.countryPhoneCode || "+XXX"} 9876543210`}
             />
+
             {errors.phoneNo && <span className="error-message">{errors.phoneNo}</span>}
           </div>
         </div>

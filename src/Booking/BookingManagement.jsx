@@ -3,9 +3,11 @@ import BookingForm from "./BookingForm";
 import BookingList from "./BookingList";
 import BookingViewModal from "./BookingViewModal";
 import BookingEditModal from "./BookingEditModal";
+import CommercialForm from "./CommercialForm"; // Import the CommercialForm
 import bookingApi from "../api/bookingApi";
 import "./BookingManagement.css"
 import { AuthContext } from "../context/AuthContext";
+import CombinedBookingCommercial from "./CombinedBookingCommercial";
 
 const BookingManagement = () => {
   const { user } = useContext(AuthContext);
@@ -16,6 +18,8 @@ const BookingManagement = () => {
   const [viewModal, setViewModal] = useState({ isOpen: false, booking: null });
   const [editModal, setEditModal] = useState({ isOpen: false, booking: null });
   const [loading, setLoading] = useState(false);
+  const [commercialModal, setCommercialModal] = useState({ isOpen: false, booking: null });
+
 
   const isAdmin = userRole.toLowerCase() === "admin";
 
@@ -29,22 +33,19 @@ const BookingManagement = () => {
     setLoading(true);
     try {
       const data = await bookingApi.getBookings();
-      const mappedBookings = data.map((b) => ({
-        id: b.id,
-        ticketNumber: b.ticketNumber,
-        agencyName: b.agencyName || "N/A",
-        supplierName: b.supplierName || "N/A",
-        hotelName: b.hotelName || "N/A",
-        checkIn: b.checkIn,
-        checkOut: b.checkOut,
-        nights: b.nights,
-        numberOfRooms: b.numberOfRooms,
-        adults: b.adults,
-        children: b.children,
-        childrenAges: b.childrenAges,
-        status: b.status,
-        specialRequest: b.specialRequest,
-      }));
+      console.log('API Response:', data);
+      
+      // Calculate nights for each booking and ensure specialRequest exists
+      const mappedBookings = data.map((b) => {
+        const nights = Math.ceil((new Date(b.checkOut) - new Date(b.checkIn)) / (1000 * 60 * 60 * 24));
+        
+        return {
+          ...b, // Keep all the original API data
+          nights: nights,
+          specialRequest: b.specialRequest || "" // Add specialRequest if missing
+        };
+      });
+      
       setBookings(mappedBookings);
     } catch (error) {
       console.error("Error fetching bookings:", error);
@@ -54,7 +55,13 @@ const BookingManagement = () => {
     }
   };
 
-  const openViewModal = (booking) => setViewModal({ isOpen: true, booking });
+  const openViewModal = (booking) => {
+    console.log('Opening view modal with booking:', booking);
+    console.log('Booking rooms:', booking.rooms);
+    console.log('Number of people:', booking.numberOfPeople);
+    setViewModal({ isOpen: true, booking });
+  };
+
   const closeViewModal = () => setViewModal({ isOpen: false, booking: null });
 
   const openEditModal = (booking) => {
@@ -64,6 +71,7 @@ const BookingManagement = () => {
     }
     setEditModal({ isOpen: true, booking });
   };
+
   const closeEditModal = () => setEditModal({ isOpen: false, booking: null });
 
   const toggleBookingStatus = async (id, currentStatus) => {
@@ -93,6 +101,19 @@ const BookingManagement = () => {
       );
     }
   };
+  const openCommercialModal = (booking) => {
+  if (!isAdmin) {
+    alert("You do not have permission to edit commercial data.");
+    return;
+  }
+  setCommercialModal({ isOpen: true, booking });
+};
+
+const closeCommercialModal = () => {
+  setCommercialModal({ isOpen: false, booking: null });
+  fetchBookings(); // Refresh to show updated commercial data
+};
+
 
   return (
     <div className="booking-management-container">
@@ -112,13 +133,19 @@ const BookingManagement = () => {
             className={activeTab === "add" ? "booking-management-tab booking-management-tab-active" : "booking-management-tab"}
             onClick={() => handleTabChange("add")}
           >
-            Add Booking
+            Quick Booking
           </button>
           <button
             className={activeTab === "view" ? "booking-management-tab booking-management-tab-active" : "booking-management-tab"}
             onClick={() => handleTabChange("view")}
           >
             View Bookings ({bookings.length})
+          </button>
+          <button
+            className={activeTab === "commercial" ? "booking-management-tab booking-management-tab-active" : "booking-management-tab"}
+            onClick={() => handleTabChange("commercial")}
+          >
+             Booking + Commercial
           </button>
         </div>
       </div>
@@ -133,7 +160,7 @@ const BookingManagement = () => {
             }}
             onCancel={() => setActiveTab("view")}
           />
-        ) : (
+        ) : activeTab === "view" ? (
           <BookingList
             bookings={bookings}
             loading={loading}
@@ -143,12 +170,34 @@ const BookingManagement = () => {
             isAdmin={isAdmin}
             refreshBookings={fetchBookings}
           />
+        ) : (
+          <CombinedBookingCommercial
+            onSaved={(completeData) => {
+              console.log('Complete booking with commercial data:', completeData);
+              alert('Booking created successfully with commercial details!');
+              fetchBookings();
+              setActiveTab("view");
+            }}
+            onCancel={() => setActiveTab("view")}
+          />
         )}
       </div>
+{viewModal.isOpen && (
+  <BookingViewModal 
+    booking={viewModal.booking} 
+    onClose={closeViewModal}
+    onEditCommercial={openCommercialModal} // Add this prop
+  />
+)}
 
-      {viewModal.isOpen && (
-        <BookingViewModal booking={viewModal.booking} onClose={closeViewModal} />
-      )}
+{/* // Add Commercial Modal: */}
+{commercialModal.isOpen && (
+  <CommercialForm 
+    bookingId={commercialModal.booking?.id}
+    onClose={closeCommercialModal}
+    onSave={closeCommercialModal}
+  />
+)}
 
       {editModal.isOpen && (
         <BookingEditModal
@@ -158,7 +207,6 @@ const BookingManagement = () => {
           refreshBookings={fetchBookings}
         />
       )}
-
     </div>
   );
 };

@@ -1,960 +1,524 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  FaHotel, FaBuilding, FaUsers, FaChartLine, 
-  FaSync, FaEye, FaPlus, FaExclamationTriangle,
-  FaGlobe, FaExclamationCircle, FaArrowUp, FaArrowDown
-} from 'react-icons/fa';
-import { Pie, Line, Bar, Doughnut } from 'react-chartjs-2';
-import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import 'chartjs-adapter-date-fns';
+// Dashboard.jsx
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Line, Bar, Doughnut } from "react-chartjs-2";
+import "chart.js/auto";
 import './Dashboard.css';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler,
-  TimeScale
-} from 'chart.js';
-import { TrendingUp, Users, MapPin, Activity, Globe, Star } from 'lucide-react';
-import { borderRadius } from '@mui/system';
+import CommercialForm from "../Booking/CommercialForm";
 
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  TimeScale,
-  Title,
-  Tooltip,
-  Legend,
-  Filler
-);
+const Dashboard = () => {
+  // const [summary, setSummary] = useState({});
+  // const [bookingTrends, setBookingTrends] = useState([]);
+  // const [statusDistribution, setStatusDistribution] = useState([]);
+  // const [agencyPerformance, setAgencyPerformance] = useState([]);
+  // const [supplierPerformance, setSupplierPerformance] = useState([]);
+  // const [hotelOccupancy, setHotelOccupancy] = useState([]);
+  // const [topPerformers, setTopPerformers] = useState({});
+  // const [dailyBookings, setDailyBookings] = useState([]);
+  // const [upcomingBookings, setUpcomingBookings] = useState([]);
+  // const [peakSeason, setPeakSeason] = useState({});
+  // const [peopleDistribution, setPeopleDistribution] = useState([]);
+  // const [averages, setAverages] = useState({});
+  // const [recentActivity, setRecentActivity] = useState([]);
+  // const [loading, setLoading] = useState(true);
 
-const API_BASE = "https://backend.chaloholidayonline.com/api";
-const API_STATS = `${API_BASE}/dashboard/stats`;
-const API_RECENT_ACTIVITIES = `${API_BASE}/dashboard/recent-activities`;
-const API_HOTELS_BY_COUNTRY = `${API_BASE}/dashboard/hotels-by-country`;
-const API_AGENCIES_BY_COUNTRY = `${API_BASE}/dashboard/agencies-by-country`;
-const API_TOP_COUNTRIES = `${API_BASE}/dashboard/top-countries`;
-const API_MONTHLY_STATS = `${API_BASE}/dashboard/monthly-stats`;
+  // const API_BASE = "http://localhost:5039/api/Dashboard";
 
-const Dashboard = ({ showNotification, onNavigate }) => {
-    const navigate = useNavigate();
-  const [stats, setStats] = useState({
-    totalHotels: 0,
-    totalAgencies: 0,
-    activeHotels: 0,
-    pendingApprovals: 0,
-    totalCountries: 0,
-    monthlyGrowth: 0
-  });
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+  //       setLoading(true);
+  //       const [
+  //         summaryRes,
+  //         bookingTrendsRes,
+  //         statusRes,
+  //         agencyRes,
+  //         supplierRes,
+  //         hotelRes,
+  //         topRes,
+  //         dailyRes,
+  //         upcomingRes,
+  //         peakRes,
+  //         peopleRes,
+  //         avgRes,
+  //         activityRes,
+  //       ] = await Promise.all([
+  //         axios.get(`${API_BASE}/summary`),
+  //         axios.get(`${API_BASE}/booking-trends`),
+  //         axios.get(`${API_BASE}/status-distribution`),
+  //         axios.get(`${API_BASE}/agency-performance`),
+  //         axios.get(`${API_BASE}/supplier-performance`),
+  //         // axios.get(`${API_BASE}/hotel-occupancy`),
+  //         axios.get(`${API_BASE}/top-performers`),
+  //         axios.get(`${API_BASE}/daily-bookings`),
+  //         axios.get(`${API_BASE}/upcoming-bookings`),
+  //         axios.get(`${API_BASE}/peak-season`),
+  //         // axios.get(`${API_BASE}/people-distribution`),
+  //         // axios.get(`${API_BASE}/averages`),
+  //         axios.get(`${API_BASE}/recent-activity`),
+  //       ]);
 
-  const [recentActivities, setRecentActivities] = useState([]);
-  const [hotelsByCountry, setHotelsByCountry] = useState([]);
-  const [agenciesByCountry, setAgenciesByCountry] = useState([]);
-  const [topCountries, setTopCountries] = useState([]);
-  const [monthlyStats, setMonthlyStats] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState(null);
-  const fetchWithToken = async (url, options = {}) => {
-  const token = localStorage.getItem('accessToken'); // get token
-  const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-    'Authorization': `Bearer ${token}`  // attach token
-  };
+  //       setSummary(summaryRes.data);
+  //       setBookingTrends(bookingTrendsRes.data);
+  //       setStatusDistribution(statusRes.data);
+  //       setAgencyPerformance(agencyRes.data);
+  //       setSupplierPerformance(supplierRes.data);
+  //       setHotelOccupancy(hotelRes.data);
+  //       setTopPerformers(topRes.data);
+  //       setDailyBookings(dailyRes.data);
+  //       setUpcomingBookings(upcomingRes.data);
+  //       setPeakSeason(peakRes.data);
+  //       setPeopleDistribution(peopleRes.data);
+  //       setAverages(avgRes.data);
+  //       setRecentActivity(activityRes.data);
+  //     } catch (err) {
+  //       console.error("Error fetching dashboard data:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-  const response = await fetch(url, { ...options, headers });
-  return response;
-};
-    const latestActivities = [...recentActivities]
-  .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-  .slice(0, 6);
-const hotelActivities = latestActivities.filter(a => a.type === 'hotel');
-const agencyActivities = latestActivities.filter(a => a.type === 'agency');
-  // Chart options and data
-  const lineChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          usePointStyle: true,
-          padding: 20,
-          font: {
-            size: 12,
-            family: "'Inter', sans-serif",
-            weight: '500'
-          },
-          color: '#1a1a1a'
-        }
-      },
-      title: {
-        display: true,
-        text: 'Monthly Performance',
-        align: 'start',
-        font: {
-          size: 18,
-          family: "'Inter', sans-serif",
-          weight: '600'
-        },
-        padding: {
-          top: 0,
-          bottom: 20
-        },
-        color: '#1a1a1a'
-      },
-      tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        titleColor: '#1a1a1a',
-        bodyColor: '#1a1a1a',
-        borderColor: 'rgba(0, 0, 0, 0.1)',
-        borderWidth: 1,
-        padding: 12,
-        boxPadding: 6,
-        usePointStyle: true,
-        callbacks: {
-          label: function(context) {
-            return `${context.dataset.label}: ${context.parsed.y}`;
-          }
-        }
-      }
-    },
-    interaction: {
-      intersect: false,
-      mode: 'index',
-    },
-    elements: {
-      line: {
-        tension: 0.4,
-        borderWidth: 2,
-      },
-      point: {
-        radius: 4,
-        hoverRadius: 6,
-        borderWidth: 2,
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: false,
-        grid: {
-          color: 'rgba(215, 215, 215, 0.2)',
-          drawBorder: false,
-        },
-        ticks: {
-          padding: 10,
-          font: {
-            size: 11,
-            family: "'Inter', sans-serif"
-          },
-          color: '#6b7280'
-        }
-      },
-      x: {
-         type: 'time',          // <-- important
-        time: {
-          unit: 'month',
-          tooltipFormat: 'MMM yyyy',
-          displayFormats: {
-            month: 'MMM yyyy'
-          }
-        },
-        grid: {
-          color: 'rgba(204, 204, 204, 0.1)',
-          drawBorder: false,
-        },
-        ticks: {
-          padding: 10,
-          font: {
-            size: 11,
-            family: "'Inter', sans-serif"
-          },
-          color: '#6b7280'
-        }
-      },
-    },
-    maintainAspectRatio: false,
-    animations: {
-      tension: {
-        duration: 3000,
-        easing: 'linear'
-      }
-    }
-  };
+  //   fetchData();
+  // }, []);
 
-  const barChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          usePointStyle: true,
-          padding: 20,
-          font: {
-            size: 12,
-            family: "'Inter', sans-serif",
-            weight: '500'
-          },
-          color: '#1a1a1a'
-        }
-      },
-      title: {
-        display: true,
-        text: 'Hotels vs Agencies by Country',
-        align: 'start',
-        font: {
-          size: 18,
-          family: "'Inter', sans-serif",
-          weight: '600'
-        },
-        padding: {
-          top: 0,
-          bottom: 20
-        },
-        color: '#1a1a1a'
-      },
-      tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        titleColor: '#1a1a1a',
-        bodyColor: '#1a1a1a',
-        borderColor: 'rgba(0, 0, 0, 0.1)',
-        borderWidth: 1,
-        padding: 12,
-        boxPadding: 6,
-        usePointStyle: true,
-        callbacks: {
-          label: function(context) {
-            return `${context.dataset.label}: ${context.parsed.y}`;
-          }
-        }
-      }
-    },
-    interaction: {
-      intersect: false,
-      mode: 'index',
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          color: 'rgba(215, 215, 215, 0.2)',
-          drawBorder: false,
-        },
-        ticks: {
-          padding: 10,
-          font: {
-            size: 11,
-            family: "'Inter', sans-serif"
-          },
-          color: '#6b7280'
-        }
-      },
-      x: {
-        grid: {
-          color: 'rgba(204, 204, 204, 0.1)',
-          drawBorder: false,
-        },
-        ticks: {
-          padding: 10,
-          font: {
-            size: 11,
-            family: "'Inter', sans-serif"
-          },
-          color: '#6b7280'
-        }
-      },
-    },
-    maintainAspectRatio: false,
-    datasets: {
-      bar: {
-        borderRadius: 6,
-        borderSkipped: false,
-        categoryPercentage: 0.8,
-        barPercentage: 0.9,
-      }
-    },
-    animations: {
-      numbers: {
-        duration: 1000,
-        easing: 'easeOutQuart'
-      }
-    }
-  };
+  // const formatDate = (date) => {
+  //   if (!date) return "N/A";
+  //   const d = new Date(date);
+  //   return isNaN(d) ? "N/A" : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  // };
 
-  const doughnutOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          usePointStyle: true,
-          padding: 20,
-          font: {
-            size: 12,
-            family: "'Inter', sans-serif",
-            weight: '500'
-          },
-          color: '#1a1a1a'
-        }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        titleColor: '#1a1a1a',
-        bodyColor: '#1a1a1a',
-        borderColor: 'rgba(0, 0, 0, 0.1)',
-        borderWidth: 1,
-        padding: 12,
-        boxPadding: 6,
-        usePointStyle: true,
-        callbacks: {
-          label: function(context) {
-            const label = context.label || '';
-            const value = context.parsed || 0;
-            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-            const percentage = Math.round((value / total) * 100);
-            return `${label}: ${value} (${percentage}%)`;
-          }
-        }
-      }
-    },
-    cutout: '65%',
-    radius: '90%',
-    animation: {
-      animateScale: true,
-      animateRotate: true,
-      duration: 1000,
-      easing: 'easeOutQuart'
-    },
-    maintainAspectRatio: false,
-  };
+  // const getStatusBadgeClass = (status) => {
+  //   switch (status?.toLowerCase()) {
+  //     case 'confirmed':
+  //       return 'statusBadgeBase statusConfirmed';
+  //     case 'pending':
+  //       return 'statusBadgeBase statusPending';
+  //     case 'cancelled':
+  //       return 'statusBadgeBase statusCancelled';
+  //     default:
+  //       return 'statusBadgeBase';
+  //   }
+  // };
 
-  const pieData = {
-    labels: ['Hotels', 'Agencies', 'Pending'],
-    datasets: [
-      {
-        label: 'Distribution',
-        data: [stats.totalHotels, stats.totalAgencies, stats.pendingApprovals],
-        backgroundColor: [
-          'rgba(79, 70, 229, 0.85)',
-          'rgba(217, 70, 239, 0.85)',
-          'rgba(234, 179, 8, 0.85)',
-        ],
-        borderColor: [
-          'rgba(79, 70, 229, 1)',
-          'rgba(220, 38, 38, 1)',
-          'rgba(245, 158, 11, 1)',
-        ],
-        borderWidth: 2,
-        borderJoinStyle: 'round',
-        hoverBackgroundColor: [
-          'rgba(67, 56, 202, 0.9)',
-          'rgba(185, 28, 28, 0.9)',
-          'rgba(217, 119, 6, 0.9)',
-        ],
-        hoverBorderColor: [
-          'rgba(79, 70, 229, 1)',
-          'rgba(220, 38, 38, 1)',
-          'rgba(245, 158, 11, 1)',
-        ],
-        hoverBorderWidth: 3,
-        hoverOffset: 8,
-      },
-    ],
-  };
+  // // Professional color palette
+  // const colors = {
+  //   primary: {
+  //     blue: '#3b82f6',
+  //     green: '#10b981',
+  //     red: '#ef4444',
+  //     teal: '#14b8a6',
+  //     purple: '#8b5cf6',
+  //     orange: '#f97316',
+  //     indigo: '#6366f1'
+  //   },
+  //   light: {
+  //     blue: 'rgba(59, 130, 246, 0.1)',
+  //     green: 'rgba(16, 185, 129, 0.1)',
+  //     red: 'rgba(239, 68, 68, 0.1)',
+  //     teal: 'rgba(20, 184, 166, 0.1)',
+  //     purple: 'rgba(139, 92, 246, 0.1)',
+  //     orange: 'rgba(249, 115, 22, 0.1)',
+  //     indigo: 'rgba(99, 102, 241, 0.1)'
+  //   }
+  // };
 
-  const pieOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          usePointStyle: true,
-          padding: 20,
-          font: {
-            size: 12,
-            family: "'Inter', sans-serif",
-            weight: '500'
-          },
-          color: '#1a1a1a'
-        }
-      },
-      tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        titleColor: '#1a1a1a',
-        bodyColor: '#1a1a1a',
-        borderColor: 'rgba(0, 0, 0, 0.1)',
-        borderWidth: 1,
-        padding: 12,
-        boxPadding: 6,
-        usePointStyle: true,
-        callbacks: {
-          label: function(context) {
-            const label = context.label || '';
-            const value = context.parsed || 0;
-            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-            const percentage = Math.round((value / total) * 100);
-            return `${label}: ${value} (${percentage}%)`;
-          }
-        }
-      }
-    },
-    radius: '90%',
-    animation: {
-      animateScale: true,
-      animateRotate: true,
-      duration: 1000,
-      easing: 'easeOutQuart'
-    },
-    maintainAspectRatio: false,
-  };
+  // // Safe month label formatting
+  // const getMonthLabel = (monthData) => {
+  //   if (!monthData) return '';
+  //   const month = monthData.month || monthData.monthName || '';
+  //   const year = monthData.year || '';
+    
+  //   if (typeof month === 'number') {
+  //     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  //     const monthName = monthNames[month - 1] || month.toString();
+  //     return `${monthName} '${year.toString().slice(-2)}`;
+  //   }
+    
+  //   if (typeof month === 'string') {
+  //     return `${month.slice(0, 3)} '${year.toString().slice(-2)}`;
+  //   }
+    
+  //   return `${month} '${year.toString().slice(-2)}`;
+  // };
 
-  const doughnutData = {
-    labels: ['Hotels', 'Agencies', 'Pending'],
-    datasets: [
-      {
-        label: 'Distribution',
-        data: [stats.totalHotels, stats.totalAgencies, stats.pendingApprovals],
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.9)',
-          'rgba(139, 92, 246, 0.9)',
-          'rgba(245, 158, 11, 0.9)',
-        ],
-        borderColor: [
-          'rgba(59, 130, 246, 1)',
-          'rgba(139, 92, 246, 1)',
-          'rgba(245, 158, 11, 1)',
-        ],
-        borderWidth: 0,
-        hoverBackgroundColor: [
-          'rgba(37, 99, 235, 0.95)',
-          'rgba(124, 58, 237, 0.95)',
-          'rgba(217, 119, 6, 0.95)',
-        ],
-        hoverBorderColor: [
-          'rgba(59, 130, 246, 1)',
-          'rgba(139, 92, 246, 1)',
-          'rgba(245, 158, 11, 1)',
-        ],
-        hoverBorderWidth: 2,
-        hoverOffset: 5,
-      },
-    ],
-  };
+  // // All KPIs - Including everything from summary and averages
+  // const allKPIs = [
+  //   // Summary KPIs
+  //   { key: 'totalBookings', title: 'Total Bookings', value: summary.totalBookings || '0', icon: '📊', color: 'Blue' },
+  //   // { key: 'totalRevenue', title: 'Revenue', value: summary.totalRevenue ? `$${Number(summary.totalRevenue).toLocaleString()}` : '$0', icon: '💰', color: 'Green' },
+  //   // { key: 'confirmedBookings', title: 'Confirmed', value: summary.confirmedBookings || '0', icon: '✅', color: 'Teal' },
+  //   // { key: 'cancelledBookings', title: 'Cancelled', value: summary.cancelledBookings || '0', icon: '❌', color: 'Red' },
+    
+  //   // Additional summary KPIs
+  //   { key: 'pendingBookings', title: 'Pending', value: summary.pendingBookings || '0', icon: '⏳', color: 'Orange' },
+  //   { key: 'totalAgencies', title: 'Agencies', value: summary.totalAgencies || '0', icon: '🏢', color: 'Purple' },
+  //   { key: 'totalHotels', title: 'Hotels', value: summary.totalHotels || '0', icon: '🏨', color: 'Indigo' },
+  //   { key: 'totalSuppliers', title: 'Suppliers', value: summary.totalSuppliers || '0', icon: '🤝', color: 'Blue' },
+    
+  //   // Averages
+  //   { key: 'averageNights', title: 'Avg Nights', value: averages.averageNights || '0', icon: '🌙', color: 'Purple' },
+  //   { key: 'averagePeople', title: 'Avg People', value: averages.averagePeople || '0', icon: '👥', color: 'Teal' },
+    
+  //   // Peak Season
+  //   // { key: 'peakMonth', title: 'Peak Month', value: peakSeason.PeakMonthName || 'N/A', icon: '📈', color: 'Orange' }
+  // ];
 
-  // Custom plugin to display percentages inside doughnut segments
-  const doughnutSegmentLabels = {
-    id: 'doughnutSegmentLabels',
-    afterDraw(chart) {
-      const { ctx, chartArea: { width, height } } = chart;
-      
-      chart.data.datasets.forEach((dataset, i) => {
-        const meta = chart.getDatasetMeta(i);
-        
-        meta.data.forEach((element, index) => {
-          const total = dataset.data.reduce((a, b) => a + b, 0);
-          const percentage = Math.round((dataset.data[index] / total) * 100);
+  // // Chart data configurations
+  // const bookingTrendData = {
+  //   labels: bookingTrends.slice(-6).map(d => getMonthLabel(d)),
+  //   datasets: [
+  //     { 
+  //       label: "Total Bookings", 
+  //       data: bookingTrends.slice(-6).map(d => d.totalBookings), 
+  //       borderColor: colors.primary.blue,
+  //       backgroundColor: colors.light.blue,
+  //       borderWidth: 2,
+  //       tension: 0.4,
+  //       fill: true
+  //     },
+  //     { 
+  //       label: "Confirmed", 
+  //       data: bookingTrends.slice(-6).map(d => d.confirmed), 
+  //       borderColor: colors.primary.green,
+  //       backgroundColor: colors.light.green,
+  //       borderWidth: 2,
+  //       tension: 0.4,
+  //       fill: true
+  //     }
+  //   ]
+  // };
+
+  // const statusPieData = {
+  //   labels: statusDistribution.map(d => d.status),
+  //   datasets: [{ 
+  //     data: statusDistribution.map(d => d.count), 
+  //     backgroundColor: [
+  //       colors.primary.green,
+  //       colors.primary.blue,
+  //       colors.primary.red,
+  //       colors.primary.orange,
+  //       colors.primary.purple
+  //     ],
+  //     borderWidth: 2,
+  //     borderColor: '#fff'
+  //   }]
+  // };
+
+  // const agencyBarData = {
+  //   labels: agencyPerformance.slice(0, 5).map(a => a.agency?.split(' ')[0] || 'Agency'),
+  //   datasets: [{ 
+  //     label: "Bookings", 
+  //     data: agencyPerformance.slice(0, 5).map(a => a.bookings),
+  //     backgroundColor: colors.primary.blue,
+  //     borderColor: colors.primary.blue,
+  //     borderWidth: 0,
+  //     borderRadius: 4,
+  //   }]
+  // };
+
+  // const supplierBarData = {
+  //   labels: supplierPerformance.slice(0, 5).map(s => s.supplier?.split(' ')[0] || 'Supplier'),
+  //   datasets: [{ 
+  //     label: "Bookings", 
+  //     data: supplierPerformance.slice(0, 5).map(s => s.bookings),
+  //     backgroundColor: colors.primary.orange,
+  //     borderColor: colors.primary.orange,
+  //     borderWidth: 0,
+  //     borderRadius: 4,
+  //   }]
+  // };
+
+  // const hotelBarData = {
+  //   // labels: hotelOccupancy.slice(0, 5).map(h => h.hotel?.split(' ')[0] || 'Hotel'),
+  //   datasets: [
+  //     { 
+  //       label: "Bookings", 
+  //       data: hotelOccupancy.slice(0, 5).map(h => h.bookings),
+  //       backgroundColor: colors.primary.green,
+  //       borderColor: colors.primary.green,
+  //       borderWidth: 0,
+  //       borderRadius: 4,
+  //     },
+  //     { 
+  //       label: "People", 
+  //       data: hotelOccupancy.slice(0, 5).map(h => h.people),
+  //       backgroundColor: colors.primary.purple,
+  //       borderColor: colors.primary.purple,
+  //       borderWidth: 0,
+  //       borderRadius: 4,
+  //     }
+  //   ]
+  // };
+
+  // const peopleBarData = {
+  //   labels: peopleDistribution.map(p => p.people?.toString() || 'N/A'),
+  //   datasets: [{ 
+  //     label: "Bookings", 
+  //     data: peopleDistribution.map(p => p.count),
+  //     backgroundColor: colors.primary.indigo,
+  //     borderColor: colors.primary.indigo,
+  //     borderWidth: 0,
+  //     borderRadius: 4,
+  //   }]
+  // };
+
+  // const chartOptions = {
+  //   responsive: true,
+  //   maintainAspectRatio: false,
+  //   plugins: {
+  //     legend: {
+  //       position: 'top',
+  //       labels: {
+  //         usePointStyle: true,
+  //         padding: 8,
+  //         color: '#6b7280',
+  //         font: { size: 11, weight: '500' }
+  //       }
+  //     },
+  //     tooltip: {
+  //       backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  //       titleColor: '#1f2937',
+  //       bodyColor: '#374151',
+  //       borderColor: '#e5e7eb',
+  //       borderWidth: 1,
+  //       cornerRadius: 6,
+  //       usePointStyle: true,
+  //     }
+  //   },
+  //   scales: {
+  //     y: {
+  //       beginAtZero: true,
+  //       grid: { color: 'rgba(229, 231, 235, 0.8)' },
+  //       ticks: { color: '#6b7280', font: { size: 10 } }
+  //     },
+  //     x: {
+  //       grid: { display: false },
+  //       ticks: { color: '#6b7280', font: { size: 10 } }
+  //     }
+  //   }
+  // };
+
+  // const pieOptions = {
+  //   responsive: true,
+  //   maintainAspectRatio: false,
+  //   cutout: '50%',
+  //   plugins: {
+  //     legend: {
+  //       position: 'bottom',
+  //       labels: {
+  //         usePointStyle: true,
+  //         padding: 8,
+  //         color: '#6b7280',
+  //         font: { size: 10 }
+  //       }
+  //     }
+  //   }
+  // };
+
+  // if (loading) {
+  //   return (
+  //     <div className="dashboardLoadingWrapper">
+  //       <div className="loadingSpinnerElement"></div>
+  //       <p className="dashboardLoadingText">Loading dashboard...</p>
+  //     </div>
+  //   );
+  // }
+
+  // return (
+  //   <div className="dashboardCore">
+  //     {/* Header */}
+  //     <header className="dashboardHeaderContainer">
+  //       <div className="headerContentWrapper">
+  //         <div className="headerTitleSection">
+  //           <h1 className="dashboardMainTitle">Travel Analytics Dashboard</h1>
+  //           <p className="dashboardSubtitleText">Complete performance overview</p>
+  //         </div>
+  //         <div className="headerActionsContainer">
+  //           <div className="dateFilterBadge">
+  //             <span>Last 30 Days</span>
+  //           </div>
+  //           <button className="exportButtonPrimary">Export Report</button>
+  //         </div>
+  //       </div>
+  //     </header>
+
+  //     {/* All KPIs Section - Compact Grid */}
+  //     <section className="kpiSectionWrapper">
+  //       <div className="sectionHeaderGlobal">
+  //         <h2 className="sectionTitleGlobal">Key Performance Indicators</h2>
+  //       </div>
+  //       <div className="kpiGridCompactLayout">
+  //         {allKPIs.map(kpi => (
+  //           <div key={kpi.key} className={`kpiCardBase kpiCard${kpi.color}`}>
+  //             <div className="kpiIconWrapper">{kpi.icon}</div>
+  //             <div className="kpiContentArea">
+  //               <h3 className="kpiTitleText">{kpi.title}</h3>
+  //               <p className="kpiValueDisplay">{kpi.value}</p>
+  //             </div>
+  //           </div>
+  //         ))}
+  //       </div>
+  //     </section>
+
+  //     {/* Main Charts Grid - All Charts Included */}
+  //     <section className="chartsSectionContainer">
+  //       <div className="sectionHeaderGlobal">
+  //         <h2 className="sectionTitleGlobal">Analytics & Performance</h2>
+  //       </div>
+  //       <div className="chartsGridCompact">
+  //         {/* Row 1 */}
+  //         <div className="chartCardBase mainChartCard">
+  //           <div className="chartHeaderArea">
+  //             <h3 className="chartTitleText">Booking Trends</h3>
+  //             <span className="chartSubtitleText">Last 6 months</span>
+  //           </div>
+  //           <div className="chartWrapperContainer">
+  //             <Line data={bookingTrendData} options={chartOptions} />
+  //           </div>
+  //         </div>
+
+  //         <div className="chartCardBase">
+  //           <div className="chartHeaderArea">
+  //             <h3 className="chartTitleText">Status Distribution</h3>
+  //           </div>
+  //           <div className="chartWrapperContainer">
+  //             <Doughnut data={statusPieData} options={pieOptions} />
+  //           </div>
+  //         </div>
+
+  //         {/* Row 2 */}
+  //         <div className="chartsGridRow">
+  //           <div className="chartCardBase">
+  //             <div className="chartHeaderArea">
+  //               <h3 className="chartTitleText">Top Agencies</h3>
+  //             </div>
+  //             <div className="chartWrapperContainer">
+  //               <Bar data={agencyBarData} options={chartOptions} />
+  //             </div>
+  //           </div>
+
+  //           <div className="chartCardBase">
+  //             <div className="chartHeaderArea">
+  //               <h3 className="chartTitleText">Top Suppliers</h3>
+  //             </div>
+  //             <div className="chartWrapperContainer">
+  //               <Bar data={supplierBarData} options={chartOptions} />
+  //             </div>
+  //           </div>
+
+  //           <div className="chartCardBase">
+  //             <div className="chartHeaderArea">
+  //               <h3 className="chartTitleText">Hotel Performance</h3>
+  //             </div>
+  //             <div className="chartWrapperContainer">
+  //               <Bar data={hotelBarData} options={chartOptions} />
+  //             </div>
+  //           </div>
+  //         </div>
+
+  //         {/* Row 3 */}
+  //         <div className="chartCardBase">
+  //           <div className="chartHeaderArea">
+  //             <h3 className="chartTitleText">Group Size Distribution</h3>
+  //           </div>
+  //           <div className="chartWrapperContainer">
+  //             <Bar data={peopleBarData} options={chartOptions} />
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </section>
+
+  //     {/* Data Tables Section - All Data Included */}
+  //     <section className="tablesSectionWrapper">
+  //       <div className="tablesGridCompact">
           
-          const { x, y } = element.tooltipPosition();
-          
-          ctx.save();
-          ctx.font = 'bold 14px Inter';
-          ctx.fillStyle = '#ffffff';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(`${percentage}%`, x, y);
-          ctx.restore();
-        });
-      });
-    }
-  };
-  const monthMap = {
-  Jan: "Jan", January: "Jan",
-  Feb: "Feb", February: "Feb",
-  Mar: "Mar", March: "Mar",
-  Apr: "Apr", April: "Apr",
-  May: "May",
-  Jun: "Jun", June: "Jun",
-  Jul: "Jul", July: "Jul",
-  Aug: "Aug", August: "Aug",
-  Sep: "Sep", Sept: "Sep", September: "Sep",   // <-- Fix here
-  Oct: "Oct", October: "Oct",
-  Nov: "Nov", November: "Nov",
-  Dec: "Dec", December: "Dec",
-};
-  
-  const lineChartData = {
-  labels: monthlyStats.map(stat => {
-    const [rawMonth, year] = stat.month.split(" "); // e.g. "Sept", "2025"
-    const shortMonth = monthMap[rawMonth] || rawMonth.substring(0, 3);
-    return new Date(`${shortMonth} 01, ${year}`);
-  }),
-    datasets: [
-      {
-        label: 'Hotels',
-        data: monthlyStats.map(stat => stat.hotels),
-         pointRadius: monthlyStats.map(stat => stat.hotels === 0 ? 3 : 6),
-        borderColor: 'rgba(79, 70, 229, 1)',
-        backgroundColor: (context) => {
-          const chart = context.chart;
-          const {ctx, chartArea} = chart;
-          if (!chartArea) return null;
-          
-          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-          gradient.addColorStop(0, 'rgba(79, 70, 229, 0.1)');
-          gradient.addColorStop(0.7, 'rgba(79, 70, 229, 0.3)');
-          gradient.addColorStop(1, 'rgba(79, 70, 229, 0.5)');
-          return gradient;
-        },
-        pointBackgroundColor: 'rgba(79, 70, 229, 1)',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        
-        pointHoverRadius: 6,
-        tension: 7,
-        fill: true,
-        
-        borderWidth: 3,
-      },
-      {
-        label: 'Agencies',
-        data: monthlyStats.map(stat => stat.agencies),
-         pointRadius: monthlyStats.map(stat => stat.agencies === 0 ? 3 : 6),
-        borderColor: 'rgba(220, 38, 38, 1)',
-        backgroundColor: (context) => {
-          const chart = context.chart;
-          const {ctx, chartArea} = chart;
-          if (!chartArea) return null;
-          
-          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-          gradient.addColorStop(0, 'rgba(220, 38, 38, 0.1)');
-          gradient.addColorStop(0.7, 'rgba(220, 38, 38, 0.3)');
-          gradient.addColorStop(1, 'rgba(220, 38, 38, 0.5)');
-          return gradient;
-        },
-        pointBackgroundColor: 'rgba(220, 38, 38, 1)',
-        pointBorderColor: '#ffffff',
-        pointBorderWidth: 2,
-        
-        pointHoverRadius: 6,
-        tension: 0.4,
-        spanGaps:true,
-        fill: true,
-        borderWidth: 3,
-      },
-    ],
-  };
+  //         {/* Upcoming Bookings */}
+  //         <div className="tableCardBase">
+  //           <div className="tableHeaderArea">
+  //             <h3 className="tableTitleText">Upcoming Bookings</h3>
+  //             <span className="viewAllLink">View All</span>
+  //           </div>
+  //           <div className="tableContentCompact">
+  //             {upcomingBookings.slice(0, 6).map(booking => (
+  //               <div key={booking.ticketNumber} className="tableRowCompact">
+  //                 <div className="rowMainInfo">
+  //                   <span className="ticketNumber">#{booking.ticketNumber}</span>
+  //                   <span className="agencyName">{booking.agency}</span>
+  //                 </div>
+  //                 <div className="rowDetailsInfo">
+  //                   <span className="hotelName">{booking.hotel}</span>
+  //                   <span className="datesRange">
+  //                     {formatDate(booking.checkIn)} - {formatDate(booking.checkOut)}
+  //                   </span>
+  //                 </div>
+  //                 <span className={getStatusBadgeClass(booking.status)}>
+  //                   {booking.status}
+  //                 </span>
+  //               </div>
+  //             ))}
+  //           </div>
+  //         </div>
 
-  const barChartData = {
-    labels: topCountries.slice(0, 5).map(country => country.countryName),
-    datasets: [
-      {
-        label: 'Hotels',
-        data: topCountries.slice(0, 5).map(country => country.hotelCount),
-        backgroundColor: (context) => {
-          const chart = context.chart;
-          const {ctx, chartArea} = chart;
-          if (!chartArea) return 'rgba(79, 70, 229, 0.8)';
-          
-          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-          gradient.addColorStop(0, 'rgba(79, 70, 229, 0.8)');
-          gradient.addColorStop(1, 'rgba(67, 56, 202, 0.9)');
-          return gradient;
-        },
-        borderColor: 'rgba(79, 70, 229, 1)',
-        borderWidth: 0,
-        borderRadius: 6,
-        borderSkipped: false,
-        hoverBackgroundColor: 'rgba(67, 56, 202, 0.9)',
-      },
-      {
-        label: 'Agencies',
-        data: topCountries.slice(0, 5).map(country => country.agencyCount),
-        backgroundColor: (context) => {
-          const chart = context.chart;
-          const {ctx, chartArea} = chart;
-          if (!chartArea) return 'rgba(220, 38, 38, 0.8)';
-          
-          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
-          gradient.addColorStop(0, 'rgba(220, 38, 38, 0.8)');
-          gradient.addColorStop(1, 'rgba(185, 28, 28, 0.9)');
-          return gradient;
-        },
-        borderColor: 'rgba(220, 38, 38, 1)',
-        borderWidth: 0,
-        borderRadius: 6,
-        borderSkipped: false,
-        hoverBackgroundColor: 'rgba(185, 28, 28, 0.9)',
-      },
-    ],
-  };
+  //         {/* Recent Activity */}
+  //         <div className="tableCardBase">
+  //           <div className="tableHeaderArea">
+  //             <h3 className="tableTitleText">Recent Activity</h3>
+  //             <span className="viewAllLink">View All</span>
+  //           </div>
+  //           <div className="tableContentCompact">
+  //             {recentActivity.slice(0, 6).map((activity, index) => (
+  //               <div key={index} className="tableRowCompact">
+  //                 <div className="activityMessage">{activity.message}</div>
+  //                 <div className="activityTime">{formatDate(activity.updatedAt)}</div>
+  //               </div>
+  //             ))}
+  //           </div>
+  //         </div>
 
-const fetchDashboardData = async () => {
-  setRefreshing(true);
-  setError(null);
+  //         {/* Top Performers */}
+  //         <div className="tableCardBase">
+  //           <div className="tableHeaderArea">
+  //             <h3 className="tableTitleText">Top Performers</h3>
+  //           </div>
+  //           <div className="performersGridLayout">
+  //             <div className="performerCategory">
+  //               <h4>🏆 Agencies</h4>
+  //               {topPerformers.topAgencies?.slice(0, 3).map((agency, index) => (
+  //                 <div key={agency.agency} className="performerItem">
+  //                   <span className="rankBadge">{index + 1}</span>
+  //                   <span className="performerName">{agency.agency}</span>
+  //                   <span className="performerCount">{agency.count}</span>
+  //                 </div>
+  //               ))}
+  //             </div>
+  //             <div className="performerCategory">
+  //               <h4>🏨 Hotels</h4>
+  //               {topPerformers.topHotels?.slice(0, 3).map((hotel, index) => (
+  //                 <div key={hotel.hotel} className="performerItem">
+  //                   <span className="rankBadge">{index + 1}</span>
+  //                   <span className="performerName">{hotel.hotel}</span>
+  //                   <span className="performerCount">{hotel.count}</span>
+  //                 </div>
+  //               ))}
+  //             </div>
+  //             <div className="performerCategory">
+  //               <h4>🤝 Suppliers</h4>
+  //               {topPerformers.topSuppliers?.slice(0, 3).map((supplier, index) => (
+  //                 <div key={supplier.supplier} className="performerItem">
+  //                   <span className="rankBadge">{index + 1}</span>
+  //                   <span className="performerName">{supplier.supplier}</span>
+  //                   <span className="performerCount">{supplier.count}</span>
+  //                 </div>
+  //               ))}
+  //             </div>
+  //           </div>
+  //         </div>
 
-  try {
-    // Get the JWT token from localStorage (or wherever you store it)
-    const token = localStorage.getItem("token"); // adjust key if different
+  //       </div>
+  //     </section>
+    // </div>
+  // );
 
-    const headers = token
-      ? { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" }
-      : { "Content-Type": "application/json" };
-
-    const [
-      statsRes,
-      activitiesRes,
-      hotelsByCountryRes,
-      agenciesByCountryRes,
-      topCountriesRes,
-      monthlyStatsRes
-    ] = await Promise.allSettled([
-      fetch(API_STATS, { headers }),
-      fetch(API_RECENT_ACTIVITIES, { headers }),
-      fetch(API_HOTELS_BY_COUNTRY, { headers }),
-      fetch(API_AGENCIES_BY_COUNTRY, { headers }),
-      fetch(API_TOP_COUNTRIES, { headers }),
-      fetch(API_MONTHLY_STATS, { headers })
-    ]);
-
-    if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
-      const statsData = await statsRes.value.json();
-      setStats(statsData);
-    }
-
-    if (activitiesRes.status === 'fulfilled' && activitiesRes.value.ok) {
-      const activitiesData = await activitiesRes.value.json();
-        
-      // Normalize the activities data to handle missing user information
-      const normalizedActivities = activitiesData.map(activity => ({
-        id: activity.id || Math.random().toString(36).substr(2, 9),
-        user: activity.user || activity.userName || activity.createdBy || "System",
-        action: activity.action || "modified",
-        type: activity.type || "item",
-        name: activity.name || activity.title || "Unnamed",
-        timeAgo: activity.timeAgo || (activity.timestamp ? 
-          formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true }) : 
-          "Recently"),
-        timestamp: activity.timestamp || new Date().toISOString(),
-        country: activity.country || null
-      }));
-      
-      setRecentActivities(normalizedActivities);
-    }
-
-    if (hotelsByCountryRes.status === 'fulfilled' && hotelsByCountryRes.value.ok) {
-      const hotelsByCountryData = await hotelsByCountryRes.value.json();
-      setHotelsByCountry(hotelsByCountryData);
-    }
-
-    if (agenciesByCountryRes.status === 'fulfilled' && agenciesByCountryRes.value.ok) {
-      const agenciesByCountryData = await agenciesByCountryRes.value.json();
-      setAgenciesByCountry(agenciesByCountryData);
-    }
-
-    if (topCountriesRes.status === 'fulfilled' && topCountriesRes.value.ok) {
-      const topCountriesData = await topCountriesRes.value.json();
-      setTopCountries(topCountriesData);
-    }
-
-    if (monthlyStatsRes.status === 'fulfilled' && monthlyStatsRes.value.ok) {
-      const monthlyStatsData = await monthlyStatsRes.value.json();
-      console.log("Raw API response:", monthlyStatsData);
-      setMonthlyStats(monthlyStatsData);
-    }
-
-  } catch (err) {
-    console.error("Error fetching dashboard data:", err);
-    setError(err.message);
-    if (showNotification) {
-      showNotification(`Error loading dashboard: ${err.message}`, "error");
-    }
-  } finally {
-    setRefreshing(false);
-    setLoading(false);
-  }
-};
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const StatCard = ({ title, value, icon, color, trend, subtitle }) => (
-    <div className={`dashboard-stat-card ${color}`}>
-      <div className="stat-icon">{icon}</div>
-      <div className="stat-content">
-        <h3>{value}</h3>
-        <p>{title}</p>
-        {trend && (
-          <div className={`stat-trend ${trend > 0 ? 'positive' : 'negative'}`}>
-            {trend > 0 ? <FaArrowUp /> : <FaArrowDown />}
-            <span>{Math.abs(trend)}%</span>
-          </div>
-        )}
-        {subtitle && <div className="stat-subtitle">{subtitle}</div>}
-      </div>
-    </div>
-  );
-
-  const QuickAction = ({ title, icon, description, onClick }) => (
-    <div className="quick-action-card" onClick={onClick}>
-      <div className="action-icon">{icon}</div>
-      <div className="action-content">
-        <h4>{title}</h4>
-        <p>{description}</p>
-      </div>
-    </div>
-  );
-
-  const MetricCard = ({ title, value, change, icon, backgroundColor, color, border  }) => (
-    <div className="metric-card">
-      <div className="metric-icon" style={{ backgroundColor, color, border }}>
-        {icon}
-      </div>
-      <div className="metric-content">
-        <h3>{value}</h3>
-        <p>{title}</p>
-        {change && (
-          <span className={`metric-change ${change > 0 ? 'positive' : 'negative'}`}>
-            {change > 0 ? '+' : ''}{change}%
-          </span>
-        )}
-      </div>
-    </div>
-  );
-
-  if (loading) return (
-    <div className="dashboard-loading">
-      <div className="dashboard-spinner"></div>
-      <p>Loading dashboard...</p>
-    </div>
-  );
-
-  if (error) return (
-    <div className="dashboard-error">
-      <div className="error-icon">
-        <FaExclamationCircle />
-      </div>
-      <h2>Unable to Load Dashboard</h2>
-      <p>{error}</p>
-      <button className="dashboard-retry-btn" onClick={fetchDashboardData}>
-        <FaSync className={refreshing ? 'spinning' : ''} />
-        Try Again
-      </button>
-    </div>
-  );
-
-  return (
-    <div className="dashboard-container ">
-      <div className="dashboard-header">
-        <div className="header-content">
-          <h1>Dashboard Overview</h1>
-          <p>Real-time insights and analytics</p>
-        </div>
-        <button className="dashboard-refresh-btn" onClick={fetchDashboardData}>
-          <FaSync className={refreshing ? 'spinning' : ''} />
-          Refresh Data
-        </button>
-      </div>
-
-      {/* Key Metrics Row */}
-      <div className="metrics-grid">
-        <MetricCard
-          title="Total Hotels"
-          value={stats.totalHotels}
-          
-          icon={<FaHotel />}
-          backgroundColor=" rgb(232 246 255)"
-          color= "rgb(52, 152, 219)"
-          border=" 2px solid rgb(52, 152, 219)"
-        />
-        <MetricCard
-          title="Total Agencies"
-          value={stats.totalAgencies}
-          
-          icon={<FaBuilding />}
-          color=" rgb(46, 204, 113)"
-          backgroundColor=" rgb(221 255 235)"
-          border= " 2px solid rgb(46, 204, 113)"
-        />
-        <MetricCard
-          title="Active Properties"
-          value={stats.activeHotels}
-          
-          icon={<Activity size={20} />}
-          color="#9b59b6"
-          backgroundColor="rgba(251, 241, 255, 1)"
-          border="2px solid rgb(155, 89, 182)"
-        />
-        <MetricCard
-          title="Countries Covered"
-          value={stats.totalCountries}
-          
-          icon={<Globe size={20} />}
-          color="#e67e22"
-          backgroundColor="#fff9f4ff"
-          border="2px solid #e67e22"
-        />
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="dashboard-content">
-        {/* Left Column - Charts */}
-        <div className="main-content">
-          {/* Performance Chart */}
-          <div className="chart-card">
-            <div className="chart-header">
-              <h3>Monthly Performance Trend</h3>
-              <span className="chart-subtitle">Last 6 months</span>
-            </div>
-            <div className="chart-container">
-            {monthlyStats.length > 0 ? (
-              <Line data={lineChartData} options={lineChartOptions} />
-            ) : (
-              <p>Loading chart...</p>
-            )}
-            </div>
-          </div>
-
-          {/* Distribution Charts */}
-          <div className="charts-row">
-            <div className="chart-card">
-              <div className="chart-header">
-                <h3>Distribution Overview</h3>
-              </div>
-              <div className="chart-container">
-                <Pie data={pieData} options={pieOptions} />
-              </div>
-            </div>
-
-            <div className="chart-card">
-              <div className="chart-header">
-                <h3>Top Countries Comparison</h3>
-              </div>
-              <div className="chart-container">
-                <Bar data={barChartData} options={barChartOptions} />
-              </div>
-            </div>
-          </div>
-        </div> 
-
-        {/* Right Column - Sidebar */}
-        <div className="dashboard-sidebar">
-          <div className="recent-activities">
-            <div className="section-header">
-              <h3>Recent Activities</h3>
-              <Users size={18} />
-            </div>
-
-          <div className="activities-list">
-            {recentActivities
-              .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-              .slice(0, 6)
-              .map((activity, index) => {
-                const user = activity.user || activity.userName || activity.createdBy || "System";
-                const action = activity.action || "performed action on";
-                const type = activity.type || "item";
-                const name = activity.name || "Unnamed";
-
-                return (
-                  <div key={activity.id || `activity-${index}`} className="activity-item">
-                    <div className="activity-icon">
-                      {type === 'hotel' && <FaHotel />}
-                      {type === 'agency' && <FaBuilding />}
-                      {!type && <FaExclamationTriangle />}
-                    </div>
-                    <div className="activity-content">
-                      <p className="activity-text">{`${user} ${action} ${type} "${name}"`}</p>
-                      <div className="activity-meta">
-                        <span className="activity-time">
-                          {activity.timestamp 
-                            ? formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })
-                            : "Recently"}
-                        </span>
-                        {activity.country && <span className="activity-country">{activity.country}</span>}
-                      </div>
-                    </div>
-                  </div>
-                );
-            })}
-          </div>
-
-
-            <div className="see-more-wrapper">
-              <button
-                className="see-more-btn"
-                onClick={() => navigate("/recent-activities")}
-              >
-                See More
-              </button>
-            </div>
-          </div>
-
-          {/* Top Countries */}
-          <div className="top-countries">
-            <div className="section-header">
-              <h3>Top Countries</h3>
-              <MapPin size={18} />
-            </div>
-            <div className="countries-list">
-              {topCountries.slice(0, 5).map((country, index) => (
-                <div key={country.countryId} className="country-item">
-                  <div className="country-rank">{index + 1}</div>
-                  <div className="country-info">
-                    <span className="country-name">{country.countryName}</span>
-                    <span className="country-stats">
-                      {country.hotelCount} hotels • {country.agencyCount} agencies
-                    </span>
-                  </div>
-                  <div className="country-score">
-                    <Star size={14} fill="currentColor" />
-                    {Math.round((country.hotelCount + country.agencyCount) / 2)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* System Status */}
-          <div className="system-status">
-            <div className="section-header">
-              <h3>System Status</h3>
-              <Activity size={18} />
-            </div>
-            <div className="status-items">
-              <div className="status-item online">
-                <div className="status-dot"></div>
-                <span>API Services</span>
-                <span className="status-badge">Online</span>
-              </div>
-              <div className="status-item online">
-                <div className="status-dot"></div>
-                <span>Database</span>
-                <span className="status-badge">Online</span>
-              </div>
-              <div className="status-item online">
-                <div className="status-dot"></div>
-                <span>Storage</span>
-                <span className="status-badge">Online</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 };
 
 export default Dashboard;

@@ -71,6 +71,26 @@ const AgencyViewModal = ({ viewModal, closeViewModal }) => {
                     {viewModal.agency.status || 'N/A'}
                   </span>
                 </div>
+                <div className="detail-section">
+                  <h3>Agency Staff</h3>
+
+                  {viewModal.agency.staff && viewModal.agency.staff.length > 0 ? (
+                    viewModal.agency.staff.map((member, index) => (
+                      <div key={index} className="detail-row">
+                        <span className="detail-label">{member.role}:</span>
+                        <span className="detail-value">
+                          {member.name} 
+                          {member.designation ? ` (${member.designation})` : ''} 
+                          {member.email ? ` | ${member.email}` : ''} 
+                          {member.phone ? ` | ${member.phone}` : ''}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p>No staff added.</p>
+                  )}
+                </div>
+
                 <div className="detail-row">
                   <span className="detail-label">Registered On:</span>
                   <span className="detail-value">{viewModal.agency.createdAt}</span>

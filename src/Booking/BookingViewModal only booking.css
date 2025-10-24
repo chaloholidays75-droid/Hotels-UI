@@ -1,0 +1,233 @@
+/* BookingViewModal.css */
+.booking-view-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.booking-view-modal-content-ticket {
+  background: white;
+  border-radius: 8px;
+  width: 95%;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  border: 1px solid #e1e5e9;
+}
+
+.booking-view-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 2px solid #2d3748;
+  background: #f8f9fa;
+}
+
+.booking-view-modal-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  font-family: 'Courier New', monospace;
+}
+
+.booking-view-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #64748b;
+  padding: 4px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+}
+
+.booking-view-modal-close:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.booking-view-modal-body-ticket {
+  padding: 24px;
+  background: #fafbfc;
+}
+
+.booking-view-ticket-two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #2d3748;
+}
+
+.booking-view-ticket-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.booking-view-ticket-line {
+  display: flex;
+  margin-bottom: 8px;
+  align-items: flex-start;
+  border-bottom: 1px dotted #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.booking-view-ticket-line:last-child {
+  border-bottom: none;
+}
+
+.booking-view-ticket-label {
+  font-weight: 600;
+  min-width: 140px;
+  color: #4a5568;
+  margin-right: 8px;
+}
+
+.booking-view-ticket-value {
+  color: #2d3748;
+  flex: 1;
+}
+
+.booking-view-ticket-spacer {
+  height: 20px;
+  margin: 12px 0;
+  border-bottom: 2px dashed #cbd5e1;
+}
+
+.booking-view-ticket-rooms-list {
+  margin-left: 10px;
+}
+
+.booking-view-ticket-room-item {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+}
+
+.booking-view-ticket-room-header {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.booking-view-ticket-room-details {
+  margin-left: 10px;
+}
+
+.booking-view-ticket-indented-line {
+  display: flex;
+  margin-bottom: 6px;
+  align-items: flex-start;
+}
+
+.booking-view-ticket-indented-line .booking-view-ticket-label {
+  min-width: 120px;
+}
+
+.booking-view-ticket-special-request {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 12px;
+  margin-top: 8px;
+  white-space: pre-wrap;
+  line-height: 1.5;
+  color: #4a5568;
+  font-family: 'Courier New', monospace;
+}
+
+.booking-view-ticket-no-rooms {
+  text-align: center;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 4px;
+  border: 1px dashed #cbd5e1;
+}
+
+.booking-view-modal-actions {
+  padding: 20px 24px;
+  border-top: 1px solid #e1e5e9;
+  display: flex;
+  justify-content: flex-end;
+  background: #f8f9fa;
+}
+
+.booking-view-close-btn {
+  background: #2d3748;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Courier New', monospace;
+}
+
+.booking-view-close-btn:hover {
+  background: #4a5568;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .booking-view-ticket-two-column {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .booking-view-modal-content-ticket {
+    width: 98%;
+    max-width: 800px;
+  }
+}
+
+@media (max-width: 768px) {
+  .booking-view-modal-overlay {
+    padding: 10px;
+  }
+  
+  .booking-view-modal-header {
+    padding: 16px 20px;
+  }
+  
+  .booking-view-modal-body-ticket {
+    padding: 20px;
+  }
+  
+  .booking-view-ticket-line {
+    flex-direction: column;
+    margin-bottom: 12px;
+  }
+  
+  .booking-view-ticket-label {
+    min-width: auto;
+    margin-bottom: 4px;
+  }
+  
+  .booking-view-ticket-indented-line {
+    flex-direction: column;
+  }
+  
+  .booking-view-ticket-room-details {
+    margin-left: 5px;
+  }
+}
