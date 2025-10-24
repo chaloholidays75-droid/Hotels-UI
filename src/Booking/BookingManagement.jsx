@@ -190,14 +190,14 @@ const closeCommercialModal = () => {
   />
 )}
 
-{/* // Add Commercial Modal:
+{/* // Add Commercial Modal: */}
 {commercialModal.isOpen && (
   <CommercialForm 
     bookingId={commercialModal.booking?.id}
     onClose={closeCommercialModal}
     onSave={closeCommercialModal}
   />
-)} */}
+)}
 
       {editModal.isOpen && (
         <BookingEditModal
