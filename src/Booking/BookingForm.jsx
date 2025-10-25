@@ -41,6 +41,8 @@ const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [rooms, setRooms] = useState(() => booking.bookingRooms || []);
   const [showHotelResults, setShowHotelResults] = useState(false);
+  const [sharedRoomTypes, setSharedRoomTypes] = useState([]);
+
 
   // Search states
   const [agentSearch, setAgentSearch] = useState("");
@@ -634,17 +636,28 @@ const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
                   <div className="booking-field-box">
                     <label>Type *</label>
                     <RoomTypeSelector
-                      hotelId={booking.hotelId}
-                      value={room.roomTypeId}
-                      onSelect={(roomTypeId) => {
-                        const next = [...rooms];
-                        next[idx] = { ...room, roomTypeId };
-                        setRooms(next);
-                      }}
-                      placeholder="Select type"
-                      compact
-                      disabled={!booking.hotelId}
-                    />
+                        hotelId={booking.hotelId}
+                        value={room.roomTypeId}
+                        sharedRoomTypes={sharedRoomTypes}
+                        onSelect={(roomTypeId, roomTypeName) => {
+                          const next = [...rooms];
+                          next[idx] = { ...room, roomTypeId };
+                          setRooms(next);
+                          // Ensure selected type is tracked globally
+                          if (!sharedRoomTypes.some(rt => rt.id === roomTypeId)) {
+                            setSharedRoomTypes(prev => [...prev, { id: roomTypeId, name: roomTypeName }]);
+                          }
+                        }}
+                        onNotify={(msg) => {
+                          if (msg?.newRoom) {
+                            setSharedRoomTypes(prev => [...prev, msg.newRoom]);
+                          }
+                        }}
+                        placeholder="Select type"
+                        compact
+                        disabled={!booking.hotelId}
+                      />
+
                   </div>
 
                   <div className="booking-field-box">

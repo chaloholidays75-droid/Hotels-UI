@@ -59,25 +59,6 @@ export default function CommercialForm() {
     { code: "EUR", name: "Euro", symbol: "€" },
     { code: "GBP", name: "British Pound", symbol: "£" },
   ];
-// ✅ Auto-tick Commission checkbox if value exists
-useEffect(() => {
-  setBuying((prev) => ({
-    ...prev,
-    commissionable:
-      prev.commissionable ||
-      (!!prev.commissionValue && parseFloat(prev.commissionValue) > 0),
-  }));
-}, [buying.commissionValue]);
-
-// ✅ Auto-tick Incentive checkbox if value exists
-useEffect(() => {
-  setSelling((prev) => ({
-    ...prev,
-    incentive:
-      prev.incentive ||
-      (!!prev.incentiveValue && parseFloat(prev.incentiveValue) > 0),
-  }));
-}, [selling.incentiveValue]);
 
   useEffect(() => {
     if (
@@ -127,6 +108,25 @@ const selectedBooking = bookings.find(b => b.id === selectedBookingId);
       [name]: type === "checkbox" ? checked : value,
     }));
   };
+// ✅ Auto-toggle Commission checkbox based on its value
+useEffect(() => {
+  if (parseFloat(buying.commissionValue) > 0) {
+    setBuying(prev => ({ ...prev, commissionable: true }));
+  }
+  if (parseFloat(selling.incentiveValue) > 0) {
+    setSelling(prev => ({ ...prev, incentive: true }));
+  }
+}, [buying.commissionValue, selling.incentiveValue]);
+
+// ✅ Auto-toggle Incentive checkbox based on its value
+useEffect(() => {
+  if (parseFloat(selling.incentiveValue) > 0 && !selling.incentive) {
+    setSelling(prev => ({ ...prev, incentive: true }));
+  }
+  if ((!selling.incentiveValue || parseFloat(selling.incentiveValue) === 0) && selling.incentive) {
+    setSelling(prev => ({ ...prev, incentive: false }));
+  }
+}, [selling.incentiveValue]);
 
   const addAdditionalCost = () => {
     setBuying((prev) => ({
@@ -485,6 +485,65 @@ useEffect(() => {
 
   fetchExistingCommercial();
 }, [selectedBookingId]);
+// ✅ Auto-tick commission and incentive checkboxes if their values already exist (after loading)
+// ✅ Auto-tick commission and incentive checkboxes if their values exist (after loading or prefill)
+// ✅ Auto-tick or untick Commission, Incentive, and VAT checkboxes dynamically
+useEffect(() => {
+  if (!loading) {
+    // --- COMMISSION (BUYING SIDE) ---
+    const commValue = parseFloat(buying.commissionValue) || 0;
+    if (commValue > 0 && !buying.commissionable) {
+      setBuying(prev => ({ ...prev, commissionable: true }));
+    } else if ((commValue === 0 || buying.commissionValue === "" || buying.commissionValue === null) && buying.commissionable) {
+      setBuying(prev => ({ ...prev, commissionable: false }));
+    }
+
+    // --- INCENTIVE (SELLING SIDE) ---
+    const incValue = parseFloat(selling.incentiveValue) || 0;
+    if (incValue > 0 && !selling.incentive) {
+      setSelling(prev => ({ ...prev, incentive: true }));
+    } else if ((incValue === 0 || selling.incentiveValue === "" || selling.incentiveValue === null) && selling.incentive) {
+      setSelling(prev => ({ ...prev, incentive: false }));
+    }
+
+    // --- VAT (BUYING SIDE) ---
+    const vatPercentBuy = parseFloat(buying.vatPercent) || 0;
+    if (vatPercentBuy > 0 && !buying.vatIncluded) {
+      setBuying(prev => ({ ...prev, vatIncluded: true }));
+    } else if ((vatPercentBuy === 0 || buying.vatPercent === "" || buying.vatPercent === null) && buying.vatIncluded) {
+      setBuying(prev => ({ ...prev, vatIncluded: false }));
+    }
+
+    // --- VAT (SELLING SIDE) ---
+    const vatPercentSell = parseFloat(selling.vatPercent) || 0;
+    if (vatPercentSell > 0 && !selling.vatIncluded) {
+      setSelling(prev => ({ ...prev, vatIncluded: true }));
+    } else if ((vatPercentSell === 0 || selling.vatPercent === "" || selling.vatPercent === null) && selling.vatIncluded) {
+      setSelling(prev => ({ ...prev, vatIncluded: false }));
+    }
+  }
+}, [
+  loading,
+  buying.commissionValue,
+  selling.incentiveValue,
+  buying.vatPercent,
+  selling.vatPercent,
+]);
+useEffect(() => {
+  const value = parseFloat(selling.incentiveValue);
+
+  if (!isNaN(value) && value > 0) {
+    // ✅ Auto-tick if greater than zero
+    if (!selling.incentive) {
+      setSelling(prev => ({ ...prev, incentive: true }));
+    }
+  } else {
+    // ❌ Auto-untick if 0, empty, or invalid
+    if (selling.incentive) {
+      setSelling(prev => ({ ...prev, incentive: false }));
+    }
+  }
+}, [selling.incentiveValue]);
 
 // useEffect(() => {
 //   if (!selectedBookingId) return;
@@ -653,7 +712,7 @@ useEffect(() => {
           {/* Commission */}
           <div style={{ marginTop: "20px" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
-              <input type="checkbox" name="commissionable" onChange={handleBuyingChange} style={{ transform: "scale(1.2)" }} />
+              <input type="checkbox" name="commissionable" checked={buying.commissionable} onChange={handleBuyingChange} style={{ transform: "scale(1.2)" }} />
               <span style={{ fontWeight: "bold", color: "#555" }}>Commission Claim</span>
             </label>
             {buying.commissionable && (
@@ -690,7 +749,7 @@ useEffect(() => {
           {/* VAT */}
           <div style={{ marginTop: "15px" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
-              <input type="checkbox" name="vatIncluded" onChange={handleBuyingChange} style={{ transform: "scale(1.2)" }} />
+              <input type="checkbox" name="vatIncluded" checked={buying.vatIncluded} onChange={handleBuyingChange} style={{ transform: "scale(1.2)" }} />
               <span style={{ fontWeight: "bold", color: "#555" }}>Include VAT</span>
             </label>
             {buying.vatIncluded && (
@@ -783,7 +842,7 @@ useEffect(() => {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
-              <span style={{ fontWeight: "bold", color: "#0056b3" }}>GROSS VALUE (before VAT):</span>
+              <span style={{ fontWeight: "bold", color: "#0056b3" }}>GROSS PAYABLE (before VAT):</span>
               <span style={{ fontWeight: "bold", color: "#0056b3" }}>
                 {getCurrencySymbol(buying.currency)} {(buyingCalculation.grossValue || 0).toFixed(2)}
               </span>
@@ -865,7 +924,7 @@ useEffect(() => {
           {/* Incentive */}
           <div style={{ marginTop: "20px" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
-              <input type="checkbox" name="incentive" onChange={handleSellingChange} style={{ transform: "scale(1.2)" }} />
+              <input type="checkbox" name="incentive" onChange={handleSellingChange} checked={selling.incentive} style={{ transform: "scale(1.2)" }} />
               <span style={{ fontWeight: "bold", color: "#555" }}>Include Incentive/Discount</span>
             </label>
             {selling.incentive && (
@@ -901,7 +960,7 @@ useEffect(() => {
           {/* VAT */}
           <div style={{ marginTop: "15px" }}>
             <label style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "15px" }}>
-              <input type="checkbox" name="vatIncluded" onChange={handleSellingChange} style={{ transform: "scale(1.2)" }} />
+              <input type="checkbox" name="vatIncluded" checked={selling.vatIncluded} onChange={handleSellingChange} style={{ transform: "scale(1.2)" }} />
               <span style={{ fontWeight: "bold", color: "#555" }}>Include VAT</span>
             </label>
             {selling.vatIncluded && (
@@ -994,13 +1053,13 @@ useEffect(() => {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
-              <span style={{ fontWeight: "bold", color: "#0056b3" }}>GROSS REVENUE (before VAT):</span>
+              <span style={{ fontWeight: "bold", color: "#0056b3" }}>GROSS SELLING (before VAT):</span>
               <span style={{ fontWeight: "bold", color: "#0056b3" }}>
                 {getCurrencySymbol(selling.currency)} {(sellingCalc.grossRevenue || 0).toFixed(2)}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontWeight: "bold", color: "#0066cc" }}>NET REVENUE (after VAT):</span>
+              <span style={{ fontWeight: "bold", color: "#0066cc" }}>NET AMOUNT (after VAT):</span>
               <span style={{ fontSize: "18px", fontWeight: "bold", color: "#0066cc" }}>
                 {getCurrencySymbol(selling.currency)} {(sellingCalc.netRevenue || 0).toFixed(2)}
               </span>

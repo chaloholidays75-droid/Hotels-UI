@@ -11,8 +11,10 @@ import bookingApi from "../api/bookingApi";
 import "./RoomTypeSelector.css"
 
 const RoomTypeSelector = forwardRef(
-  ({ hotelId, value, onSelect, onNotify, errors = {} }, ref) => {
+  ({ hotelId, value, onSelect, onNotify, sharedRoomTypes = [], errors = {} }, ref) => {
     const [roomTypes, setRoomTypes] = useState([]);
+  
+
     const [roomSearch, setRoomSearch] = useState("");
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -42,19 +44,23 @@ const RoomTypeSelector = forwardRef(
     }, []);
 
     // ✅ Fetch room types for current hotel
-    const fetchRoomTypes = useCallback(async () => {
-      if (!hotelId) return;
-      setLoading(true);
-      try {
-        const data = await bookingApi.getRoomTypesByHotel(hotelId);
-        console.log("Room types fetched:", data);
-        setRoomTypes(data || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }, [hotelId]);
+      const fetchRoomTypes = useCallback(async () => {
+        if (!hotelId) return;
+        setLoading(true);
+        try {
+          const data = await bookingApi.getRoomTypesByHotel(hotelId);
+          // merge unique room types from shared state
+          const merged = [
+            ...data,
+            ...sharedRoomTypes.filter(rt => !data.some(d => d.id === rt.id))
+          ];
+          setRoomTypes(merged);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      }, [hotelId, sharedRoomTypes]);
     useEffect(() => {
   if (!value) return;
   const found = roomTypes.find(rt => rt.id === value);
@@ -96,44 +102,73 @@ const RoomTypeSelector = forwardRef(
     };
 
     // ✅ Handle manual add
-    const handleManualAdd = async () => {
-      const name = roomSearch.trim();
-      if (!name || !hotelId) {
-        setNotice("Please enter a name and select a hotel first");
-        setTimeout(() => setNotice(""), 2000);
-        return;
-      }
+    // const handleManualAdd = async () => {
+    //   const name = roomSearch.trim();
+    //   if (!name || !hotelId) {
+    //     setNotice("Please enter a name and select a hotel first");
+    //     setTimeout(() => setNotice(""), 2000);
+    //     return;
+    //   }
 
-      const exists = roomTypes.find(
-        (r) => r.name.toLowerCase() === name.toLowerCase()
-      );
-      if (exists) {
-        setNotice("Room Type already exists.");
-        setTimeout(() => setNotice(""), 2000);
-        handleSelect(exists);
-        return;
-      }
+    //   const exists = roomTypes.find(
+    //     (r) => r.name.toLowerCase() === name.toLowerCase()
+    //   );
+    //   if (exists) {
+    //     setNotice("Room Type already exists.");
+    //     setTimeout(() => setNotice(""), 2000);
+    //     handleSelect(exists);
+    //     return;
+    //   }
 
-      setSaving(true);
-      try {
-        const newRoom = await bookingApi.createRoomType({
-          hotelId,
-          name,
-          isActive: true
-        });
+    //   setSaving(true);
+    //   try {
+    //     const newRoom = await bookingApi.createRoomType({
+    //       hotelId,
+    //       name,
+    //       isActive: true
+    //     });
 
-        setRoomTypes((prev) => [...prev, newRoom]);
-        handleSelect(newRoom);
-        onNotify?.({ type: "success", message: `Room type "${name}" added` });
-      } catch (err) {
-        console.error(err);
-        setNotice("Failed to add room type");
-        onNotify?.({ type: "error", message: "Failed to add room type" });
-      } finally {
-        setSaving(false);
-        setTimeout(() => setNotice(""), 2000);
-      }
-    };
+    //     setRoomTypes((prev) => [...prev, newRoom]);
+    //     handleSelect(newRoom);
+    //     onNotify?.({ type: "success", message: `Room type "${name}" added` });
+    //   } catch (err) {
+    //     console.error(err);
+    //     setNotice("Failed to add room type");
+    //     onNotify?.({ type: "error", message: "Failed to add room type" });
+    //   } finally {
+    //     setSaving(false);
+    //     setTimeout(() => setNotice(""), 2000);
+    //   }
+    // };
+  const handleManualAdd = async () => {
+  const name = roomSearch.trim();
+  if (!name || !hotelId) return;
+
+  const exists = roomTypes.find(
+    (r) => r.name.toLowerCase() === name.toLowerCase()
+  );
+  if (exists) {
+    handleSelect(exists);
+    return;
+  }
+
+  setSaving(true);
+  try {
+    const newRoom = await bookingApi.createRoomType({
+      hotelId,
+      name,
+      isActive: true
+    });
+    setRoomTypes((prev) => [...prev, newRoom]);
+    handleSelect(newRoom);
+    onNotify?.({ type: "success", message: `Room type "${name}" added`, newRoom });
+  } catch (err) {
+    console.error(err);
+    onNotify?.({ type: "error", message: "Failed to add room type" });
+  } finally {
+    setSaving(false);
+  }
+};
 
     // ✅ Keyboard navigation
     const handleKeyDown = (e) => {
