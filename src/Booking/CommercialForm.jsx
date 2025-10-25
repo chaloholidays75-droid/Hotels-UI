@@ -59,6 +59,25 @@ export default function CommercialForm() {
     { code: "EUR", name: "Euro", symbol: "€" },
     { code: "GBP", name: "British Pound", symbol: "£" },
   ];
+// ✅ Auto-tick Commission checkbox if value exists
+useEffect(() => {
+  setBuying((prev) => ({
+    ...prev,
+    commissionable:
+      prev.commissionable ||
+      (!!prev.commissionValue && parseFloat(prev.commissionValue) > 0),
+  }));
+}, [buying.commissionValue]);
+
+// ✅ Auto-tick Incentive checkbox if value exists
+useEffect(() => {
+  setSelling((prev) => ({
+    ...prev,
+    incentive:
+      prev.incentive ||
+      (!!prev.incentiveValue && parseFloat(prev.incentiveValue) > 0),
+  }));
+}, [selling.incentiveValue]);
 
   useEffect(() => {
     if (
