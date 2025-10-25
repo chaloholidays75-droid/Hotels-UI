@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./CommercialTicketForm.css";
 import {
-  getBookingsDropdown,
+
   getCommercialByBooking,
   createCommercial,
   updateCommercial,
@@ -46,7 +46,7 @@ export default function CommercialForm() {
    useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const data = await getBookingsDropdown();
+        const data = await getCommercialByBooking();
         setBookings(data);
       } catch (err) {
         console.error("Failed to load bookings dropdown:", err);
