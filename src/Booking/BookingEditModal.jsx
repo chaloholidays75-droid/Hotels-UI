@@ -542,48 +542,96 @@ useEffect(() => {
 
       // Save commercial data if it exists
       if (commercialData.buyingAmount || commercialData.sellingPrice) {
-        const commercialPayload = {
-          ...commercialData,
-          bookingId: editModal.booking.id,
-          additionalCostsJson: JSON.stringify(commercialData.additionalCosts),
-          discountsJson: JSON.stringify(commercialData.discounts)
-        };
+ const commercialPayload = {
+  bookingId: editModal.booking.id,
+  buyingCurrency: commercialData.buyingCurrency,
+  sellingCurrency: commercialData.sellingCurrency,
+  exchangeRate: parseFloat(commercialData.exchangeRate || 1),
+
+  buyingAmount: parseFloat(commercialData.buyingAmount || 0),
+  buyingVatIncluded: !!commercialData.buyingVatIncluded,
+  buyingVatPercent: parseFloat(commercialData.buyingVatPercent || 0),
+
+  sellingPrice: parseFloat(commercialData.sellingPrice || 0),
+  sellingVatIncluded: !!commercialData.sellingVatIncluded,
+  sellingVatPercent: parseFloat(commercialData.sellingVatPercent || 0),
+
+  commissionable: !!commercialData.commissionable,
+  commissionType: commercialData.commissionType,
+  commissionValue: parseFloat(commercialData.commissionValue || 0),
+
+  incentive: !!commercialData.incentive,
+  incentiveType: commercialData.incentiveType,
+  incentiveValue: parseFloat(commercialData.incentiveValue || 0),
+
+  additionalCostsJson: JSON.stringify(commercialData.additionalCosts || []),
+  discountsJson: JSON.stringify(commercialData.discounts || [])
+};
+
           console.log("💼 Sending Commercial payload:", commercialPayload);
  try {
-        // Check if Commercial exists for this booking
-        const existing = await getCommercialByBooking(editModal.booking.id);
-        let commercialId;
+  console.group("🧾 COMMERCIAL DEBUG LOG");
+  console.log("📤 Payload sent to backend:", commercialPayload);
 
-        if (existing && existing.id) {
-          // 3️⃣ Update existing Commercial
-          const res = await updateCommercial(existing.id, commercialPayload);
-          commercialId = res.id || existing.id;
-          console.log("✅ Updated Commercial:", commercialId);
-        } else {
-          // 4️⃣ Create new Commercial
-          const res = await createCommercial(commercialPayload);
-          commercialId = res.id;
-          console.log("✅ Created new Commercial:", commercialId);
-        }
+  const existing = await getCommercialByBooking(editModal.booking.id);
+  console.log("🔍 Existing commercial from backend:", existing);
 
-        // 5️⃣ Link Booking ↔ Commercial
-        if (commercialId) {
-          await linkCommercialToBooking(editModal.booking.id, commercialId);
-          console.log(`🔗 Linked Booking ${editModal.booking.id} with Commercial ${commercialId}`);
-        }
-      } catch (error) {
-        console.error("❌ Failed to save or link commercial data:", error);
+  let commercialId;
+  if (existing && existing.id) {
+    console.log("➡️ Updating commercial ID:", existing.id);
+    const res = await updateCommercial(existing.id, commercialPayload);
+    console.log("✅ Backend update response:", res);
+    commercialId = res.id || existing.id;
+  } else {
+    console.log("➡️ Creating new commercial");
+    const res = await createCommercial(commercialPayload);
+    console.log("✅ Backend create response:", res);
+    commercialId = res.id;
+  }
+
+  if (commercialId) {
+    console.log(`🔗 Linking Booking ${editModal.booking.id} to Commercial ${commercialId}`);
+    const linkRes = await linkCommercialToBooking(editModal.booking.id, commercialId);
+    console.log("✅ Link response:", linkRes);
+  }
+
+  console.groupEnd();
+} catch (error) {
+  console.error("❌ Failed to save or link commercial data:", error);
+  if (error.response) {
+    console.error("📥 Backend Response Data:", error.response.data);
+    console.error("📥 Backend Status:", error.response.status);
+  }
+}
+      alert("✅ Booking & Commercial saved successfully!");
+      refreshBookings();
+      closeEditModal();
       }
     }
-
-    alert("✅ Booking & Commercial saved successfully!");
-    refreshBookings();
-    closeEditModal();
-  } catch (error) {
-    console.error("❌ Update failed:", error);
-    alert("Failed to update booking!");
+    catch (error) {
+      console.error("❌ Update failed:", error);
+      alert("Failed to update booking!");
+    }
   }
-};
+  
+    //     // 5️⃣ Link Booking ↔ Commercial
+    //     if (commercialId) {
+    //       await linkCommercialToBooking(editModal.booking.id, commercialId);
+    //       console.log(`🔗 Linked Booking ${editModal.booking.id} with Commercial ${commercialId}`);
+    //     }
+    //   } catch (error) {
+    //     console.error("❌ Failed to save or link commercial data:", error);
+    //   }
+    // }
+
+    // alert("✅ Booking & Commercial saved successfully!");
+    // refreshBookings();
+    // closeEditModal();
+  // } catch (error) {
+  //   console.error("❌ Update failed:", error);
+  //   alert("Failed to update booking!");
+  // }
+
 
   if (!editModal.isOpen) return null;
 
