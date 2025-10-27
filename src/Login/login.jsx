@@ -54,33 +54,34 @@ function Login({ setUserName, setIsAuthenticated }) {
       const fieldErrors = result.error.flatten().fieldErrors;
       setErrors(fieldErrors);
       setIsLoading(false);
+      console.warn("⚠️ Validation failed:", fieldErrors);
+      alert("Please correct the highlighted errors.");
       return;
     }
 
-    try {
-      const { userFullName, token } = await login(
-        formData.email,
-        formData.password
-      );
+    console.log("🟦 Submitting login form:", formData);
 
-      setUserName(userFullName);
+    try {
+      // ✅ Send RememberMe to backend
+      const data = await login(formData.email, formData.password, formData.rememberMe);
+      console.log("✅ Backend response:", data);
+
+      // Backend now handles cookies — no need to store token manually
+      setUserName(data.userFullName);
       setIsAuthenticated(true);
 
-      // ✅ Remember or clear login info
       if (formData.rememberMe) {
-        localStorage.setItem("authToken", token);
         localStorage.setItem("userEmail", formData.email);
       } else {
-        sessionStorage.setItem("authToken", token);
-        sessionStorage.setItem("userEmail", formData.email);
         localStorage.removeItem("userEmail");
       }
 
+      alert(`Welcome back, ${data.userFullName || "User"}!`);
       navigate("/");
     } catch (err) {
-      setErrors({
-        general: "Invalid email or password. Please try again.",
-      });
+      console.error("❌ Login error:", err);
+      alert("Login failed. Please check your credentials and try again.");
+      setErrors({ general: "Invalid email or password." });
     } finally {
       setIsLoading(false);
     }
@@ -98,6 +99,7 @@ function Login({ setUserName, setIsAuthenticated }) {
             Sign in to your account
           </h2>
         </div>
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             {/* Email */}
