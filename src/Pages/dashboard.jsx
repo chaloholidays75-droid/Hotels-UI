@@ -1,524 +1,214 @@
-// Dashboard.jsx
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { Line, Bar, Doughnut } from "react-chartjs-2";
-import "chart.js/auto";
-import './Dashboard.css';
-import CommercialForm from "../Booking/CommercialForm";
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  fetchDashboardData
+} from "../api/dashboardApi"; // ✅ new import
+import DashboardCard from "./DashboardCard";
+import DashboardCharts from "./DashboardCharts";
+import RecentBookings from "./RecentBookings";
+import RecentActivities from "./RecentActivities";
+import LoadingSkeleton from "./LoadingSkeleton";
+import "./Dashboard.css";
 
 const Dashboard = () => {
-  // const [summary, setSummary] = useState({});
-  // const [bookingTrends, setBookingTrends] = useState([]);
-  // const [statusDistribution, setStatusDistribution] = useState([]);
-  // const [agencyPerformance, setAgencyPerformance] = useState([]);
-  // const [supplierPerformance, setSupplierPerformance] = useState([]);
-  // const [hotelOccupancy, setHotelOccupancy] = useState([]);
-  // const [topPerformers, setTopPerformers] = useState({});
-  // const [dailyBookings, setDailyBookings] = useState([]);
-  // const [upcomingBookings, setUpcomingBookings] = useState([]);
-  // const [peakSeason, setPeakSeason] = useState({});
-  // const [peopleDistribution, setPeopleDistribution] = useState([]);
-  // const [averages, setAverages] = useState({});
-  // const [recentActivity, setRecentActivity] = useState([]);
-  // const [loading, setLoading] = useState(true);
+  const [dateRange, setDateRange] = useState("This Month");
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState({
+    summary: null,
+    bookingsTrend: null,
+    financialTrends: null,
+    bookingStatus: null,
+    topAgencies: null,
+    topSuppliers: null,
+    recentBookings: null,
+    recentActivities: null,
+  });
 
-  // const API_BASE = "http://localhost:5039/api/Dashboard";
+  useEffect(() => {
+    loadDashboard();
+  }, [dateRange]);
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-  //       setLoading(true);
-  //       const [
-  //         summaryRes,
-  //         bookingTrendsRes,
-  //         statusRes,
-  //         agencyRes,
-  //         supplierRes,
-  //         hotelRes,
-  //         topRes,
-  //         dailyRes,
-  //         upcomingRes,
-  //         peakRes,
-  //         peopleRes,
-  //         avgRes,
-  //         activityRes,
-  //       ] = await Promise.all([
-  //         axios.get(`${API_BASE}/summary`),
-  //         axios.get(`${API_BASE}/booking-trends`),
-  //         axios.get(`${API_BASE}/status-distribution`),
-  //         axios.get(`${API_BASE}/agency-performance`),
-  //         axios.get(`${API_BASE}/supplier-performance`),
-  //         // axios.get(`${API_BASE}/hotel-occupancy`),
-  //         axios.get(`${API_BASE}/top-performers`),
-  //         axios.get(`${API_BASE}/daily-bookings`),
-  //         axios.get(`${API_BASE}/upcoming-bookings`),
-  //         axios.get(`${API_BASE}/peak-season`),
-  //         // axios.get(`${API_BASE}/people-distribution`),
-  //         // axios.get(`${API_BASE}/averages`),
-  //         axios.get(`${API_BASE}/recent-activity`),
-  //       ]);
+  const loadDashboard = async () => {
+    setLoading(true);
+    try {
+      const data = await fetchDashboardData();
+      setDashboardData(data);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired — please log in again.");
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  //       setSummary(summaryRes.data);
-  //       setBookingTrends(bookingTrendsRes.data);
-  //       setStatusDistribution(statusRes.data);
-  //       setAgencyPerformance(agencyRes.data);
-  //       setSupplierPerformance(supplierRes.data);
-  //       setHotelOccupancy(hotelRes.data);
-  //       setTopPerformers(topRes.data);
-  //       setDailyBookings(dailyRes.data);
-  //       setUpcomingBookings(upcomingRes.data);
-  //       setPeakSeason(peakRes.data);
-  //       setPeopleDistribution(peopleRes.data);
-  //       setAverages(avgRes.data);
-  //       setRecentActivity(activityRes.data);
-  //     } catch (err) {
-  //       console.error("Error fetching dashboard data:", err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 },
+    },
+  };
 
-  //   fetchData();
-  // }, []);
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5 },
+    },
+  };
+// console.log("Booking Status Data:", bookingStatus);
+// console.log("Top Agencies Data:", topAgencies);
 
-  // const formatDate = (date) => {
-  //   if (!date) return "N/A";
-  //   const d = new Date(date);
-  //   return isNaN(d) ? "N/A" : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  // };
+  if (loading) return <LoadingSkeleton />;
 
-  // const getStatusBadgeClass = (status) => {
-  //   switch (status?.toLowerCase()) {
-  //     case 'confirmed':
-  //       return 'statusBadgeBase statusConfirmed';
-  //     case 'pending':
-  //       return 'statusBadgeBase statusPending';
-  //     case 'cancelled':
-  //       return 'statusBadgeBase statusCancelled';
-  //     default:
-  //       return 'statusBadgeBase';
-  //   }
-  // };
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <motion.header
+        className="bg-white shadow-sm border-b"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Analytics Dashboard
+              </h1>
+              <p className="text-sm text-gray-500">
+                ChaloHoliday Online Performance
+              </p>
+            </div>
 
-  // // Professional color palette
-  // const colors = {
-  //   primary: {
-  //     blue: '#3b82f6',
-  //     green: '#10b981',
-  //     red: '#ef4444',
-  //     teal: '#14b8a6',
-  //     purple: '#8b5cf6',
-  //     orange: '#f97316',
-  //     indigo: '#6366f1'
-  //   },
-  //   light: {
-  //     blue: 'rgba(59, 130, 246, 0.1)',
-  //     green: 'rgba(16, 185, 129, 0.1)',
-  //     red: 'rgba(239, 68, 68, 0.1)',
-  //     teal: 'rgba(20, 184, 166, 0.1)',
-  //     purple: 'rgba(139, 92, 246, 0.1)',
-  //     orange: 'rgba(249, 115, 22, 0.1)',
-  //     indigo: 'rgba(99, 102, 241, 0.1)'
-  //   }
-  // };
+            <div className="flex items-center space-x-4">
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option>This Month</option>
+                <option>Last 6 Months</option>
+                <option>Custom</option>
+              </select>
 
-  // // Safe month label formatting
-  // const getMonthLabel = (monthData) => {
-  //   if (!monthData) return '';
-  //   const month = monthData.month || monthData.monthName || '';
-  //   const year = monthData.year || '';
-    
-  //   if (typeof month === 'number') {
-  //     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  //     const monthName = monthNames[month - 1] || month.toString();
-  //     return `${monthName} '${year.toString().slice(-2)}`;
-  //   }
-    
-  //   if (typeof month === 'string') {
-  //     return `${month.slice(0, 3)} '${year.toString().slice(-2)}`;
-  //   }
-    
-  //   return `${month} '${year.toString().slice(-2)}`;
-  // };
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-semibold">CH</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.header>
 
-  // // All KPIs - Including everything from summary and averages
-  // const allKPIs = [
-  //   // Summary KPIs
-  //   { key: 'totalBookings', title: 'Total Bookings', value: summary.totalBookings || '0', icon: '📊', color: 'Blue' },
-  //   // { key: 'totalRevenue', title: 'Revenue', value: summary.totalRevenue ? `$${Number(summary.totalRevenue).toLocaleString()}` : '$0', icon: '💰', color: 'Green' },
-  //   // { key: 'confirmedBookings', title: 'Confirmed', value: summary.confirmedBookings || '0', icon: '✅', color: 'Teal' },
-  //   // { key: 'cancelledBookings', title: 'Cancelled', value: summary.cancelledBookings || '0', icon: '❌', color: 'Red' },
-    
-  //   // Additional summary KPIs
-  //   { key: 'pendingBookings', title: 'Pending', value: summary.pendingBookings || '0', icon: '⏳', color: 'Orange' },
-  //   { key: 'totalAgencies', title: 'Agencies', value: summary.totalAgencies || '0', icon: '🏢', color: 'Purple' },
-  //   { key: 'totalHotels', title: 'Hotels', value: summary.totalHotels || '0', icon: '🏨', color: 'Indigo' },
-  //   { key: 'totalSuppliers', title: 'Suppliers', value: summary.totalSuppliers || '0', icon: '🤝', color: 'Blue' },
-    
-  //   // Averages
-  //   { key: 'averageNights', title: 'Avg Nights', value: averages.averageNights || '0', icon: '🌙', color: 'Purple' },
-  //   { key: 'averagePeople', title: 'Avg People', value: averages.averagePeople || '0', icon: '👥', color: 'Teal' },
-    
-  //   // Peak Season
-  //   // { key: 'peakMonth', title: 'Peak Month', value: peakSeason.PeakMonthName || 'N/A', icon: '📈', color: 'Orange' }
-  // ];
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* KPI Cards */}
+        <motion.section
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {dashboardData.summary?.cards && (
+            <>
+              <motion.div variants={itemVariants}>
+                <DashboardCard
+                  title="Total Bookings"
+                  value={dashboardData.summary.cards.totalBookings}
+                  // change={12}
+                  changeType="increase"
+                  icon="📊"
+                />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <DashboardCard
+                  title="Revenue"
+                  value={`$${dashboardData.summary.cards.totalRevenue.toLocaleString()}`}
+                  // change={8.2}
+                  changeType="increase"
+                  icon="💰"
+                />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <DashboardCard
+                  title="Profit"
+                  value={`$${dashboardData.summary.cards.totalProfit.toLocaleString()}`}
+                  // change={15.5}
+                  changeType="increase"
+                  icon="📈"
+                />
+              </motion.div>
+              <motion.div variants={itemVariants}>
+                <DashboardCard
+                  title="Hotels"
+                  value={dashboardData.summary.cards.totalHotels}
+                  // change={-2.1}
+                  changeType="decrease"
+                  icon="🏨"
+                />
+              </motion.div>
+            </>
+          )}
+        </motion.section>
 
-  // // Chart data configurations
-  // const bookingTrendData = {
-  //   labels: bookingTrends.slice(-6).map(d => getMonthLabel(d)),
-  //   datasets: [
-  //     { 
-  //       label: "Total Bookings", 
-  //       data: bookingTrends.slice(-6).map(d => d.totalBookings), 
-  //       borderColor: colors.primary.blue,
-  //       backgroundColor: colors.light.blue,
-  //       borderWidth: 2,
-  //       tension: 0.4,
-  //       fill: true
-  //     },
-  //     { 
-  //       label: "Confirmed", 
-  //       data: bookingTrends.slice(-6).map(d => d.confirmed), 
-  //       borderColor: colors.primary.green,
-  //       backgroundColor: colors.light.green,
-  //       borderWidth: 2,
-  //       tension: 0.4,
-  //       fill: true
-  //     }
-  //   ]
-  // };
+        {/* Charts Section */}
+        <motion.section
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div className="lg:col-span-2" variants={itemVariants}>
+            <DashboardCharts
+              financialTrend={dashboardData.financialTrend}
+              bookingsTrend={dashboardData.bookingsTrend}
+              bookingStatus={dashboardData.bookingStatus}
+              topAgencies={dashboardData.topAgencies}
+              topSuppliers={dashboardData.topSuppliers}
+            />
+          </motion.div>
 
-  // const statusPieData = {
-  //   labels: statusDistribution.map(d => d.status),
-  //   datasets: [{ 
-  //     data: statusDistribution.map(d => d.count), 
-  //     backgroundColor: [
-  //       colors.primary.green,
-  //       colors.primary.blue,
-  //       colors.primary.red,
-  //       colors.primary.orange,
-  //       colors.primary.purple
-  //     ],
-  //     borderWidth: 2,
-  //     borderColor: '#fff'
-  //   }]
-  // };
+          <motion.div className="space-y-6" variants={itemVariants}>
+            <div className="bg-white rounded-card shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Booking Status
+              </h3>
+              <div className="h-64">{/* Doughnut chart */}</div>
+            </div>
 
-  // const agencyBarData = {
-  //   labels: agencyPerformance.slice(0, 5).map(a => a.agency?.split(' ')[0] || 'Agency'),
-  //   datasets: [{ 
-  //     label: "Bookings", 
-  //     data: agencyPerformance.slice(0, 5).map(a => a.bookings),
-  //     backgroundColor: colors.primary.blue,
-  //     borderColor: colors.primary.blue,
-  //     borderWidth: 0,
-  //     borderRadius: 4,
-  //   }]
-  // };
+            <div className="bg-white rounded-card shadow-sm p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Top Agencies
+              </h3>
+              <div className="h-64">{/* Bar chart */}</div>
+            </div>
+          </motion.div>
+        </motion.section>
 
-  // const supplierBarData = {
-  //   labels: supplierPerformance.slice(0, 5).map(s => s.supplier?.split(' ')[0] || 'Supplier'),
-  //   datasets: [{ 
-  //     label: "Bookings", 
-  //     data: supplierPerformance.slice(0, 5).map(s => s.bookings),
-  //     backgroundColor: colors.primary.orange,
-  //     borderColor: colors.primary.orange,
-  //     borderWidth: 0,
-  //     borderRadius: 4,
-  //   }]
-  // };
-
-  // const hotelBarData = {
-  //   // labels: hotelOccupancy.slice(0, 5).map(h => h.hotel?.split(' ')[0] || 'Hotel'),
-  //   datasets: [
-  //     { 
-  //       label: "Bookings", 
-  //       data: hotelOccupancy.slice(0, 5).map(h => h.bookings),
-  //       backgroundColor: colors.primary.green,
-  //       borderColor: colors.primary.green,
-  //       borderWidth: 0,
-  //       borderRadius: 4,
-  //     },
-  //     { 
-  //       label: "People", 
-  //       data: hotelOccupancy.slice(0, 5).map(h => h.people),
-  //       backgroundColor: colors.primary.purple,
-  //       borderColor: colors.primary.purple,
-  //       borderWidth: 0,
-  //       borderRadius: 4,
-  //     }
-  //   ]
-  // };
-
-  // const peopleBarData = {
-  //   labels: peopleDistribution.map(p => p.people?.toString() || 'N/A'),
-  //   datasets: [{ 
-  //     label: "Bookings", 
-  //     data: peopleDistribution.map(p => p.count),
-  //     backgroundColor: colors.primary.indigo,
-  //     borderColor: colors.primary.indigo,
-  //     borderWidth: 0,
-  //     borderRadius: 4,
-  //   }]
-  // };
-
-  // const chartOptions = {
-  //   responsive: true,
-  //   maintainAspectRatio: false,
-  //   plugins: {
-  //     legend: {
-  //       position: 'top',
-  //       labels: {
-  //         usePointStyle: true,
-  //         padding: 8,
-  //         color: '#6b7280',
-  //         font: { size: 11, weight: '500' }
-  //       }
-  //     },
-  //     tooltip: {
-  //       backgroundColor: 'rgba(255, 255, 255, 0.95)',
-  //       titleColor: '#1f2937',
-  //       bodyColor: '#374151',
-  //       borderColor: '#e5e7eb',
-  //       borderWidth: 1,
-  //       cornerRadius: 6,
-  //       usePointStyle: true,
-  //     }
-  //   },
-  //   scales: {
-  //     y: {
-  //       beginAtZero: true,
-  //       grid: { color: 'rgba(229, 231, 235, 0.8)' },
-  //       ticks: { color: '#6b7280', font: { size: 10 } }
-  //     },
-  //     x: {
-  //       grid: { display: false },
-  //       ticks: { color: '#6b7280', font: { size: 10 } }
-  //     }
-  //   }
-  // };
-
-  // const pieOptions = {
-  //   responsive: true,
-  //   maintainAspectRatio: false,
-  //   cutout: '50%',
-  //   plugins: {
-  //     legend: {
-  //       position: 'bottom',
-  //       labels: {
-  //         usePointStyle: true,
-  //         padding: 8,
-  //         color: '#6b7280',
-  //         font: { size: 10 }
-  //       }
-  //     }
-  //   }
-  // };
-
-  // if (loading) {
-  //   return (
-  //     <div className="dashboardLoadingWrapper">
-  //       <div className="loadingSpinnerElement"></div>
-  //       <p className="dashboardLoadingText">Loading dashboard...</p>
-  //     </div>
-  //   );
-  // }
-
-  // return (
-  //   <div className="dashboardCore">
-  //     {/* Header */}
-  //     <header className="dashboardHeaderContainer">
-  //       <div className="headerContentWrapper">
-  //         <div className="headerTitleSection">
-  //           <h1 className="dashboardMainTitle">Travel Analytics Dashboard</h1>
-  //           <p className="dashboardSubtitleText">Complete performance overview</p>
-  //         </div>
-  //         <div className="headerActionsContainer">
-  //           <div className="dateFilterBadge">
-  //             <span>Last 30 Days</span>
-  //           </div>
-  //           <button className="exportButtonPrimary">Export Report</button>
-  //         </div>
-  //       </div>
-  //     </header>
-
-  //     {/* All KPIs Section - Compact Grid */}
-  //     <section className="kpiSectionWrapper">
-  //       <div className="sectionHeaderGlobal">
-  //         <h2 className="sectionTitleGlobal">Key Performance Indicators</h2>
-  //       </div>
-  //       <div className="kpiGridCompactLayout">
-  //         {allKPIs.map(kpi => (
-  //           <div key={kpi.key} className={`kpiCardBase kpiCard${kpi.color}`}>
-  //             <div className="kpiIconWrapper">{kpi.icon}</div>
-  //             <div className="kpiContentArea">
-  //               <h3 className="kpiTitleText">{kpi.title}</h3>
-  //               <p className="kpiValueDisplay">{kpi.value}</p>
-  //             </div>
-  //           </div>
-  //         ))}
-  //       </div>
-  //     </section>
-
-  //     {/* Main Charts Grid - All Charts Included */}
-  //     <section className="chartsSectionContainer">
-  //       <div className="sectionHeaderGlobal">
-  //         <h2 className="sectionTitleGlobal">Analytics & Performance</h2>
-  //       </div>
-  //       <div className="chartsGridCompact">
-  //         {/* Row 1 */}
-  //         <div className="chartCardBase mainChartCard">
-  //           <div className="chartHeaderArea">
-  //             <h3 className="chartTitleText">Booking Trends</h3>
-  //             <span className="chartSubtitleText">Last 6 months</span>
-  //           </div>
-  //           <div className="chartWrapperContainer">
-  //             <Line data={bookingTrendData} options={chartOptions} />
-  //           </div>
-  //         </div>
-
-  //         <div className="chartCardBase">
-  //           <div className="chartHeaderArea">
-  //             <h3 className="chartTitleText">Status Distribution</h3>
-  //           </div>
-  //           <div className="chartWrapperContainer">
-  //             <Doughnut data={statusPieData} options={pieOptions} />
-  //           </div>
-  //         </div>
-
-  //         {/* Row 2 */}
-  //         <div className="chartsGridRow">
-  //           <div className="chartCardBase">
-  //             <div className="chartHeaderArea">
-  //               <h3 className="chartTitleText">Top Agencies</h3>
-  //             </div>
-  //             <div className="chartWrapperContainer">
-  //               <Bar data={agencyBarData} options={chartOptions} />
-  //             </div>
-  //           </div>
-
-  //           <div className="chartCardBase">
-  //             <div className="chartHeaderArea">
-  //               <h3 className="chartTitleText">Top Suppliers</h3>
-  //             </div>
-  //             <div className="chartWrapperContainer">
-  //               <Bar data={supplierBarData} options={chartOptions} />
-  //             </div>
-  //           </div>
-
-  //           <div className="chartCardBase">
-  //             <div className="chartHeaderArea">
-  //               <h3 className="chartTitleText">Hotel Performance</h3>
-  //             </div>
-  //             <div className="chartWrapperContainer">
-  //               <Bar data={hotelBarData} options={chartOptions} />
-  //             </div>
-  //           </div>
-  //         </div>
-
-  //         {/* Row 3 */}
-  //         <div className="chartCardBase">
-  //           <div className="chartHeaderArea">
-  //             <h3 className="chartTitleText">Group Size Distribution</h3>
-  //           </div>
-  //           <div className="chartWrapperContainer">
-  //             <Bar data={peopleBarData} options={chartOptions} />
-  //           </div>
-  //         </div>
-  //       </div>
-  //     </section>
-
-  //     {/* Data Tables Section - All Data Included */}
-  //     <section className="tablesSectionWrapper">
-  //       <div className="tablesGridCompact">
-          
-  //         {/* Upcoming Bookings */}
-  //         <div className="tableCardBase">
-  //           <div className="tableHeaderArea">
-  //             <h3 className="tableTitleText">Upcoming Bookings</h3>
-  //             <span className="viewAllLink">View All</span>
-  //           </div>
-  //           <div className="tableContentCompact">
-  //             {upcomingBookings.slice(0, 6).map(booking => (
-  //               <div key={booking.ticketNumber} className="tableRowCompact">
-  //                 <div className="rowMainInfo">
-  //                   <span className="ticketNumber">#{booking.ticketNumber}</span>
-  //                   <span className="agencyName">{booking.agency}</span>
-  //                 </div>
-  //                 <div className="rowDetailsInfo">
-  //                   <span className="hotelName">{booking.hotel}</span>
-  //                   <span className="datesRange">
-  //                     {formatDate(booking.checkIn)} - {formatDate(booking.checkOut)}
-  //                   </span>
-  //                 </div>
-  //                 <span className={getStatusBadgeClass(booking.status)}>
-  //                   {booking.status}
-  //                 </span>
-  //               </div>
-  //             ))}
-  //           </div>
-  //         </div>
-
-  //         {/* Recent Activity */}
-  //         <div className="tableCardBase">
-  //           <div className="tableHeaderArea">
-  //             <h3 className="tableTitleText">Recent Activity</h3>
-  //             <span className="viewAllLink">View All</span>
-  //           </div>
-  //           <div className="tableContentCompact">
-  //             {recentActivity.slice(0, 6).map((activity, index) => (
-  //               <div key={index} className="tableRowCompact">
-  //                 <div className="activityMessage">{activity.message}</div>
-  //                 <div className="activityTime">{formatDate(activity.updatedAt)}</div>
-  //               </div>
-  //             ))}
-  //           </div>
-  //         </div>
-
-  //         {/* Top Performers */}
-  //         <div className="tableCardBase">
-  //           <div className="tableHeaderArea">
-  //             <h3 className="tableTitleText">Top Performers</h3>
-  //           </div>
-  //           <div className="performersGridLayout">
-  //             <div className="performerCategory">
-  //               <h4>🏆 Agencies</h4>
-  //               {topPerformers.topAgencies?.slice(0, 3).map((agency, index) => (
-  //                 <div key={agency.agency} className="performerItem">
-  //                   <span className="rankBadge">{index + 1}</span>
-  //                   <span className="performerName">{agency.agency}</span>
-  //                   <span className="performerCount">{agency.count}</span>
-  //                 </div>
-  //               ))}
-  //             </div>
-  //             <div className="performerCategory">
-  //               <h4>🏨 Hotels</h4>
-  //               {topPerformers.topHotels?.slice(0, 3).map((hotel, index) => (
-  //                 <div key={hotel.hotel} className="performerItem">
-  //                   <span className="rankBadge">{index + 1}</span>
-  //                   <span className="performerName">{hotel.hotel}</span>
-  //                   <span className="performerCount">{hotel.count}</span>
-  //                 </div>
-  //               ))}
-  //             </div>
-  //             <div className="performerCategory">
-  //               <h4>🤝 Suppliers</h4>
-  //               {topPerformers.topSuppliers?.slice(0, 3).map((supplier, index) => (
-  //                 <div key={supplier.supplier} className="performerItem">
-  //                   <span className="rankBadge">{index + 1}</span>
-  //                   <span className="performerName">{supplier.supplier}</span>
-  //                   <span className="performerCount">{supplier.count}</span>
-  //                 </div>
-  //               ))}
-  //             </div>
-  //           </div>
-  //         </div>
-
-  //       </div>
-  //     </section>
-    // </div>
-  // );
-
+        {/* Bottom Section */}
+        <motion.section
+          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={itemVariants}>
+            <RecentBookings data={dashboardData.recentBookings} />
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <RecentActivities data={dashboardData.recentActivities} />
+          </motion.div>
+        </motion.section>
+      </main>
+    </div>
+  );
 };
 
 export default Dashboard;

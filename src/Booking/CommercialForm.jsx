@@ -346,7 +346,18 @@ const handleSaveCommercial = async () => {
   try {
     setLoading(true);
 
-    const existing = await getCommercialByBooking(selectedBookingId);
+    let existing = null;
+try {
+  existing = await getCommercialByBooking(selectedBookingId);
+} catch (err) {
+  if (err.response && err.response.status === 404) {
+    console.log("No existing commercial found — will create a new one.");
+    existing = null; // allow creation
+  } else {
+    throw err; // real error
+  }
+}
+
     let commercialId;
 
     if (existing && existing.id) {
@@ -366,12 +377,39 @@ const handleSaveCommercial = async () => {
      setSaveStatus('success');
     setTimeout(() => setSaveStatus('idle'), 2000);
   } catch (err) {
-    console.error("Error saving commercial:", err);
-    setSaveStatus('error');
-    setTimeout(() => setSaveStatus('idle'), 3000);
-  } finally {
-    setLoading(false);
+  console.error("Error saving commercial:", err);
+
+  setSaveStatus("error");
+
+  // 🔍 Extract deeper backend reason
+  let reason = "Unknown error occurred.";
+
+  if (err.response) {
+    const { status, data } = err.response;
+    if (data?.error) {
+      reason = data.error; // our backend uses { error: "..." }
+    } else if (data?.title) {
+      reason = data.title;
+    } else if (data?.errors) {
+      // Collect validation messages from ASP.NET
+      reason = Object.entries(data.errors)
+        .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+        .join("\n");
+    } else {
+      reason = JSON.stringify(data, null, 2);
+    }
+    reason = `HTTP ${status} — ${reason}`;
+  } else if (err.message) {
+    reason = err.message;
   }
+
+  // 🧾 Display clearly to user
+  alert(`❌ Failed to save commercial:\n\n${reason}`);
+
+  setTimeout(() => setSaveStatus("idle"), 3000);
+} finally {
+  setLoading(false);
+}
 };
 
 const [profitSummary, setProfitSummary] = useState({
@@ -784,7 +822,7 @@ useEffect(() => {
                   fontSize: "12px",
                 }}
               >
-                + Add Cost
+                + Add Product
               </button>
             </div>
             {buying.additionalCosts.map((cost) => (
@@ -995,7 +1033,7 @@ useEffect(() => {
                   fontSize: "12px",
                 }}
               >
-                + Add Discount
+                + Add Product
               </button>
             </div>
             {selling.discounts.map((discount) => (

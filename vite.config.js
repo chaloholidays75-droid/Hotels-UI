@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+// import tailwindcss from '@tailwindcss/vite'
 
 // You'll need to know the full URL of your backend API server.
 // For this example, I'll use the one from your previous code snippets.
@@ -13,7 +13,7 @@ export default defineConfig({
 
   plugins: [
     react(),
-    tailwindcss()
+    // tailwindcss()
   ],
 
   // =========================================================================
@@ -44,6 +44,9 @@ export default defineConfig({
         // rewrite: (path) => path.replace(/^\/api/, '')
         // But since your backend endpoint is already prefixed with 'api', we don't need to rewrite.
       },
+      css: {
+    postcss: './postcss.config.js',
+  },
     }
   },
 

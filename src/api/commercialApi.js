@@ -5,9 +5,23 @@ import api from "./api"; // your pre-configured axios instance with interceptors
 // CREATE Commercial
 // -----------------------------
 export const createCommercial = async (data) => {
-  const res = await api.post("/commercial", data);
-  return res.data;
+  try {
+    const res = await api.post("/commercial", data);
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      // Return full backend response
+      throw new Error(
+        error.response.data?.error ||
+        JSON.stringify(error.response.data.errors || {}, null, 2) ||
+        error.message
+      );
+    } else {
+      throw new Error("Network error: " + error.message);
+    }
+  }
 };
+
 
 // -----------------------------
 // GET ALL (with pagination)
