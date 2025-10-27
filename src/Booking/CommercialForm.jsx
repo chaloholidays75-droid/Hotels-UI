@@ -24,7 +24,7 @@ export default function CommercialForm() {
     commissionType: "percentage",
     commissionValue: "",
     vatIncluded: false,
-    vatPercent: "18",
+    vatPercent: "20",
     additionalCosts: [{ id: 1, description: "", amount: "", type: "fixed" }],
   });
 
@@ -35,7 +35,7 @@ export default function CommercialForm() {
     incentiveType: "percentage",
     incentiveValue: "",
     vatIncluded: false,
-    vatPercent: "18",
+    vatPercent: "20",
     discounts: [{ id: 1, description: "", amount: "", type: "fixed" }],
   });
 
