@@ -1,42 +1,43 @@
-import axios from 'axios';
+// ✅ apiInstance.js
+import axios from "axios";
 
-// const API_BASE = 'http://localhost:5039/api';
-const API_BASE = 'https://backend.chaloholidayonline.com/api';
+const api = axios.create({
+  baseURL: "https://backend.chaloholidayonline.com/api",
+  withCredentials: true, // allow cookies
+});
 
-
-const api = axios.create({ baseURL: API_BASE });
-
-// Request interceptor: attach JWT token
-api.interceptors.request.use(config => {
-  const token = localStorage.getItem('accessToken');
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("accessToken");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Response interceptor: handle 401 and refresh token
 api.interceptors.response.use(
   res => res,
-  async error => {
+  async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
+
+    // Prevent infinite retry loops
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes("/auth/auto-login")
+    ) {
       originalRequest._retry = true;
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
-        try {
-          const { data } = await api.post('/auth/refresh-token', { refreshToken });
-          localStorage.setItem('accessToken', data.accessToken);
-          localStorage.setItem('refreshToken', data.refreshToken);
+
+      try {
+        const { data } = await api.post("/auth/auto-login");
+        if (data?.accessToken) {
+          localStorage.setItem("accessToken", data.accessToken);
           originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
           return api(originalRequest);
-        } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError);
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userRole');
-          return Promise.reject(refreshError);
         }
+      } catch (err) {
+        console.warn("Auto-login failed:", err.response?.data?.message);
+        localStorage.clear();
       }
     }
+
     return Promise.reject(error);
   }
 );

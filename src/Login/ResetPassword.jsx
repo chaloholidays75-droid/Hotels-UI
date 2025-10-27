@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import api from '../api/authApi';
+import { resetPassword } from "../api/authApi";
+
 import { Eye, EyeOff, CheckCircle, XCircle, Loader } from 'lucide-react';
 
 function ResetPassword() {
@@ -58,11 +59,8 @@ function ResetPassword() {
     setMessage({ text: '', type: '' });
     
     try {
-      await api.post('/auth/reset-password', { 
-        email, 
-        token, 
-        newPassword: formData.newPassword 
-      });
+      await resetPassword(email, token, formData.newPassword);
+
       
       setMessage({ 
         text: 'Password reset successfully! Redirecting to login...', 

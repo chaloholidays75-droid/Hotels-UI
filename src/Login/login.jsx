@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { z } from "zod";
-import { login } from "../api/authApi";
+import { login, autoLogin } from "../api/authApi";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -17,31 +17,45 @@ function Login({ setUserName, setIsAuthenticated }) {
     password: "",
     rememberMe: false,
   });
-
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Load remembered email on mount
+  // ✅ Prefill saved credentials & try backend auto-login
   useEffect(() => {
-    const rememberedEmail = localStorage.getItem("userEmail");
-    if (rememberedEmail) {
-      setFormData((prev) => ({
-        ...prev,
-        email: rememberedEmail,
-        rememberMe: true,
-      }));
-    }
-  }, []);
+    (async () => {
+      // ⬇️ Load from localStorage (frontend remember)
+      const saved = JSON.parse(localStorage.getItem("rememberLogin") || "{}");
+      if (saved.email) {
+        setFormData({
+          email: saved.email,
+          password: saved.password || "",
+          rememberMe: true,
+        });
+      }
+
+      // ⬇️ Try backend cookie-based auto-login (silent login)
+      try {
+        const auto = await autoLogin();
+        if (auto) {
+          setUserName(auto.userFullName);
+          setIsAuthenticated(true);
+          navigate("/");
+        }
+      } catch {
+        // ignore — no auto login cookie
+      }
+    })();
+  }, [navigate, setIsAuthenticated, setUserName]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: type === "checkbox" ? checked : value,
-    });
-    setErrors({ ...errors, [name]: "" });
+    }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   const handleSubmit = async (e) => {
@@ -54,53 +68,53 @@ function Login({ setUserName, setIsAuthenticated }) {
       const fieldErrors = result.error.flatten().fieldErrors;
       setErrors(fieldErrors);
       setIsLoading(false);
-      console.warn("⚠️ Validation failed:", fieldErrors);
-      alert("Please correct the highlighted errors.");
       return;
     }
 
-    console.log("🟦 Submitting login form:", formData);
-
     try {
-      // ✅ Send RememberMe to backend
-      const data = await login(formData.email, formData.password, formData.rememberMe);
-      console.log("✅ Backend response:", data);
-
-      // Backend now handles cookies — no need to store token manually
+      const data = await login(
+        formData.email,
+        formData.password,
+        formData.rememberMe
+      );
       setUserName(data.userFullName);
       setIsAuthenticated(true);
 
+      // ✅ Save credentials for UI prefill next time
       if (formData.rememberMe) {
-        localStorage.setItem("userEmail", formData.email);
+        localStorage.setItem(
+          "rememberLogin",
+          JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          })
+        );
       } else {
-        localStorage.removeItem("userEmail");
+        localStorage.removeItem("rememberLogin");
       }
 
-      alert(`Welcome back, ${data.userFullName || "User"}!`);
       navigate("/");
     } catch (err) {
-      console.error("❌ Login error:", err);
-      alert("Login failed. Please check your credentials and try again.");
-      setErrors({ general: "Invalid email or password." });
+      setErrors({
+        general: err.response?.data?.message || "Invalid email or password.",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-        </div>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Sign in to your account
+        </h2>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form
+          className="mt-8 space-y-6"
+          onSubmit={handleSubmit}
+          autoComplete="on"
+        >
           <div className="rounded-md shadow-sm -space-y-px">
             {/* Email */}
             <div className="mb-4">
@@ -114,16 +128,14 @@ function Login({ setUserName, setIsAuthenticated }) {
                 id="email"
                 name="email"
                 type="email"
-                autoComplete="email"
+                autoComplete="username"
                 value={formData.email}
                 onChange={handleChange}
-                className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors duration-200"
+                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 placeholder="Enter your email"
               />
               {errors.email && (
-                <p className="mt-2 text-sm text-red-600 flex items-center">
-                  {errors.email}
-                </p>
+                <p className="mt-2 text-sm text-red-600">{errors.email}</p>
               )}
             </div>
 
@@ -143,55 +155,47 @@ function Login({ setUserName, setIsAuthenticated }) {
                   autoComplete="current-password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none relative block w-full px-4 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm transition-colors duration-200 pr-10"
+                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 pr-10"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                  onClick={togglePasswordVisibility}
+                  className="absolute inset-y-0 right-0 pr-3 text-gray-400"
+                  onClick={() => setShowPassword((s) => !s)}
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>
               </div>
               {errors.password && (
-                <p className="mt-2 text-sm text-red-600 flex items-center">
-                  {errors.password}
-                </p>
+                <p className="mt-2 text-sm text-red-600">{errors.password}</p>
               )}
             </div>
           </div>
 
-          {/* Remember me + Forgot password */}
+          {/* Remember me + Forgot */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
+            <label className="flex items-center">
               <input
                 id="remember-me"
                 name="rememberMe"
                 type="checkbox"
                 checked={formData.rememberMe}
                 onChange={handleChange}
-                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
               />
-              <label
-                htmlFor="remember-me"
-                className="ml-2 block text-sm text-gray-900"
-              >
-                Remember me
-              </label>
-            </div>
+              <span className="ml-2 text-sm text-gray-900">Remember me</span>
+            </label>
 
             <div className="text-sm">
               <Link
                 to="/forgot"
-                className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-200"
+                className="font-medium text-indigo-600 hover:text-indigo-500"
               >
                 Forgot your password?
               </Link>
             </div>
           </div>
 
-          {/* General error */}
           {errors.general && (
             <div className="rounded-md bg-red-50 p-4">
               <h3 className="text-sm font-medium text-red-800">
@@ -200,12 +204,11 @@ function Login({ setUserName, setIsAuthenticated }) {
             </div>
           )}
 
-          {/* Submit button */}
           <div>
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 disabled:opacity-75 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 disabled:opacity-75"
             >
               {isLoading ? "Signing in..." : "Sign in"}
             </button>
