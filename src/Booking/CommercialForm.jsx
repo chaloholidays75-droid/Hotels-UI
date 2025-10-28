@@ -1091,13 +1091,13 @@ useEffect(() => {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
-              <span style={{ fontWeight: "bold", color: "#0056b3" }}>GROSS AMOUNT (before VAT):</span>
+              <span style={{ fontWeight: "bold", color: "#0056b3" }}>NET AMOUNT (before VAT):</span>
               <span style={{ fontWeight: "bold", color: "#0056b3" }}>
                 {getCurrencySymbol(selling.currency)} {(sellingCalc.netRevenue || 0).toFixed(2)}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontWeight: "bold", color: "#0066cc" }}>NET SELLING (after VAT):</span>
+              <span style={{ fontWeight: "bold", color: "#0066cc" }}>GROSS SELLING (after VAT):</span>
               <span style={{ fontSize: "18px", fontWeight: "bold", color: "#0066cc" }}>
                 {getCurrencySymbol(selling.currency)} {(sellingCalc.grossRevenue || 0).toFixed(2)}
               </span>
