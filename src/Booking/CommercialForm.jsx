@@ -315,11 +315,9 @@ const calculateNetSelling = () => {
       : buyingCalc.grossValue;
 
   // ✅ Corrected Profit Formula (includes commission & incentive)
-  const profitValue =
-    (parseFloat(sellingCalc.grossRevenue || 0) -
-     parseFloat(sellingCalc.incentiveValue || 0)) -
-    (parseFloat(convertedBuying || 0) -
-     parseFloat(buyingCalc.commissionAmount || 0));
+    const profitValue = sellingCalc.netRevenue - buyingCalculation.netValue ;
+    console.log(sellingCalc.netRevenue , " - ", buyingCalculation.netValue , " =  ", profitValue);
+    console.log("Profit Calculation:", profitValue);
 
   const profitMargin =
     (sellingCalc.grossRevenue || 0) > 0
@@ -334,6 +332,13 @@ const calculateNetSelling = () => {
     profitMarginPercent: profitMargin,
     markup: markupValue,
   });
+    console.log("Profit Summary:", {
+  profit: profitValue,
+  profitMarginPercent: profitMargin,
+  markup: markupValue
+});
+
+
 }, [buying, selling, exchangeRate]);
 
   const getCurrencySymbol = (currencyCode) => {
@@ -443,28 +448,28 @@ const [profitSummary, setProfitSummary] = useState({
   markup: 0,
 });
 
-useEffect(() => {
-  const buyingCalc = calculateNetBuying();
-  const sellingCalc = calculateNetSelling();
-  const convertedBuying =
-    buying.currency !== selling.currency && exchangeRate
-      ? buyingCalc.grossValue * parseFloat(exchangeRate)
-      : buyingCalc.grossValue;
+// useEffect(() => {
+//   const buyingCalc = calculateNetBuying();
+//   const sellingCalc = calculateNetSelling();
+//   const convertedBuying =
+//     buying.currency !== selling.currency && exchangeRate
+//       ? buyingCalc.grossValue * parseFloat(exchangeRate)
+//       : buyingCalc.grossValue;
 
-  const profitValue = (sellingCalc.grossRevenue || 0) - (convertedBuying || 0);
-  const profitMargin =
-    (sellingCalc.grossRevenue || 0) > 0
-      ? (profitValue / sellingCalc.grossRevenue) * 100
-      : 0;
-  const markupValue =
-    convertedBuying > 0 ? (profitValue / convertedBuying) * 100 : 0;
+//   const profitValue = (sellingCalc.grossRevenue || 0) - (convertedBuying || 0);
+//   const profitMargin =
+//     (sellingCalc.grossRevenue || 0) > 0
+//       ? (profitValue / sellingCalc.grossRevenue) * 100
+//       : 0;
+//   const markupValue =
+//     convertedBuying > 0 ? (profitValue / convertedBuying) * 100 : 0;
 
-  setProfitSummary({
-    profit: profitValue,
-    profitMarginPercent: profitMargin,
-    markup: markupValue,
-  });
-}, [buying, selling, exchangeRate]);
+//   setProfitSummary({
+//     profit: profitValue,
+//     profitMarginPercent: profitMargin,
+//     markup: markupValue,
+//   });
+// }, [buying, selling, exchangeRate]);
 
   const resetCommercialForm = () => {
     setBuying({
