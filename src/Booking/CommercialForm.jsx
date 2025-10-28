@@ -1189,59 +1189,65 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Profit Summary */}
-      <div
-        style={{
-          background: "white",
-          border: "1px solid #e1e5e9",
-          borderRadius: "10px",
-          padding: "20px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-        }}
-      >
-        <h3 style={{ color: "#555" }}>Profit Analysis</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "15px" }}>
-          <div
-            style={{
-              background: profit >= 0 ? "#d4edda" : "#f8d7da",
-              padding: "20px",
-              borderRadius: "8px",
-              border: `2px solid ${profit >= 0 ? "#c3e6cb" : "#f5c6cb"}`,
-            }}
-          >
-            <div style={{ color: profit >= 0 ? "#155724" : "#721c24" }}>Net Profit/Loss</div>
-            <div style={{ fontSize: "24px", fontWeight: "bold", color: profit >= 0 ? "#155724" : "#721c24" }}>
-              {getCurrencySymbol(selling.currency)} {(isNaN(profit) ? 0 : profit).toFixed(2)}
-            </div>
-          </div>
-          <div
-            style={{
-              background: "#d1ecf1",
-              padding: "20px",
-              borderRadius: "8px",
-              border: "2px solid #bee5eb",
-            }}
-          >
-            <div style={{ color: "#0c5460" }}>Profit Margin</div>
-            <div style={{ fontSize: "24px", fontWeight: "bold", color: "#0c5460" }}>
-              {(isNaN(profitMarginPercent) ? 0 : profitMarginPercent).toFixed(2)}%
-            </div>
-          </div>
-          <div
-            style={{
-              background: "#e2e3e5",
-              padding: "20px",
-              borderRadius: "8px",
-              border: "2px solid #d6d8db",
-            }}
-          >
-            <div style={{ color: "#383d41" }}>Markup Percentage</div>
-            <div style={{ fontSize: "24px", fontWeight: "bold", color: "#383d41" }}>
-              {convertedBuying > 0 ? ((profit / convertedBuying) * 100).toFixed(2) : "0.00"}%
-            </div>
-          </div>
-        </div>
+{/* Profit Summary */}
+<div
+  style={{
+    background: "white",
+    border: "1px solid #e1e5e9",
+    borderRadius: "10px",
+    padding: "20px",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+  }}
+>
+  <h3 style={{ color: "#555" }}>Profit Analysis</h3>
+  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "15px" }}>
+    {/* Net Profit */}
+    <div
+      style={{
+        background: profitSummary.profit >= 0 ? "#d4edda" : "#f8d7da",
+        padding: "20px",
+        borderRadius: "8px",
+        border: `2px solid ${profitSummary.profit >= 0 ? "#c3e6cb" : "#f5c6cb"}`,
+      }}
+    >
+      <div style={{ color: profitSummary.profit >= 0 ? "#155724" : "#721c24" }}>Net Profit/Loss</div>
+      <div style={{ fontSize: "24px", fontWeight: "bold", color: profitSummary.profit >= 0 ? "#155724" : "#721c24" }}>
+        {getCurrencySymbol(selling.currency)} {(isNaN(profitSummary.profit) ? 0 : profitSummary.profit).toFixed(2)}
       </div>
+    </div>
+
+    {/* Profit Margin */}
+    <div
+      style={{
+        background: "#d1ecf1",
+        padding: "20px",
+        borderRadius: "8px",
+        border: "2px solid #bee5eb",
+      }}
+    >
+      <div style={{ color: "#0c5460" }}>Profit Margin</div>
+      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#0c5460" }}>
+        {(isNaN(profitSummary.profitMarginPercent) ? 0 : profitSummary.profitMarginPercent).toFixed(2)}%
+      </div>
+    </div>
+
+    {/* Markup */}
+    <div
+      style={{
+        background: "#e2e3e5",
+        padding: "20px",
+        borderRadius: "8px",
+        border: "2px solid #d6d8db",
+      }}
+    >
+      <div style={{ color: "#383d41" }}>Markup Percentage</div>
+      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#383d41" }}>
+        {(isNaN(profitSummary.markup) ? 0 : profitSummary.markup).toFixed(2)}%
+      </div>
+    </div>
+  </div>
+</div>
+
 
       {/* Bill-style summaries */}
       <div
