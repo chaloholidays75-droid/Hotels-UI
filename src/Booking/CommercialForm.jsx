@@ -880,7 +880,7 @@ useEffect(() => {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
-              <span style={{ fontWeight: "bold", color: "#0056b3" }}>NET Value (before VAT):</span>
+              <span style={{ fontWeight: "bold", color: "#0056b3" }}>NET VALUE (before VAT):</span>
               <span style={{ fontWeight: "bold", color: "#0056b3" }}>
                 {getCurrencySymbol(buying.currency)} {(buyingCalculation.grossValue || 0).toFixed(2)}
               </span>
