@@ -305,9 +305,11 @@ const calculateNetSelling = () => {
       : buyingCalculation.grossValue;
 
   // ✅ Profit uses grossRevenue from selling side
-  const profit =
-  (sellingCalc.grossRevenue - sellingCalc.incentiveValue) -
-  (convertedBuying - buyingCalculation.commissionAmount);
+const profit =
+  (parseFloat(sellingCalc.grossRevenue || 0) -
+   parseFloat(sellingCalc.incentiveValue || 0)) -
+  (parseFloat(convertedBuying || 0) -
+   parseFloat(buyingCalculation.commissionAmount || 0));
 
   const profitMarginPercent =
     (sellingCalc.grossRevenue || 0) > 0
