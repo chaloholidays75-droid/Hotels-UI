@@ -234,22 +234,22 @@ useEffect(() => {
       : baseAmountWithoutVAT * vatRate;
 
     const commissionAmount = calculateCommissionAmount();
-    const grossValue =
+    const netValue =
       baseAmountWithoutVAT + additionalCosts - commissionAmount;
-    const netValue = baseAmountIncludingVAT + additionalCosts;
+    const grossValue = baseAmountIncludingVAT + additionalCosts;
 
     return {
       baseAmountWithoutVAT,
       vatAmount,
       commissionAmount,
       additionalCosts,
-      grossValue,
       netValue,
+      grossValue,
     };
   };
 
   // ✅ Revenue breakdown — VAT recomputed AFTER discounts/incentives
-// ✅ Incentive should reduce only GROSS (before VAT). Net (receivable) stays the same.
+// ✅ Incentive should reduce only NET (before VAT). Gross (receivable) stays the same.
 //    VAT is computed from the original base (not the incentive-reduced base).
 const calculateNetSelling = () => {
   const sellingPrice = parseFloat(selling.price) || 0;
@@ -260,7 +260,7 @@ const calculateNetSelling = () => {
     ? sellingPrice / (1 + vatRate)
     : sellingPrice;
 
-  // Incentive we give to supplier/agent (deduct from GROSS only)
+  // Incentive we give to supplier/agent (deduct from NET only)
   let incentiveValue = 0;
   if (selling.incentive && selling.incentiveValue) {
     incentiveValue =
@@ -280,19 +280,19 @@ const calculateNetSelling = () => {
     ? sellingPrice - baseBeforeVAT
     : baseBeforeVAT * vatRate;
 
-  // ✅ GROSS (before VAT) reflects the incentive
-  const grossRevenue = baseBeforeVAT - incentiveValue + totalAdditional;
+  // ✅ NET (before VAT) reflects the incentive
+  const netRevenue = baseBeforeVAT - incentiveValue + totalAdditional;
 
-  // ✅ NET (after VAT) does NOT reflect the incentive; it's your receivable
-  const netRevenue = baseBeforeVAT + vatAmount + totalAdditional;
+  // ✅ GROSS (after VAT) does NOT reflect the incentive; it's your receivable
+  const grossRevenue = baseBeforeVAT + vatAmount + totalAdditional;
 
   return {
     baseBeforeVAT,
     vatAmount,
     incentiveValue,
     totalAdditional,
-    grossRevenue, // shown as "GROSS REVENUE (before VAT)"
-    netRevenue,   // shown as "NET REVENUE (after VAT)" / Total Receivable
+    netRevenue, // shown as "NET REVENUE (before VAT)"
+    grossRevenue,   // shown as "GROSS REVENUE (after VAT)" / Total Receivable
   };
 };
 
@@ -301,14 +301,14 @@ const calculateNetSelling = () => {
 
   const convertedBuying =
     buying.currency !== selling.currency && exchangeRate
-      ? buyingCalculation.netValue * parseFloat(exchangeRate)
-      : buyingCalculation.netValue;
+      ? buyingCalculation.grossValue * parseFloat(exchangeRate)
+      : buyingCalculation.grossValue;
 
-  // ✅ Profit uses netRevenue from selling side
-  const profit = (sellingCalc.netRevenue || 0) - (convertedBuying || 0);
+  // ✅ Profit uses grossRevenue from selling side
+  const profit = (sellingCalc.grossRevenue || 0) - (convertedBuying || 0);
   const profitMarginPercent =
-    (sellingCalc.netRevenue || 0) > 0
-      ? (profit / sellingCalc.netRevenue) * 100
+    (sellingCalc.grossRevenue || 0) > 0
+      ? (profit / sellingCalc.grossRevenue) * 100
       : 0;
 
   const getCurrencySymbol = (currencyCode) => {
@@ -423,13 +423,13 @@ useEffect(() => {
   const sellingCalc = calculateNetSelling();
   const convertedBuying =
     buying.currency !== selling.currency && exchangeRate
-      ? buyingCalc.netValue * parseFloat(exchangeRate)
-      : buyingCalc.netValue;
+      ? buyingCalc.grossValue * parseFloat(exchangeRate)
+      : buyingCalc.grossValue;
 
-  const profitValue = (sellingCalc.netRevenue || 0) - (convertedBuying || 0);
+  const profitValue = (sellingCalc.grossRevenue || 0) - (convertedBuying || 0);
   const profitMargin =
-    (sellingCalc.netRevenue || 0) > 0
-      ? (profitValue / sellingCalc.netRevenue) * 100
+    (sellingCalc.grossRevenue || 0) > 0
+      ? (profitValue / sellingCalc.grossRevenue) * 100
       : 0;
   const markupValue =
     convertedBuying > 0 ? (profitValue / convertedBuying) * 100 : 0;
@@ -880,15 +880,15 @@ useEffect(() => {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
-              <span style={{ fontWeight: "bold", color: "#0056b3" }}>NET VALUE (before VAT):</span>
+              <span style={{ fontWeight: "bold", color: "#0056b3" }}>GROSS VALUE (before VAT):</span>
               <span style={{ fontWeight: "bold", color: "#0056b3" }}>
-                {getCurrencySymbol(buying.currency)} {(buyingCalculation.grossValue || 0).toFixed(2)}
+                {getCurrencySymbol(buying.currency)} {(buyingCalculation.netValue || 0).toFixed(2)}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontWeight: "bold", color: "#0066cc" }}>GROSS PAYABLE (with VAT):</span>
+              <span style={{ fontWeight: "bold", color: "#0066cc" }}>NET PAYABLE (with VAT):</span>
               <span style={{ fontSize: "18px", fontWeight: "bold", color: "#0066cc" }}>
-                {getCurrencySymbol(buying.currency)} {(buyingCalculation.netValue || 0).toFixed(2)}
+                {getCurrencySymbol(buying.currency)} {(buyingCalculation.grossValue || 0).toFixed(2)}
               </span>
             </div>
           </div>
@@ -1091,15 +1091,15 @@ useEffect(() => {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
-              <span style={{ fontWeight: "bold", color: "#0056b3" }}>NET AMOUNT (before VAT):</span>
+              <span style={{ fontWeight: "bold", color: "#0056b3" }}>GROSS AMOUNT (before VAT):</span>
               <span style={{ fontWeight: "bold", color: "#0056b3" }}>
-                {getCurrencySymbol(selling.currency)} {(sellingCalc.grossRevenue || 0).toFixed(2)}
+                {getCurrencySymbol(selling.currency)} {(sellingCalc.netRevenue || 0).toFixed(2)}
               </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontWeight: "bold", color: "#0066cc" }}>GROSS SELLING (after VAT):</span>
+              <span style={{ fontWeight: "bold", color: "#0066cc" }}>NET SELLING (after VAT):</span>
               <span style={{ fontSize: "18px", fontWeight: "bold", color: "#0066cc" }}>
-                {getCurrencySymbol(selling.currency)} {(sellingCalc.netRevenue || 0).toFixed(2)}
+                {getCurrencySymbol(selling.currency)} {(sellingCalc.grossRevenue || 0).toFixed(2)}
               </span>
             </div>
           </div>
@@ -1317,16 +1317,16 @@ useEffect(() => {
           <hr style={{ margin: "10px 0", border: "none", borderTop: "2px solid #999" }} />
 
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontWeight: "bold", color: "#555" }}>NET VALUE (before VAT):</span>
+            <span style={{ fontWeight: "bold", color: "#555" }}>GROSS VALUE (before VAT):</span>
             <span style={{ fontWeight: "bold", color: "#555" }}>
-              {getCurrencySymbol(buying.currency)} {(buyingCalculation.grossValue || 0).toFixed(2)}
+              {getCurrencySymbol(buying.currency)} {(buyingCalculation.netValue || 0).toFixed(2)}
             </span>
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span style={{ fontWeight: "bold", color: "#000" }}>GROSS VALUE (with VAT):</span>
+            <span style={{ fontWeight: "bold", color: "#000" }}>NET VALUE (with VAT):</span>
             <span style={{ fontWeight: "bold", color: "#000" }}>
-              {getCurrencySymbol(buying.currency)} {(buyingCalculation.netValue || 0).toFixed(2)}
+              {getCurrencySymbol(buying.currency)} {(buyingCalculation.grossValue || 0).toFixed(2)}
             </span>
           </div>
 
@@ -1343,7 +1343,7 @@ useEffect(() => {
             }}
           >
             <span>TOTAL BILL AMOUNT:</span>
-            <span>{getCurrencySymbol(buying.currency)} {(buyingCalculation.netValue || 0).toFixed(2)}</span>
+            <span>{getCurrencySymbol(buying.currency)} {(buyingCalculation.grossValue || 0).toFixed(2)}</span>
           </div>
         </div>
 
@@ -1440,21 +1440,21 @@ useEffect(() => {
 
   <div style={{ display: "flex", justifyContent: "space-between" }}>
     <span style={{ fontWeight: "bold", color: "#555" }}>
-      NET REVENUE (before VAT):
+      GROSS REVENUE (before VAT):
     </span>
     <span style={{ fontWeight: "bold", color: "#555" }}>
       {getCurrencySymbol(selling.currency)}{" "}
-      {(sellingCalc.grossRevenue || 0).toFixed(2)}
+      {(sellingCalc.netRevenue || 0).toFixed(2)}
     </span>
   </div>
 
   <div style={{ display: "flex", justifyContent: "space-between" }}>
     <span style={{ fontWeight: "bold", color: "#000" }}>
-      GROSS REVENUE (after VAT):
+      NET REVENUE (after VAT):
     </span>
     <span style={{ fontWeight: "bold", color: "#000" }}>
       {getCurrencySymbol(selling.currency)}{" "}
-      {(sellingCalc.netRevenue || 0).toFixed(2)}
+      {(sellingCalc.grossRevenue || 0).toFixed(2)}
     </span>
   </div>
 
@@ -1475,7 +1475,7 @@ useEffect(() => {
     <span>TOTAL RECEIVABLE AMOUNT:</span>
     <span>
       {getCurrencySymbol(selling.currency)}{" "}
-      {(sellingCalc.netRevenue || 0).toFixed(2)}
+      {(sellingCalc.grossRevenue || 0).toFixed(2)}
     </span>
   </div>
 </div>
