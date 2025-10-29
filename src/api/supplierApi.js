@@ -99,8 +99,10 @@
 // // };
 // import api from './api';
 // src/api/supplierApi.js
-import api from './api'; // import your axios instance with interceptors
+// import api from './api'; // import your axios instance with interceptors
+import api from './apiInstance'; // your pre-configured axios instance with interceptors
 
+// ----------------- SUPPLIER API -----------------
 const supplierApi = {
   // Categories
   getCategories: async (page = 1, pageSize = 50, search = '') => {

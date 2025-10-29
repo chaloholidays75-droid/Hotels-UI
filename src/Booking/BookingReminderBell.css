@@ -1,0 +1,315 @@
+/* BookingReminderBell.css - Professional Enhanced Version */
+
+.reminder-bell-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Bell Icon with Notification Badge */
+.reminder-bell {
+  position: relative;
+  background: var(--reminder-bell-bg, #f8f9fa);
+  border: 1px solid var(--reminder-bell-border, #e9ecef);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  /* transition: all 0.2s ease-in-out; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--reminder-bell-color, #6c757d);
+}
+
+.reminder-bell:hover {
+  background: var(--reminder-bell-bg-hover, #e9ecef);
+  border-color: var(--reminder-bell-border-hover, #dee2e6);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.reminder-bell:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.reminder-bell fml-icon {
+  font-size: 1.25rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Notification Badge */
+.reminder-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--reminder-badge-bg, #dc3545);
+  color: var(--reminder-badge-color, #ffffff);
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  border: 2px solid var(--reminder-bell-bg, #ffffff);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  /* animation:  2s infinite; */
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+  }
+}
+
+/* Dropdown Container */
+.reminder-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: var(--reminder-dropdown-bg, #ffffff);
+  border: 1px solid var(--reminder-dropdown-border, #e9ecef);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 320px;
+  max-width: 400px;
+  z-index: 1000;
+  animation: slideDown 0.2s ease-out;
+  backdrop-filter: blur(10px);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dropdown Header */
+.reminder-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--reminder-dropdown-border, #f1f3f4);
+  background: var(--reminder-header-bg, #fafbfc);
+  border-radius: 12px 12px 0 0;
+}
+
+.reminder-dropdown-header span {
+  font-weight: 600;
+  color: var(--reminder-header-color, #2d3748);
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+
+/* Mute Button */
+.reminder-mute {
+  background: transparent;
+  border: 1px solid var(--reminder-mute-border, #e2e8f0);
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.reminder-mute:hover {
+  background: var(--reminder-mute-bg-hover, #f7fafc);
+  border-color: var(--reminder-mute-border-hover, #cbd5e0);
+  transform: scale(1.05);
+}
+
+.reminder-mute.is-muted {
+  background: var(--reminder-mute-bg-muted, #fed7d7);
+  border-color: var(--reminder-mute-border-muted, #fc8181);
+}
+
+/* Empty State */
+.reminder-empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--reminder-empty-color, #718096);
+  font-style: italic;
+  font-size: 0.9rem;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Reminders List */
+.reminder-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.reminder-dropdown li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--reminder-item-border, #f7fafc);
+  transition: background-color 0.15s ease;
+  gap: 12px;
+}
+
+.reminder-dropdown li:hover {
+  background: var(--reminder-item-bg-hover, #f8f9fa);
+}
+
+.reminder-dropdown li:last-child {
+  border-bottom: none;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Reminder Item Info */
+.reminder-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.reminder-item-info strong {
+  display: block;
+  font-weight: 600;
+  color: var(--reminder-item-title-color, #2d3748);
+  font-size: 0.85rem;
+  margin-bottom: 2px;
+  letter-spacing: 0.02em;
+}
+
+.reminder-item-info p {
+  margin: 0;
+  color: var(--reminder-item-desc-color, #718096);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Date Badges */
+.badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-today {
+  background: var(--badge-today-bg, #fed7d7);
+  color: var(--badge-today-color, #c53030);
+  border: 1px solid var(--badge-today-border, #feb2b2);
+}
+
+.badge-normal {
+  background: var(--badge-normal-bg, #e2e8f0);
+  color: var(--badge-normal-color, #4a5568);
+  border: 1px solid var(--badge-normal-border, #cbd5e0);
+}
+
+/* Scrollbar Styling */
+.reminder-dropdown ul::-webkit-scrollbar {
+  width: 6px;
+}
+
+.reminder-dropdown ul::-webkit-scrollbar-track {
+  background: var(--scrollbar-track, #f1f1f1);
+  border-radius: 3px;
+}
+
+.reminder-dropdown ul::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb, #c1c1c1);
+  border-radius: 3px;
+}
+
+.reminder-dropdown ul::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover, #a8a8a8);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+  .reminder-dropdown {
+    position: fixed;
+    top: auto;
+    right: 16px;
+    left: 16px;
+    bottom: 16px;
+    margin-top: 0;
+    min-width: auto;
+    max-width: none;
+  }
+  
+  .reminder-bell-container {
+    position: static;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  .reminder-bell {
+    border-width: 2px;
+  }
+  
+  .reminder-dropdown {
+    border-width: 2px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .reminder-bell,
+  .reminder-mute {
+    transition: none;
+  }
+  
+  .reminder-badge {
+    animation: none;
+  }
+  
+  .reminder-dropdown {
+    animation: none;
+  }
+}
+
+
+/* Focus States for Accessibility */
+.reminder-bell:focus-visible,
+.reminder-mute:focus-visible {
+  outline: 2px solid var(--focus-outline, #4299e1);
+  outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+  .reminder-bell-container {
+    display: none;
+  }
+}

@@ -11,17 +11,28 @@ const decodeJwt = (token) => {
   }
 };
 
-export async function login(email, password, rememberMe = false) {
-  const { data } = await api.post("/auth/login", { email, password, rememberMe });
+// export async function login(email, password, rememberMe = false) {
+//   const { data } = await api.post("/auth/login", { email, password, rememberMe });
 
-  // Store header-mode tokens (cookies are set by server automatically)
-  if (data.accessToken) localStorage.setItem("accessToken", data.accessToken);
-  if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+//   // Store header-mode tokens (cookies are set by server automatically)
+//   if (data.accessToken) localStorage.setItem("accessToken", data.accessToken);
+//   if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
 
-  const { name, role } = extractUserFromToken(data.accessToken);
-  return { userFullName: data.userFullName || name, userRole: data.userRole || role };
+//   const { name, role } = extractUserFromToken(data.accessToken);
+//   return { userFullName: data.userFullName || name, userRole: data.userRole || role };
+// }
+
+
+export async function login(email, password) {
+  try {
+    const { data } = await api.post("/auth/login", { email, password });
+    console.log("✅ Login successful");
+    return data;
+  } catch (err) {
+    console.error("❌ Login failed:", err);
+    throw err;
+  }
 }
-
 export async function autoLogin() {
   // uses rememberToken cookie; server returns fresh tokens
   const { data } = await api.post("/auth/auto-login");

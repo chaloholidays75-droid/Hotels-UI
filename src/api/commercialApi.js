@@ -1,5 +1,5 @@
 // src/api/commercialApi.js
-import api from "./api"; // your pre-configured axios instance with interceptors
+import api from "./apiInstance"; // your pre-configured axios instance with interceptors
 
 // -----------------------------
 // CREATE Commercial

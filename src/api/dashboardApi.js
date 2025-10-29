@@ -1,6 +1,6 @@
 // src/api/dashboardApi.js
-import api from "./api"; // ✅ your pre-configured axios instance with interceptors
-
+// import api from "./api"; // ✅ your pre-configured axios instance with interceptors
+import api from "./apiInstance"; // your pre-configured axios instance with interceptors
 // -----------------------------
 // 1️⃣ SUMMARY (KPI CARDS)
 // -----------------------------
@@ -88,6 +88,10 @@ export const getRevenueByCountry = async () => {
   const res = await api.get("/dashboard/revenue-by-country");
   return res.data;
 };
+export async function getUpcomingDeadlines() {
+  const { data } = await api.get("/dashboard/upcoming-deadlines");
+  return data.data;
+}
 
 // -----------------------------
 // 📊 FETCH ALL DASHBOARD DATA
@@ -103,6 +107,7 @@ export const fetchDashboardData = async () => {
       topSuppliers,
       recentBookings,
       recentActivities,
+      upcomingDeadlines
     ] = await Promise.all([
       getDashboardSummary(),
       getBookingsTrend(),
@@ -112,6 +117,7 @@ export const fetchDashboardData = async () => {
       getTopSuppliers(),
       getRecentBookings(),
       getRecentActivities(),
+      getUpcomingDeadlines(), // ✅ OK now — not shadowed
     ]);
 
     // ✅ Log all data for debugging
@@ -124,6 +130,7 @@ export const fetchDashboardData = async () => {
     console.log("Top Suppliers:", topSuppliers);
     console.log("Recent Bookings:", recentBookings);
     console.log("Recent Activities:", recentActivities);
+    console.log("Upcoming Deadlines:", upcomingDeadlines);
     console.groupEnd();
 
     return {
@@ -135,10 +142,10 @@ export const fetchDashboardData = async () => {
       topSuppliers,
       recentBookings,
       recentActivities,
+      upcomingDeadlines, // ✅ include it here
     };
   } catch (error) {
     console.error("❌ Dashboard API Error:", error.response || error.message);
     throw error;
   }
 };
-

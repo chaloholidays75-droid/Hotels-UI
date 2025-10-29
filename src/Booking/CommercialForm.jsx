@@ -60,23 +60,82 @@ export default function CommercialForm() {
     { code: "GBP", name: "British Pound", symbol: "£" },
   ];
 
-  useEffect(() => {
-    if (
-      autoCalculateRate &&
-      buying.currency &&
-      selling.currency &&
-      buying.currency !== selling.currency
-    ) {
-      const mockRates = {
-        "USD-EUR": 0.85,
-        "USD-GBP": 0.73,
-        "EUR-USD": 1.18,
-        "GBP-USD": 1.37,
-      };
-      const rateKey = `${buying.currency}-${selling.currency}`;
-      setExchangeRate(mockRates[rateKey] || "1.0");
+// --- Live Exchange Rates ---
+const [exchangeRates, setExchangeRates] = useState({
+  "USD-EUR": 1,
+  "USD-GBP": 1,
+  "EUR-USD": 1,
+  "EUR-GBP": 1,
+  "GBP-USD": 1,
+  "GBP-EUR": 1,
+});
+const [loadingRates, setLoadingRates] = useState(false);
+
+async function fetchExchangeRate(from, to) {
+  try {
+    const res = await fetch(`https://open.er-api.com/v6/latest/${from}`);
+    const data = await res.json();
+
+    if (data?.result === "success" && data?.rates?.[to]) {
+      return Number(data.rates[to].toFixed(4));
+    } else {
+      console.warn(`⚠️ No valid rate found for ${from}->${to}:`, data);
+      return 1; // fallback
     }
-  }, [autoCalculateRate, buying.currency, selling.currency]);
+  } catch (err) {
+    console.warn(`⚠️ Failed to fetch ${from}->${to}:`, err);
+    return 1; // fallback to neutral rate
+  }
+}
+
+
+
+
+// Fetch all six rates (USD↔EUR↔GBP)
+async function loadAllRates() {
+  setLoadingRates(true);
+  const pairs = [
+    ["USD", "EUR"],
+    ["USD", "GBP"],
+    ["EUR", "USD"],
+    ["EUR", "GBP"],
+    ["GBP", "USD"],
+    ["GBP", "EUR"],
+  ];
+
+  const newRates = {};
+  for (const [from, to] of pairs) {
+    newRates[`${from}-${to}`] = await fetchExchangeRate(from, to);
+  }
+  setExchangeRates(newRates);
+  setLoadingRates(false);
+  console.log("✅ Updated exchange new rates:", newRates);
+}
+useEffect(() => {
+  loadAllRates(); // Load initially
+
+  // Auto-refresh every 6 hours (21,600,000 ms)
+  const interval = setInterval(() => {
+    loadAllRates();
+  }, 21600000);
+
+  return () => clearInterval(interval);
+}, [buying.currency, selling.currency]);
+useEffect(() => {
+  if (
+    autoCalculateRate &&
+    buying.currency &&
+    selling.currency &&
+    buying.currency !== selling.currency
+  ) {
+    const key = `${buying.currency}-${selling.currency}`;
+    const rate = exchangeRates[key];
+    if (rate) setExchangeRate(rate.toFixed(4));
+  } else {
+    setExchangeRate("1.0000");
+  }
+}, [autoCalculateRate, buying.currency, selling.currency, exchangeRates]);
+
 
   const handleBuyingChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -1160,9 +1219,12 @@ useEffect(() => {
                 placeholder="0.00"
                 style={{ width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "5px" }}
               />
-              <small style={{ color: "#666" }}>
-                1 {buying.currency} = {exchangeRate || "0"} {selling.currency}
-              </small>
+              <small style={{ color: "#777" }}>
+              {loadingRates
+                ? "Fetching live rates..."
+                : `1 ${buying.currency} = ${exchangeRate || 1} ${selling.currency}`}
+            </small>
+
             </div>
             <div>
               <label style={{ display: "flex", alignItems: "center", gap: "10px" }}>

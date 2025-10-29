@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  fetchDashboardData
-} from "../api/dashboardApi"; // ✅ new import
+  fetchDashboardData,
+  getUpcomingDeadlines,
+} from "../api/dashboardApi"; // ✅ imports
 import DashboardCard from "./DashboardCard";
 import DashboardCharts from "./DashboardCharts";
 import RecentBookings from "./RecentBookings";
@@ -17,6 +18,7 @@ const Dashboard = () => {
     summary: null,
     bookingsTrend: null,
     financialTrends: null,
+    upcomingDeadlines: null,
     bookingStatus: null,
     topAgencies: null,
     topSuppliers: null,
@@ -28,6 +30,18 @@ const Dashboard = () => {
     loadDashboard();
   }, [dateRange]);
 
+  useEffect(() => {
+    async function loadDeadlines() {
+      try {
+        const result = await getUpcomingDeadlines();
+        setDashboardData((prev) => ({ ...prev, upcomingDeadlines: result }));
+      } catch (err) {
+        console.error("Error loading deadlines:", err);
+      }
+    }
+    loadDeadlines();
+  }, []);
+
   const loadDashboard = async () => {
     setLoading(true);
     try {
@@ -36,9 +50,7 @@ const Dashboard = () => {
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       if (error.response?.status === 401) {
-        alert("Session expired — please log in again.");
-        localStorage.removeItem("token");
-        window.location.href = "/login";
+        console.log("Session expired — please log in again.");
       }
     } finally {
       setLoading(false);
@@ -47,22 +59,13 @@ const Dashboard = () => {
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
   };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { duration: 0.5 },
-    },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
   };
-// console.log("Booking Status Data:", bookingStatus);
-// console.log("Top Agencies Data:", topAgencies);
 
   if (loading) return <LoadingSkeleton />;
 
@@ -122,7 +125,6 @@ const Dashboard = () => {
                 <DashboardCard
                   title="Total Bookings"
                   value={dashboardData.summary.cards.totalBookings}
-                  // change={12}
                   changeType="increase"
                   icon="📊"
                 />
@@ -131,7 +133,6 @@ const Dashboard = () => {
                 <DashboardCard
                   title="Revenue"
                   value={`$${dashboardData.summary.cards.totalRevenue.toLocaleString()}`}
-                  // change={8.2}
                   changeType="increase"
                   icon="💰"
                 />
@@ -140,7 +141,6 @@ const Dashboard = () => {
                 <DashboardCard
                   title="Profit"
                   value={`$${dashboardData.summary.cards.totalProfit.toLocaleString()}`}
-                  // change={15.5}
                   changeType="increase"
                   icon="📈"
                 />
@@ -149,7 +149,6 @@ const Dashboard = () => {
                 <DashboardCard
                   title="Hotels"
                   value={dashboardData.summary.cards.totalHotels}
-                  // change={-2.1}
                   changeType="decrease"
                   icon="🏨"
                 />
@@ -175,19 +174,98 @@ const Dashboard = () => {
             />
           </motion.div>
 
+          {/* ✅ Upcoming Deadlines */}
           <motion.div className="space-y-6" variants={itemVariants}>
             <div className="bg-white rounded-card shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Booking Status
+                Upcoming Deadlines (Next 3 Days)
               </h3>
-              <div className="h-64">{/* Doughnut chart */}</div>
+
+              {dashboardData.upcomingDeadlines &&
+              dashboardData.upcomingDeadlines.length > 0 ? (
+                <ul className="divide-y divide-gray-200 max-h-64 overflow-y-auto">
+                  {dashboardData.upcomingDeadlines
+                    .filter(
+                      (b) =>
+                        b.status &&
+                        b.status.toLowerCase().includes("confirmed") &&
+                        !b.status.toLowerCase().includes("reconfirmed")
+                    )
+                    .map((b, i) => (
+                      <li key={i} className="py-3">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-sm font-medium text-gray-800">
+                              {b.ticketNumber || `Booking #${b.id}`}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {b.hotelName || "Unknown Hotel"} •{" "}
+                              <span
+                                className={`${
+                                  b.status?.toLowerCase().includes("cancel")
+                                    ? "text-red-500"
+                                    : "text-green-600"
+                                }`}
+                              >
+                                {b.status}
+                              </span>
+                            </p>
+                          </div>
+
+                          {/* 🟡 Deadline Badge */}
+                          {(() => {
+                            const today = new Date();
+                            const deadline = new Date(b.deadline);
+                            const diffDays = Math.floor(
+                              (deadline - today) / (1000 * 60 * 60 * 24)
+                            );
+
+                            const isSoon =
+                              diffDays <= 1 && diffDays >= 0; // today/tomorrow
+                            const isExpired = diffDays < 0;
+
+                            const badgeColor = isSoon
+                              ? "bg-red-50 text-red-600 border border-red-100"
+                              : "bg-gray-100 text-gray-700";
+
+                            const label = isExpired
+                              ? "Expired"
+                              : diffDays === 0
+                              ? "Today"
+                              : diffDays === 1
+                              ? "Tomorrow"
+                              : deadline.toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                });
+
+                            return (
+                              <span
+                                className={`text-xs font-semibold px-2 py-1 rounded ${badgeColor} ${
+                                  isExpired
+                                    ? "text-gray-400 italic line-through"
+                                    : ""
+                                }`}
+                              >
+                                {label}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              ) : (
+                <p className="text-gray-400 text-sm">No upcoming deadlines</p>
+              )}
             </div>
 
+            {/* Top Agencies */}
             <div className="bg-white rounded-card shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Top Agencies
               </h3>
-              <div className="h-64">{/* Bar chart */}</div>
+              <div className="h-64">{/* Bar chart placeholder */}</div>
             </div>
           </motion.div>
         </motion.section>

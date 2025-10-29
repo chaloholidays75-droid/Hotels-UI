@@ -26,7 +26,8 @@ const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
       children: 0,
       totalPeople: 0,
       childrenAges: [],
-      status: "Pending",
+      status: "Confirmed",
+      deadline : "",
       specialRequest: ""
     }
   );
@@ -245,6 +246,10 @@ const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
         alert("Please add at least one room."); 
         return; 
       }
+      if (!booking.deadline) {
+        alert("Please set a deadline before saving.");
+        return;
+      }
 
       const payload = {
         agencyId: booking.agencyId,
@@ -252,6 +257,8 @@ const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
         hotelId: booking.hotelId,
         checkIn: new Date(booking.checkIn).toISOString(),
         checkOut: new Date(booking.checkOut).toISOString(),
+        status: "Confirmed", // force default
+        deadline: booking.deadline ? new Date(booking.deadline).toISOString() : null,
         specialRequest: booking.specialRequest,
         bookingRooms: rooms.map(r => ({
           roomTypeId: r.roomTypeId,
@@ -260,7 +267,7 @@ const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
           childrenAges: r.childrenAges
         }))
       };
-
+      
       setLoading(true);
       const res = await bookingApi.createBooking(payload);
       onSaved?.(res);
@@ -750,7 +757,33 @@ const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
       </div>
 
       {/* Special Request */}
-      
+      <div className="booking-form-box full-width">
+        <label>Special Request</label>
+        <textarea
+          value={booking.specialRequest}
+          onChange={(e) => setBooking({ ...booking, specialRequest: e.target.value })}
+          className="booking-textarea-input"
+          placeholder="Any special requests..."
+        />
+      </div>
+      {/* Status (read-only display) */}
+        <div className="booking-form-box">
+          <label>Status</label>
+          <div className="booking-status-display">Confirmed</div>
+        </div>
+
+        {/* Deadline (staff enters) */}
+        <div className="booking-form-box">
+          <label>Deadline *</label>
+          <input
+            type="date"
+            value={booking.deadline || ""}
+            min={today}
+            onChange={(e) => setBooking({ ...booking, deadline: e.target.value })}
+            className="booking-date-input"
+          />
+        </div>
+
 
       {/* Actions */}
       <div className="booking-actions-section">

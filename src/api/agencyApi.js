@@ -1,5 +1,5 @@
 // agencyApi.js
-import api from './api';
+import api from './apiInstance';
 
 // Get all agencies
 export async function getAgencies() {
