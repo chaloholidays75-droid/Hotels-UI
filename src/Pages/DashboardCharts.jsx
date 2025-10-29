@@ -233,7 +233,7 @@ const DashboardCharts = ({
   const statusOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: "45%",
+    cutout: "60%",
     plugins: {
       legend: { position: "bottom" },
       title: {
