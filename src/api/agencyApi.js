@@ -1,4 +1,5 @@
 // agencyApi.js
+import { tr } from 'date-fns/locale';
 import api from './apiInstance';
 
 // Get all agencies
@@ -8,6 +9,17 @@ export async function getAgencies() {
     return res.data;
   } catch (error) {
     console.error('Failed to fetch agencies:', error.response?.status, error.message);
+    throw error;
+  }
+}
+// ✅ Get only active agencies
+export async function getActiveAgencies() {
+  try {
+    const res = await api.get('/agency/active');
+    console.log('✅ Active agencies fetched:', res.data.length);
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to fetch active agencies:', error.response?.data || error.message);
     throw error;
   }
 }
@@ -88,16 +100,29 @@ export async function checkEmailExists(email) {
     throw error;
   }
 }
+export async function getAgencyStaffByAgency(agencyId) {
+  try {
+  const res = await api.get(`/agencyStaff/agency/${agencyId}`);
+  return res.data;
+  } catch (error) {
+    console.error('Failed to fetch agency staff:', error.response?.data || error.message);
+    throw error;
+  }
+
+}
+
 
 const agencyApi = {
   getAgencies,
   getAgencyById,
+  getActiveAgencies,
   createAgency,
   updateAgency,
   deleteAgency,
   updateAgencyStatus,
   checkUsernameExists,
-  checkEmailExists
+  checkEmailExists,
+  getAgencyStaffByAgency,
 };
 
 export default agencyApi;

@@ -1,347 +1,271 @@
-/* HotelManagementSystem.css */
-
-/* Import Google Font for modern typography */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-/* Root container */
-.hms-hotel-management-system {
+:root {
+  --hms-primary: #7269ef;
+  --hms-primary-dark: #6658dd;
+  --hms-success: #22c55e;
+  --hms-error: #ef4444;
+  --hms-warning: #f59e0b;
+  --hms-info: #3b82f6;
   
+  --hms-bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
+  --hms-card-bg: #fdfbff;
+  --hms-text-primary: #0a0214;
+  --hms-text-secondary: #9f9f9f;
+  --hms-border: #e5e7eb;
+  --hms-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --hms-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  --hms-border-radius: 8px;
+  --hms-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hms-page-content {
+  background: var(--hms-bg-gradient);
   min-height: 100vh;
-  /* height: 100vh; */
-  /* width: 100vw; */
-  /* color: #1f2a44; */
-  /* overflow-x: hidden; */
-  border: 1px solid #342d5e;
-  font-family: "Poppins",sans-serif;
-}
-.hms-page-content{
-  background: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
-  border-radius: 50px;
-  padding: 20px;
-  margin-top: -10px;
-}
-/* Notification System */
-.hms-notification {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-  max-width: 400px;
-  width: 90%;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  background: #fff;
-  transform: translateY(-20px);
-  animation: hms-slideIn 0.3s ease-out forwards;
+  padding: 0 16px 16px 16px;
+  color: var(--hms-text-primary);
 }
 
-@keyframes hms-slideIn {
-  to {
-    transform: translateY(0);
-  }
-}
-
-.hms-notification.success {
-  background: linear-gradient(90deg, #e6ffed 0%, #d4f7db 100%);
-  border-left: 5px solid #22c55e;
-}
-
-.hms-notification.error {
-  background: linear-gradient(90deg, #fee2e2 0%, #fce7eb 100%);
-  border-left: 5px solid #ef4444;
-}
-
-.hms-notification-content {
-  display: flex;
-  align-items: center;
-  padding: 16px 20px;
-}
-
-.hms-notification-icon {
-  font-size: 1.6rem;
-  margin-right: 12px;
-  color: #22c55e;
-}
-
-.hms-notification.error .hms-notification-icon {
-  color: #ef4444;
-}
-
-.hms-notification-message {
-  flex-grow: 1;
-  font-size: 1rem;
-  font-weight: 500;
-  line-height: 1.4;
-}
-
-.hms-notification-close {
-  background: none;
-  border: none;
-  font-size: 1.3rem;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 4px;
-  transition: color 0.3s, transform 0.2s;
-}
-
-.hms-notification-close:hover {
-  color: #1f2a44;
-  transform: scale(1.1);
-}
-
-/* Header Section */
+/* Compact Header */
 .hms-system-header {
-  /* background: linear-gradient(45deg, #2563eb 0%, #3b82f6 100%); */
-  color: #342d5e;
-  padding: 1rem 1rem;
-  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
-  /* position: relative; */
-  /* overflow: hidden; */
-  display: flex;
-  font-family: "poppins";
-  flex-direction: row;
-  /* border: 1px solid #1f2a44; */
+  background: var(--hms-card-bg);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--hms-border);
+  margin-bottom: 1rem;
 }
-
-/* .hms-system-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
-  opacity: 0.3;
-} */
 
 .hms-header-content {
-  /* max-width: 1800px; */
-  margin: 0 auto;
   display: flex;
-  /* margin-left: 45px; */
-  flex-direction: row;
   justify-content: space-between;
-  gap: 20rem;
-  /* border: 1px solid #1f2a44; */
+  align-items: center;
+  gap: 1rem;
+}
+
+.hms-header-content-title {
+  flex: 1;
 }
 
 .hms-header-title {
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  margin: 0;
-  letter-spacing: -0.02em;
+  margin: 0 0 4px 0;
+  color: var(--hms-text-primary);
 }
 
 .hms-header-subtitle {
-  font-size: 1rem;
-  font-weight: 400;
+  font-size: 0.875rem;
+  color: var(--hms-text-secondary);
   margin: 0;
-  color: #9fa1a4;
-  opacity: 0.85;
-  line-height: 1.5;
+  font-weight: 400;
+}
+.hms-user-role{
+  /* color: var(--ams-primary); */
+  font-weight: 500;
+  /* background: rgba(114, 105, 239, 0.1); */
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+.hms-user-role-badge {
+  font-size: 0.75rem;
+  color: var(--hms-text-secondary);
+  margin-top: 4px;
+}
+.hms-role-admin{
+  color : var(--hms-primary);
+
+}
+.hms-role-employee{
+  color: var(--hms-success);
+  background-color: rgba(34, 197, 94, 0.1);
+}
+.hms-role-admin,
+.hms-role-employee {
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
 }
 
+/* Compact Navigation Buttons */
 .hms-nav-buttons {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: center;
-  right: 45px;
 }
 
 .hms-nav-button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  color: #1f2a44;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  color: var(--hms-text-primary);
+  background: var(--hms-card-bg);
+  border: 1px solid var(--hms-border);
+  border-radius: var(--hms-border-radius);
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden; /* Important for containing the transform animation */
-  will-change: transform, padding;
+  transition: var(--hms-transition);
+  box-shadow: var(--hms-shadow);
 }
 
 .hms-nav-button:hover {
-  background: linear-gradient(145deg, #f3f4f6 0%, #e5e7eb 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+  box-shadow: var(--hms-shadow-lg);
+  border-color: var(--hms-primary);
 }
 
 .hms-nav-button.hms-active {
-  color: #6425eb;
-  border-color: #6425eb;
-  transform: translateY(-1px);
+  background: var(--hms-primary);
+  color: white;
+  border-color: var(--hms-primary);
 }
 
-.hms-nav-button fml-icon {
-  font-size: 1.3rem;
-  transition: all 0.3s ease;
-  flex-shrink: 0; /* Prevent icon from shrinking */
+.hms-nav-button.hms-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
-.hms-nav-button:hover fml-icon {
-  transform: scale(1.1);
+.hms-nav-button.hms-disabled:hover {
+  background: var(--hms-card-bg);
+  border-color: var(--hms-border);
+  box-shadow: var(--hms-shadow);
 }
 
-.hms-nav-button span {
-  white-space: nowrap;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  transform-origin: left center;
-  .hms-nav-button span {
-    will-change: max-width, opacity;
-  }
+/* Content Area - More Focus */
+.hms-content {
+  background: var(--hms-card-bg);
+  border-radius: var(--hms-border-radius);
+  box-shadow: var(--hms-shadow);
+  min-height: calc(100vh - 120px);
+  overflow: hidden;
 }
 
-/* Expanded sidebar state - text hidden with smooth animation */
-body:not(.sb-collapsed) .hms-nav-button {
-  padding: 0.75rem; /* Reduced padding when text is hidden */
-  justify-content: center; /* Center icon when text is hidden */
+/* Notification - Keep it subtle */
+.hms-notification {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  max-width: 350px;
+  border-radius: var(--hms-border-radius);
+  box-shadow: var(--hms-shadow-lg);
+  background: var(--hms-card-bg);
+  transform: translateX(100%);
+  animation: hms-slideInRight 0.3s ease-out forwards;
 }
 
-body:not(.sb-collapsed) .hms-nav-button span {
-  transform: scaleX(0);
-  opacity: 0;
-  width: 0;
-  margin: 0;
-  position: absolute; /* Remove from flow to avoid affecting button size */
+.hms-notification-content {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  gap: 10px;
 }
 
-body:not(.sb-collapsed) .hms-nav-button fml-icon {
-  font-size: 1.5rem;
-  transform: scale(1.1);
-  margin: 0; /* Remove margin when text is hidden */
+.hms-notification-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
 }
 
-/* Collapsed sidebar state - text visible with smooth animation */
-body.sb-collapsed .hms-nav-button {
-  padding: 0.75rem 1.5rem; /* Original padding */
-  justify-content: flex-start; /* Align items to start */
+.hms-notification-message {
+  flex-grow: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
 }
 
-body.sb-collapsed .hms-nav-button span {
-  transform: scaleX(1);
-  opacity: 1;
-  width: auto;
-  margin-right: 0.5rem;
-  position: static; /* Back to normal flow */
-}
-
-body.sb-collapsed .hms-nav-button fml-icon {
-  font-size: 1.3rem;
-  transform: scale(1);
-}
-
-/* Content Section */
-/* .hms-content {
-  padding: 2rem 1rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  margin-right: 35px;
-
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  transition: transform 0.3s ease;
-} */
-
-.hms-content:hover {
-  transform: translateY(-2px);
+.hms-notification-close {
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--hms-text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+  transition: var(--hms-transition);
+  flex-shrink: 0;
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
-  .hms-system-header {
-    padding: 1.5rem 1rem;
-  }
-
+@media (max-width: 1024px) {
   .hms-header-content {
-    gap: 0.75rem;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
   }
-
+  
   .hms-nav-buttons {
-    gap: 0.5rem;
-    flex-wrap: wrap;
+    width: 100%;
+    justify-content: flex-start;
   }
+}
 
-  .hms-nav-button {
-    padding: 0.6rem 1rem;
-    font-size: 0.95rem;
+@media (max-width: 768px) {
+  .hms-page-content {
+    padding: 0 12px 12px 12px;
   }
-
+  
+  .hms-system-header {
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
   .hms-header-title {
-    font-size: 2rem;
+    font-size: 1.25rem;
   }
-
+  
   .hms-header-subtitle {
-    font-size: 1.1rem;
+    font-size: 0.8rem;
   }
-
+  
+  .hms-nav-buttons {
+    flex-direction: row;
+    width: 100%;
+    gap: 0.5rem;
+  }
+  
+  .hms-nav-button {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+  }
+  
   .hms-notification {
-    top: 15px;
-    right: 15px;
-    width: 95%;
-  }
-
-  .hms-content {
-    padding: 1.5rem;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-width: none;
   }
 }
 
 @media (max-width: 480px) {
   .hms-header-title {
-    font-size: 1.75rem;
-  }
-
-  .hms-header-subtitle {
-    font-size: 1rem;
-  }
-
-  .hms-nav-button {
-    padding: 0.5rem 0.8rem;
-    font-size: 0.9rem;
-  }
-
-  .button-icon {
     font-size: 1.1rem;
   }
-
-  .hms-notification-message {
-    font-size: 0.85rem;
+  
+  .hms-header-subtitle {
+    font-size: 0.75rem;
   }
-
-  .hms-content {
-    padding: 1rem;
-    border-radius: 8px;
-  }
-
-  .hms-nav-buttons {
-    gap: 0.5rem;
+  
+  .hms-user-role-badge {
+    font-size: 0.7rem;
   }
 }
-.hms-user-role-badge {
-  font-size: 0.8rem;
-  color: #666;
-  margin-top: 5px;
-}
 
-.hms-role-admin {
-  color: #ff6b6b;
-  font-weight: 600;
-}
-
-.hms-role-employee {
-  color: #4ecdc4;
-  font-weight: 600;
-}
-
-.hms-disabled {
-  opacity: 0.5;
-  cursor: not-allowed !important;
-}
-
-.hms-disabled:hover {
-  background-color: transparent !important;
+@media print {
+  .hms-nav-buttons,
+  .hms-notification {
+    display: none;
+  }
+  
+  .hms-page-content {
+    background: white;
+    padding: 0;
+  }
+  
+  .hms-system-header {
+    box-shadow: none;
+    border: none;
+  }
 }

@@ -342,9 +342,12 @@ const fetchHotels = async () => {
           <div className="hms-header-content-title">
             <h1 className="hms-header-title">Hotel Management System</h1>
             <p className="hms-header-subtitle">Manage hotel information, contacts, and facilities</p>
-            <div className="hms-user-role-badge">
-              Logged in as: <span className={`role-${userRole.toLowerCase()}`}>{userRole}</span>
-            </div>
+              <div className="sms-user-role-badge">
+                Logged in as:{" "}
+                <span className={`sms-role-${userRole.toLowerCase()}`}>
+                  {userRole}
+                </span>
+              </div>
           </div>
           <div className="hms-nav-buttons">
             <button 

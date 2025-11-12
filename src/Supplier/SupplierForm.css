@@ -1,0 +1,320 @@
+/* Supplier Registration Form - 4 Column Layout */
+.supplier-registration-form {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.supplier-registration-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: #1f2937;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.75rem;
+}
+
+.supplier-registration-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.registration-field-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.registration-field-group.registration-field-fullwidth {
+  grid-column: 1 / -1;
+}
+
+.registration-field-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #374151;
+  line-height: 1.25;
+}
+
+.registration-field-label.required::after {
+  content: " *";
+  color: #dc2626;
+}
+
+.registration-field-input {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease-in-out;
+  background-color: #fff;
+}
+
+.registration-field-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background-color: #fafafa;
+}
+
+.registration-field-input:hover {
+  border-color: #9ca3af;
+}
+
+.registration-field-input::placeholder {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.registration-textarea {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease-in-out;
+  background-color: #fff;
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+}
+
+.registration-field-error {
+  font-size: 0.75rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+  display: block;
+  line-height: 1.25;
+}
+
+/* Password Input with Icon */
+.registration-input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.registration-input-with-icon .registration-field-input {
+  padding-right: 3rem;
+}
+
+.registration-toggle-icon {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s;
+}
+
+.registration-toggle-icon:hover {
+  background-color: #f3f4f6;
+}
+
+/* Password Strength */
+.registration-password-strength {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.registration-password-strength-bar {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.registration-password-strength-fill {
+  height: 100%;
+  transition: width 160ms ease, background-color 160ms ease;
+}
+
+.registration-password-strength-label {
+  font-size: 0.75rem;
+  color: #374151;
+  font-weight: 500;
+  text-align: center;
+}
+
+.registration-password-tip {
+  color: #6b7280;
+  font-size: 0.7rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
+/* Checkbox Styles */
+.registration-checkbox-group {
+  margin-top: 0.5rem;
+}
+
+.registration-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.registration-checkbox {
+  width: 1rem;
+  height: 1rem;
+}
+
+.registration-checkbox-text {
+  color: #374151;
+}
+
+/* Form Actions */
+.registration-form-actions {
+  grid-column: 1 / -1;
+  margin-top: 2rem;
+  text-align: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.registration-submit-button {
+  padding: 0.875rem 3rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  min-width: 200px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.registration-submit-button:hover:not(:disabled) {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.registration-submit-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.registration-submit-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.registration-loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: registrationSpin 1s linear infinite;
+}
+
+@keyframes registrationSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Location Selector Styling */
+.registration-location-wrapper {
+  width: 100%;
+}
+
+.registration-location-wrapper :global(.location-selector) {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .supplier-registration-grid {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .supplier-registration-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .supplier-registration-form {
+    padding: 1rem;
+    max-width: 100%;
+  }
+  
+  .supplier-registration-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .supplier-registration-title {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .registration-submit-button {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .supplier-registration-form {
+    padding: 0.75rem;
+  }
+  
+  .supplier-registration-title {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+  }
+  
+  .registration-field-input {
+    padding: 0.625rem 0.75rem;
+  }
+  
+  .registration-submit-button {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Animation for form interactions */
+.registration-field-group {
+  animation: registrationFadeInUp 0.3s ease-out;
+}
+
+@keyframes registrationFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

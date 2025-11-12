@@ -6,18 +6,44 @@ const SupplierList = ({
   loading, 
   openViewModal, 
   openEditModal, 
-
   isAdmin,
   refreshSuppliers 
 }) => {
   const [suppliers, setSuppliers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [rowHover, setRowHover] = useState(null);
+  const [searchInput, setSearchInput] = useState('');
+  const [quickActionsMenu, setQuickActionsMenu] = useState(null);
   const tableRef = useRef(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     fetchSuppliers();
   }, []);
+
+  // Enhanced search with debouncing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(searchInput);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+const activeMenuRef = useRef(null);
+
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (activeMenuRef.current && !activeMenuRef.current.contains(event.target)) {
+      setQuickActionsMenu(null);
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, []);
+
 
   const fetchSuppliers = async () => {
     try {
@@ -28,24 +54,22 @@ const SupplierList = ({
       console.error("Failed to fetch suppliers:", err);
     }
   };
-   const toggleSupplierStatusa = async (id) => {
-  console.log("Toggling supplier status, ID:", id);
-  try {
-    const response = await supplierApi.toggleSupplierStatus(id);
-    console.log("Backend response:", response);
 
-    // Update isActive based on backend response message    
-    const newStatus = response.message.includes("inactive") ? false : true;
+  const toggleSupplierStatus = async (id) => {
+    console.log("Toggling supplier status, ID:", id);
+    try {
+      const response = await supplierApi.toggleSupplierStatus(id);
+      console.log("Backend response:", response);
 
-    setSuppliers(prev =>
-      prev.map(s => s.id === id ? { ...s, isActive: newStatus } : s)
-    );
-  } catch (err) {
-    console.error("Failed to toggle status:", err);
-  }
-};
+      const newStatus = response.message.includes("inactive") ? false : true;
 
-
+      setSuppliers(prev =>
+        prev.map(s => s.id === id ? { ...s, isActive: newStatus } : s)
+      );
+    } catch (err) {
+      console.error("Failed to toggle status:", err);
+    }
+  };
 
   // Filter suppliers based on search term and status
   const filteredSuppliers = suppliers.filter(supplier => {
@@ -55,12 +79,69 @@ const SupplierList = ({
       supplier.countryName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       supplier.cityName?.toLowerCase().includes(searchTerm.toLowerCase());
     
-  const matchesStatus = statusFilter === 'all' 
+    const matchesStatus = statusFilter === 'all' 
       ? true 
       : (statusFilter === 'active' ? supplier.isActive : !supplier.isActive);
     
     return matchesSearch && matchesStatus;
   });
+
+  // Enhanced sorting functionality
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Apply sorting to filtered suppliers
+  const sortedAndFilteredSuppliers = React.useMemo(() => {
+    if (!sortConfig.key) return filteredSuppliers;
+
+    return [...filteredSuppliers].sort((a, b) => {
+      const aValue = a[sortConfig.key] || '';
+      const bValue = b[sortConfig.key] || '';
+      
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [filteredSuppliers, sortConfig]);
+
+  // Quick actions menu handler
+  const handleQuickActionsClick = (supplierId, event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Toggle menu - close if already open for this supplier, else open
+    if (quickActionsMenu === supplierId) {
+      setQuickActionsMenu(null);
+    } else {
+      setQuickActionsMenu(supplierId);
+    }
+  };
+
+  // Handle menu item clicks
+  const handleMenuItemClick = (action, supplier) => {
+    setQuickActionsMenu(null); // Close menu first
+    
+    if (action === 'view') {
+      openViewModal(supplier);
+    } else if (action === 'edit') {
+      openEditModal(supplier);
+    }
+  };
+
+  // Get sort indicator
+  const getSortIndicator = (key) => {
+    if (sortConfig.key !== key) return null;
+    return sortConfig.direction === 'asc' ? ' ↑' : ' ↓';
+  };
 
   // Print functionality
   const handlePrint = () => {
@@ -205,11 +286,9 @@ const SupplierList = ({
     printWindow.document.write(printContent);
     printWindow.document.close();
     
-    // Wait for content to load before printing
     printWindow.onload = () => {
       printWindow.focus();
       printWindow.print();
-      // printWindow.close(); // Uncomment if you want to auto-close after print
     };
   };
 
@@ -258,11 +337,13 @@ const SupplierList = ({
 
   return (
     <div className="supplier-list-wrapper">
-      {/* Header Section */}
+      {/* Minimal Header */}
       <div className="supplier-list-header">
         <div className="supplier-title-section">
-          <h2>Registered Suppliers</h2>
-          <p>Manage your supplier relationships efficiently</p>
+               
+
+          <h2>Suppliers   <span className="sms-supplier-count">{suppliers.length} suppliers</span></h2>  
+          
         </div>
         <div className="supplier-action-buttons">
           <button 
@@ -277,7 +358,7 @@ const SupplierList = ({
             onClick={handleExportCSV}
             title="Export to CSV"
           >
-            <fml-icon name="document-attach-outline"></fml-icon> Export CSV
+            <fml-icon name="document-attach-outline"></fml-icon> Export
           </button>
           <button 
             className="supplier-action-btn print-btn"
@@ -295,9 +376,9 @@ const SupplierList = ({
           <input
             type="text"
             className="supplier-search-input"
-            placeholder="Search suppliers by name, email, country, or city..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search suppliers..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
         <select 
@@ -311,7 +392,7 @@ const SupplierList = ({
         </select>
       </div>
 
-      {/* Suppliers Table */}
+      {/* Suppliers List */}
       {filteredSuppliers.length === 0 ? (
         <div className="supplier-empty-state">
           <p>No suppliers found</p>
@@ -327,20 +408,49 @@ const SupplierList = ({
             <table className="supplier-data-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Category</th>
+                  <th 
+                    onClick={() => handleSort('supplierName')} 
+                    className="sortable-header"
+                  >
+                    Name{getSortIndicator('supplierName')}
+                  </th>
+                  <th 
+                    onClick={() => handleSort('emailId')} 
+                    className="sortable-header"
+                  >
+                    Email{getSortIndicator('emailId')}
+                  </th>
+                  <th 
+                    onClick={() => handleSort('supplierCategoryName')} 
+                    className="sortable-header"
+                  >
+                    Category{getSortIndicator('supplierCategoryName')}
+                  </th>
                   <th>SubCategory</th>
-                  <th>Country</th>
+                  <th 
+                    onClick={() => handleSort('countryName')} 
+                    className="sortable-header"
+                  >
+                    Country{getSortIndicator('countryName')}
+                  </th>
                   <th>City</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredSuppliers.map((s) => (
-                  <tr key={s.id} className={!s.isActive ? 'supplier-inactive' : ''}>
-                    <td>{s.supplierName || "N/A"}</td>
+                {sortedAndFilteredSuppliers.map((s) => (
+                  <tr 
+                    key={s.id} 
+                    className={`${!s.isActive ? 'supplier-inactive' : ''} ${rowHover === s.id ? 'row-hover' : ''}`}
+                    onMouseEnter={() => setRowHover(s.id)}
+                    onMouseLeave={() => setRowHover(null)}
+                  >
+                    <td>
+                      <div className="supplier-name-cell">
+                        <div className="supplier-name">{s.supplierName || "N/A"}</div>
+                      </div>
+                    </td>
                     <td>{s.emailId || "N/A"}</td>
                     <td>{s.supplierCategoryName || "N/A"}</td>
                     <td>{s.supplierSubCategoryName || "N/A"}</td>
@@ -352,37 +462,55 @@ const SupplierList = ({
                       </span>
                     </td>
                     <td>
-                      <div className="supplier-action-cells">
-                        {/* View Icon */}
-                        <button
-                          className="supplier-icon-btn supplier-view-btn"
-                          onClick={() => openViewModal(s)}
-                          title="View Supplier"
-                        >
-                          <fml-icon name="eye-outline"></fml-icon>
-                        </button>
+                      <div className="supplier-action-cells" ref={menuRef}>
+                        {/* Status Toggle Button */}
+                        {isAdmin && (
+                          <button
+                            className={`supplier-icon-btn status-toggle-btn ${s.isActive ? 'deactivate-btn' : 'activate-btn'}`}
+                            onClick={() => toggleSupplierStatus(s.id)}
+                            title={s.isActive ? "Deactivate Supplier" : "Activate Supplier"}
+                          >
+                            {s.isActive ? (
+                              <fml-icon name="pause-circle-outline"></fml-icon>
+                            ) : (
+                              <fml-icon name="play-circle-outline"></fml-icon>
+                            )}
+                          </button>
+                        )}
 
-                        {/* Edit Icon */}
-                        <button
-                          className={`supplier-icon-btn ${isAdmin ? 'supplier-edit-btn' : 'supplier-locked-btn'}`}
-                          onClick={() => isAdmin && openEditModal(s)}
-                          title={isAdmin ? "Edit Supplier" : "No permission to edit"}
-                        >
-                          <fml-icon name="create-outline"></fml-icon>
-                        </button>
+                        {/* Three-dot menu */}
+                          <div
+                            className="quick-actions-wrapper"
+                            ref={quickActionsMenu === s.id ? activeMenuRef : null}
+                            >
+                            <button
+                              className="supplier-icon-btn supplier-more-btn"
+                              onClick={(e) => handleQuickActionsClick(s.id, e)}
+                              title="More actions"
+                            >
+                              <fml-icon name="ellipsis-vertical-outline"></fml-icon>
+                            </button>
 
-                        {/* Toggle Status Icon */}
-                        <button
-                          className={`supplier-icon-btn supplier-toggle-btn ${s.isActive ? 'deactivate-btn' : 'activate-btn'}`}
-                          onClick={() => isAdmin && toggleSupplierStatusa(s.id )}
-                          title={isAdmin ? (s.isActive ? "Deactivate Supplier" : "Activate Supplier") : "No permission"}
-                        >
-                          {s.isActive ? (
-                            <fml-icon name="pause-circle-outline"></fml-icon>
-                          ) : (
-                            <fml-icon name="play-circle-outline"></fml-icon>
-                          )}
-                        </button>
+                            {quickActionsMenu === s.id && (
+                              <div className="quick-actions-menu">
+                                <button
+                                  className="quick-action-item"
+                                  onClick={() => handleMenuItemClick('view', s)}
+                                >
+                                  <fml-icon name="eye-outline"></fml-icon> View Details
+                                </button>
+                                {isAdmin && (
+                                  <button
+                                    className="quick-action-item"
+                                    onClick={() => handleMenuItemClick('edit', s)}
+                                  >
+                                    <fml-icon name="create-outline"></fml-icon> Edit Supplier
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                            </div>
+
                       </div>
                     </td>
                   </tr>
@@ -391,16 +519,10 @@ const SupplierList = ({
             </table>
           </div>
 
-          {/* Pagination */}
+          {/* Simple Pagination */}
           <div className="supplier-pagination">
             <div className="supplier-pagination-info">
               Showing {filteredSuppliers.length} of {suppliers.length} suppliers
-            </div>
-            <div className="supplier-pagination-controls">
-              <button className="supplier-page-btn" disabled>Previous</button>
-              <button className="supplier-page-btn active-page">1</button>
-              <span className="supplier-page-dots">...</span>
-              <button className="supplier-page-btn">Next</button>
             </div>
           </div>
         </>

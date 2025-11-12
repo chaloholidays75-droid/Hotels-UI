@@ -1,0 +1,325 @@
+/* HotelManagementSystem.css */
+
+/* Import Modern Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* CSS Variables for Consistent Theming */
+:root {
+  --hms-primary: #7269ef;
+  --hms-primary-dark: #6658dd;
+  --hms-success: #22c55e;
+  --hms-error: #ef4444;
+  --hms-warning: #f59e0b;
+  --hms-info: #3b82f6;
+  
+  --hms-bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
+  --hms-card-bg: #ffffff;
+  --hms-text-primary: #1f2937;
+  --hms-text-secondary: #6b7280;
+  --hms-border: #e5e7eb;
+  --hms-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --hms-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  --hms-border-radius: 12px;
+  --hms-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Root Container */
+.hms-page-content {
+  background: var(--hms-bg-gradient);
+  min-height: 100vh;
+  padding: 24px;
+  font-family: 'Inter', 'Poppins', sans-serif;
+  color: var(--hms-text-primary);
+}
+
+/* Notification System */
+.hms-notification {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 1000;
+  max-width: 400px;
+  width: 90%;
+  border-radius: var(--hms-border-radius);
+  box-shadow: var(--hms-shadow-lg);
+  background: var(--hms-card-bg);
+  transform: translateX(100%);
+  animation: hms-slideInRight 0.3s ease-out forwards;
+}
+
+@keyframes hms-slideInRight {
+  to {
+    transform: translateX(0);
+  }
+}
+
+.hms-notification.success {
+  border-left: 4px solid var(--hms-success);
+  background: linear-gradient(90deg, #f0fdf4 0%, #dcfce7 100%);
+}
+
+.hms-notification.error {
+  border-left: 4px solid var(--hms-error);
+  background: linear-gradient(90deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.hms-notification.info {
+  border-left: 4px solid var(--hms-info);
+  background: linear-gradient(90deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.hms-notification-content {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  gap: 12px;
+}
+
+.hms-notification-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.hms-notification.success .hms-notification-icon {
+  color: var(--hms-success);
+}
+
+.hms-notification.error .hms-notification-icon {
+  color: var(--hms-error);
+}
+
+.hms-notification-message {
+  flex-grow: 1;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.hms-notification-close {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  color: var(--hms-text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: var(--hms-transition);
+  flex-shrink: 0;
+}
+
+.hms-notification-close:hover {
+  color: var(--hms-text-primary);
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* Header Section */
+.hms-system-header {
+  background: var(--hms-card-bg);
+  border-radius: var(--hms-border-radius);
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--hms-shadow);
+  border: 1px solid var(--hms-border);
+}
+
+.hms-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.hms-header-content-title {
+  flex: 1;
+}
+
+.hms-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: var(--hms-text-primary);
+  letter-spacing: -0.025em;
+}
+
+.hms-title-icon {
+  color: var(--hms-primary);
+  font-size: 2rem;
+}
+
+.hms-header-subtitle {
+  font-size: 1.1rem;
+  color: var(--hms-text-secondary);
+  margin: 0 0 12px 0;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.hms-user-role-badge {
+  font-size: 0.875rem;
+  color: var(--hms-text-secondary);
+}
+
+.hms-role-admin {
+  color: var(--hms-primary);
+  font-weight: 600;
+  background: rgba(114, 105, 239, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.hms-role-employee {
+  color: var(--hms-success);
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+/* Navigation Buttons */
+.hms-nav-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.hms-nav-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--hms-text-primary);
+  background: var(--hms-card-bg);
+  border: 1px solid var(--hms-border);
+  border-radius: var(--hms-border-radius);
+  cursor: pointer;
+  transition: var(--hms-transition);
+  box-shadow: var(--hms-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.hms-nav-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.hms-nav-button:hover::before {
+  left: 100%;
+}
+
+.hms-nav-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--hms-shadow-lg);
+  border-color: var(--hms-primary);
+}
+
+.hms-nav-button.hms-active {
+  background: var(--hms-primary);
+  color: white;
+  border-color: var(--hms-primary);
+}
+
+.hms-nav-button.hms-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.hms-nav-button.hms-disabled:hover {
+  background: var(--hms-card-bg);
+  border-color: var(--hms-border);
+  box-shadow: var(--hms-shadow);
+}
+
+/* Main Content Area */
+.hms-content {
+  background: var(--hms-card-bg);
+  border-radius: var(--hms-border-radius);
+  box-shadow: var(--hms-shadow);
+  border: 1px solid var(--hms-border);
+  overflow: hidden;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .hms-header-content {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .hms-nav-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .hms-page-content {
+    padding: 16px;
+  }
+  
+  .hms-system-header {
+    padding: 1.5rem;
+  }
+  
+  .hms-header-title {
+    font-size: 1.75rem;
+  }
+  
+  .hms-nav-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .hms-nav-button {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .hms-notification {
+    right: 16px;
+    left: 16px;
+    width: auto;
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .hms-header-title {
+    font-size: 1.5rem;
+  }
+  
+  .hms-header-subtitle {
+    font-size: 1rem;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .hms-nav-buttons,
+  .hms-notification {
+    display: none;
+  }
+  
+  .hms-page-content {
+    background: white;
+    padding: 0;
+  }
+  
+  .hms-system-header {
+    box-shadow: none;
+    border: none;
+  }
+}

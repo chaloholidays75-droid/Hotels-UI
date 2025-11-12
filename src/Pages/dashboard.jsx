@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import {
   fetchDashboardData,
   getUpcomingDeadlines,
-} from "../api/dashboardApi"; // ✅ imports
+} from "../api/dashboardApi";
 import DashboardCard from "./DashboardCard";
 import DashboardCharts from "./DashboardCharts";
 import RecentBookings from "./RecentBookings";
@@ -70,39 +70,38 @@ const Dashboard = () => {
   if (loading) return <LoadingSkeleton />;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+    <div className="ds-page-content">
       <motion.header
-        className="bg-white shadow-sm border-b"
+        className="ds-system-header"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="ds-header-container">
+          <div className="ds-header-content">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="ds-header-title">
                 Analytics Dashboard
               </h1>
-              <p className="text-sm text-gray-500">
+              <p className="ds-header-subtitle">
                 ChaloHoliday Online Performance
               </p>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="ds-header-controls">
               <select
                 value={dateRange}
                 onChange={(e) => setDateRange(e.target.value)}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="ds-date-select"
               >
                 <option>This Month</option>
                 <option>Last 6 Months</option>
                 <option>Custom</option>
               </select>
 
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-semibold">CH</span>
+              <div className="ds-user-avatar">
+                <div className="ds-avatar-icon">
+                  <span className="ds-avatar-text">CH</span>
                 </div>
               </div>
             </div>
@@ -110,11 +109,9 @@ const Dashboard = () => {
         </div>
       </motion.header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* KPI Cards */}
+      <main className="ds-main-content">
         <motion.section
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="ds-kpi-grid"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -157,14 +154,13 @@ const Dashboard = () => {
           )}
         </motion.section>
 
-        {/* Charts Section */}
         <motion.section
-          className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8"
+          className="ds-charts-section"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-          <motion.div className="lg:col-span-2" variants={itemVariants}>
+          <motion.div className="ds-charts-main" variants={itemVariants}>
             <DashboardCharts
               financialTrend={dashboardData.financialTrend}
               bookingsTrend={dashboardData.bookingsTrend}
@@ -174,16 +170,15 @@ const Dashboard = () => {
             />
           </motion.div>
 
-          {/* ✅ Upcoming Deadlines */}
-          <motion.div className="space-y-6" variants={itemVariants}>
-            <div className="bg-white rounded-card shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          <motion.div className="ds-sidebar-section" variants={itemVariants}>
+            <div className="ds-sidebar-card">
+              <h3 className="ds-sidebar-title">
                 Upcoming Deadlines (Next 3 Days)
               </h3>
 
               {dashboardData.upcomingDeadlines &&
               dashboardData.upcomingDeadlines.length > 0 ? (
-                <ul className="divide-y divide-gray-200 max-h-64 overflow-y-auto">
+                <ul className="ds-deadlines-list">
                   {dashboardData.upcomingDeadlines
                     .filter(
                       (b) =>
@@ -192,19 +187,19 @@ const Dashboard = () => {
                         !b.status.toLowerCase().includes("reconfirmed")
                     )
                     .map((b, i) => (
-                      <li key={i} className="py-3">
-                        <div className="flex justify-between items-center">
+                      <li key={i} className="ds-deadline-item">
+                        <div className="ds-deadline-content">
                           <div>
-                            <p className="text-sm font-medium text-gray-800">
+                            <p className="ds-deadline-ticket">
                               {b.ticketNumber || `Booking #${b.id}`}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="ds-deadline-info">
                               {b.hotelName || "Unknown Hotel"} •{" "}
                               <span
-                                className={`${
+                                className={`ds-deadline-status ${
                                   b.status?.toLowerCase().includes("cancel")
-                                    ? "text-red-500"
-                                    : "text-green-600"
+                                    ? "ds-status-cancelled"
+                                    : "ds-status-confirmed"
                                 }`}
                               >
                                 {b.status}
@@ -212,7 +207,6 @@ const Dashboard = () => {
                             </p>
                           </div>
 
-                          {/* 🟡 Deadline Badge */}
                           {(() => {
                             const today = new Date();
                             const deadline = new Date(b.deadline);
@@ -220,13 +214,12 @@ const Dashboard = () => {
                               (deadline - today) / (1000 * 60 * 60 * 24)
                             );
 
-                            const isSoon =
-                              diffDays <= 1 && diffDays >= 0; // today/tomorrow
+                            const isSoon = diffDays <= 1 && diffDays >= 0;
                             const isExpired = diffDays < 0;
 
                             const badgeColor = isSoon
-                              ? "bg-red-50 text-red-600 border border-red-100"
-                              : "bg-gray-100 text-gray-700";
+                              ? "ds-deadline-soon"
+                              : "ds-deadline-normal";
 
                             const label = isExpired
                               ? "Expired"
@@ -241,9 +234,9 @@ const Dashboard = () => {
 
                             return (
                               <span
-                                className={`text-xs font-semibold px-2 py-1 rounded ${badgeColor} ${
+                                className={`ds-deadline-badge ${badgeColor} ${
                                   isExpired
-                                    ? "text-gray-400 italic line-through"
+                                    ? "ds-deadline-expired"
                                     : ""
                                 }`}
                               >
@@ -256,23 +249,21 @@ const Dashboard = () => {
                     ))}
                 </ul>
               ) : (
-                <p className="text-gray-400 text-sm">No upcoming deadlines</p>
+                <p className="ds-no-data">No upcoming deadlines</p>
               )}
             </div>
 
-            {/* Top Agencies */}
-            <div className="bg-white rounded-card shadow-sm p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="ds-sidebar-card">
+              <h3 className="ds-sidebar-title">
                 Top Agencies
               </h3>
-              <div className="h-64">{/* Bar chart placeholder */}</div>
+              <div className="ds-chart-placeholder"></div>
             </div>
           </motion.div>
         </motion.section>
 
-        {/* Bottom Section */}
         <motion.section
-          className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+          className="ds-bottom-section"
           variants={containerVariants}
           initial="hidden"
           animate="visible"

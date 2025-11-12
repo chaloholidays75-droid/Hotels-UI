@@ -72,11 +72,11 @@ function Login({ setUserName, setIsAuthenticated }) {
     }
 
     try {
-      const data = await login(
-        formData.email,
-        formData.password,
-        formData.rememberMe
-      );
+    const data = await login({
+      email: formData.email,
+      password: formData.password,
+      rememberMe: formData.rememberMe
+    });
       setUserName(data.userFullName);
       setIsAuthenticated(true);
 

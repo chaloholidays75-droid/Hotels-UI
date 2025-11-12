@@ -13,9 +13,32 @@ const SupplierManagement = () => {
 
   const [activeTab, setActiveTab] = useState("view");
   const [suppliers, setSuppliers] = useState([]);
-  const [viewModal, setViewModal] = useState({ isOpen: false, supplier: null });
-  const [editModal, setEditModal] = useState({ isOpen: false, supplier: null });
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [formData, setFormData] = useState({
+    supplierName: "",
+    emailId: "",
+    phoneNo: "",
+    businessCurrency: "",
+    supplierCategoryId: "",
+    supplierSubCategoryId: "",
+    countryId: "",
+    cityId: "",
+    firstName: "",
+    lastName: "",
+    userEmailId: "",
+    userName: "",
+    password: "",
+    confirmPassword: "",
+    enablePaymentDetails: false,
+    acceptTerms: false,
+    area: "",
+    postCode: "",
+    website: "",
+    address: "",
+    specialRemarks: "",
+    mobileNo: ""
+  });
 
   const handleTabChange = (tab) => setActiveTab(tab);
 
@@ -24,12 +47,10 @@ const SupplierManagement = () => {
   }, [activeTab]);
 
   const fetchSuppliers = async () => {
-    setLoading(true);
     try {
       const data = await supplierApi.getSuppliers();
 
-      // Map API fields to frontend expected fields
-      const mappedSuppliers = data.map(s => ({
+      const mappedSuppliers = data.map((s) => ({
         id: s.id,
         name: s.supplierName || "N/A",
         email: s.contactEmail || "N/A",
@@ -38,17 +59,85 @@ const SupplierManagement = () => {
         supplierSubCategory: { name: s.supplierSubCategoryName || "N/A" },
         isActive: s.isActive,
         createdAt: s.createdAt,
-        updatedAt: s.updatedAt,
+        updatedAt: s.updatedAt
       }));
 
       setSuppliers(mappedSuppliers);
     } catch (error) {
       console.error("Error fetching suppliers:", error);
       alert("Failed to fetch suppliers");
-    } finally {
-      setLoading(false);
     }
   };
+
+  // ✅ Handles both text and checkbox inputs
+  const handleChange = (e) => {
+    const { name, type, value, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
+  };
+
+  // ✅ Submit handler — creates new supplier
+  const handleSubmit = async () => {
+    if (!formData.acceptTerms) {
+      alert("You must accept the Terms & Conditions before submitting.");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const payload = { ...formData };
+
+      // Optional cleanup or formatting
+      if (payload.phoneNo?.startsWith("+")) {
+        payload.phoneNo = payload.phoneNo.replace(/\s+/g, "");
+      }
+
+      console.log("Submitting Supplier:", payload);
+      const response = await supplierApi.createSupplier(payload);
+
+      if (response?.id) {
+        alert("✅ Supplier created successfully!");
+        setFormData({
+          supplierName: "",
+          emailId: "",
+          phoneNo: "",
+          businessCurrency: "",
+          supplierCategoryId: "",
+          supplierSubCategoryId: "",
+          countryId: "",
+          cityId: "",
+          firstName: "",
+          lastName: "",
+          userEmailId: "",
+          userName: "",
+          password: "",
+          confirmPassword: "",
+          enablePaymentDetails: false,
+          acceptTerms: false,
+          area: "",
+          postCode: "",
+          website: "",
+          address: "",
+          specialRemarks: "",
+          mobileNo: ""
+        });
+        fetchSuppliers();
+        setActiveTab("view");
+      } else {
+        alert("Failed to create supplier. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error creating supplier:", error);
+      alert("An error occurred while saving supplier.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const [viewModal, setViewModal] = useState({ isOpen: false, supplier: null });
+  const [editModal, setEditModal] = useState({ isOpen: false, supplier: null });
 
   const openViewModal = (supplier) => setViewModal({ isOpen: true, supplier });
   const closeViewModal = () => setViewModal({ isOpen: false, supplier: null });
@@ -82,9 +171,10 @@ const SupplierManagement = () => {
     } catch (err) {
       console.error(err);
       alert("Failed to update supplier status");
-      // Rollback
       setSuppliers((prev) =>
-        prev.map((s) => (s.id === id ? { ...s, isActive: supplier.isActive } : s))
+        prev.map((s) =>
+          s.id === id ? { ...s, isActive: supplier.isActive } : s
+        )
       );
     }
   };
@@ -92,49 +182,59 @@ const SupplierManagement = () => {
   const isAdmin = userRole.toLowerCase() === "admin";
 
   return (
-    <div className="supplier-management-container">
-      {/* Combined header and tabs in one line */}
-      <div className="sm-header-tabs-container">
-        <div className="header-section">
-          <div className="title-section">
-            <h1>Supplier Management</h1>
-            <p>Manage suppliers and their categories/subcategories</p>
+    <div className="sms-page-content">
+      {/* Header */}
+      <header className="sms-system-header">
+        <div className="sms-header-content">
+          <div className="sms-header-main">
+            <div className="sms-header-text">
+              <h1 className="sms-header-title">Supplier Management</h1>
+              <p className="sms-header-subtitle">
+                Manage suppliers and their categories/subcategories
+              </p>
+              <div className="sms-user-role-badge">
+                Logged in as:{" "}
+                <span className={`sms-role-${userRole.toLowerCase()}`}>
+                  {userRole}
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="user-role-badge">
-            Logged in as: <span className={`role-${userRole.toLowerCase()}`}>{userRole}</span>
-          </div>
-        </div>
-        
-        <div className="tabs-section">
-          <button
-            className={activeTab === "add" ? "tab active" : "tab"}
-            onClick={() => handleTabChange("add")}
-          >
-            Add Supplier
-          </button>
-          <button
-            className={activeTab === "view" ? "tab active" : "tab"}
-            onClick={() => handleTabChange("view")}
-          >
-            View Suppliers ({suppliers.length})
-          </button>
-        </div>
-      </div>
 
-      <div className="tab-content">
+          <div className="sms-nav-buttons">
+            <button
+              className={`sms-nav-button ${
+                activeTab === "add" ? "sms-active" : ""
+              }`}
+              onClick={() => handleTabChange("add")}
+            >
+              Add Supplier
+            </button>
+            <button
+              className={`sms-nav-button ${
+                activeTab === "view" ? "sms-active" : ""
+              }`}
+              onClick={() => handleTabChange("view")}
+            >
+              View Suppliers
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Content */}
+      <main className="sms-content">
         {activeTab === "add" ? (
           <SupplierForm
-            supplier={null}
-            onSaved={() => {
-              fetchSuppliers();
-              setActiveTab("view");
-            }}
-            onCancel={() => setActiveTab("view")}
+            formData={formData}
+            setFormData={setFormData}
+            handleChange={handleChange}
+            onSubmit={handleSubmit}
+            saving={saving}
           />
         ) : (
           <SupplierList
             suppliers={suppliers}
-            loading={loading}
             openViewModal={openViewModal}
             openEditModal={openEditModal}
             toggleSupplierStatus={toggleSupplierStatus}
@@ -142,19 +242,21 @@ const SupplierManagement = () => {
             refreshSuppliers={fetchSuppliers}
           />
         )}
-      </div>
+      </main>
 
+      {/* Modals */}
       {viewModal.isOpen && (
-        <SupplierViewModal supplier={viewModal.supplier} onClose={closeViewModal} />
+        <SupplierViewModal
+          supplier={viewModal.supplier}
+          onClose={closeViewModal}
+        />
       )}
-      
+
       {editModal.isOpen && (
         <SupplierEditModal
           editModal={editModal}
-          setEditModal={setEditModal}  
+          setEditModal={setEditModal}
           closeEditModal={closeEditModal}
-          setSuppliers={setSuppliers}
-          suppliers={suppliers}
           refreshSuppliers={fetchSuppliers}
         />
       )}

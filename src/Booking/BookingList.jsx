@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import "./BookingList.css";
-import BookingReminderBell from "./BookingReminderBell"; // ✅ Bell notification
+import BookingReminderBell from "./BookingReminderBell"; 
 import bookingApi from "../api/bookingApi";
 
 const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin, refreshBookings }) => {
@@ -10,21 +10,39 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
   const [agencyFilter, setAgencyFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupData, setPopupData] = useState({
+    bookingId: null,
+    status: "",
+    agentVoucher: "",
+  
+    cancelReason: ""
+  });
 
-  // Get unique agencies for filter
+  // ✅ NEW: Accordion State
+  const [expandedBookingId, setExpandedBookingId] = useState(null);
+  const toggleAccordion = (id) => {
+    setExpandedBookingId((prev) => (prev === id ? null : id));
+  };
+
   const agencies = useMemo(() => {
     const uniqueAgencies = [...new Set(bookings.map((booking) => booking.agencyName))];
     return uniqueAgencies.sort();
   }, [bookings]);
 
-  // Filter and search
   const filteredBookings = useMemo(() => {
     return bookings.filter((booking) => {
+      const term = searchTerm.toLowerCase();
+      const ticket = booking.ticketNumber?.toLowerCase() || "";
+      const agency = booking.agencyName?.toLowerCase() || "";
+      const supplier = booking.supplierName?.toLowerCase() || "";
+      const hotel = booking.hotelName?.toLowerCase() || "";
+
       const matchesSearch =
-        booking.ticketNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.agencyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.supplierName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.hotelName.toLowerCase().includes(searchTerm.toLowerCase());
+        ticket.includes(term) ||
+        agency.includes(term) ||
+        supplier.includes(term) ||
+        hotel.includes(term);
 
       const matchesStatus = statusFilter === "all" || booking.status === statusFilter;
       const matchesAgency = agencyFilter === "all" || booking.agencyName === agencyFilter;
@@ -33,7 +51,6 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
     });
   }, [bookings, searchTerm, statusFilter, agencyFilter]);
 
-  // Pagination
   const paginatedBookings = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
@@ -49,7 +66,6 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
   }, [searchTerm, statusFilter, agencyFilter]);
 
   const handlePageChange = (page) => setCurrentPage(page);
-
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
     setCurrentPage(1);
@@ -60,6 +76,42 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
     setStatusFilter("all");
     setAgencyFilter("all");
     setCurrentPage(1);
+  };
+
+  const handleStatusChange = (bookingId, newStatus) => {
+    if (newStatus === "Reconfirmed(Guaranteed)" || newStatus.includes("Cancelled")) {
+      setPopupData({
+        bookingId,
+        status: newStatus,
+        agentVoucher: "",
+        
+        cancelReason: ""
+      });
+      setShowPopup(true);
+    } else {
+      toggleBookingStatus(bookingId, newStatus);
+    }
+  };
+
+  const handlePopupSubmit = async () => {
+    try {
+      setUpdating(popupData.bookingId);
+
+      const payload = {
+        status: popupData.status,
+        agentVoucher: popupData.agentVoucher,
+   
+        cancelReason: popupData.cancelReason
+      };
+
+      await bookingApi.updateBookingStatus(popupData.bookingId, payload);
+      await refreshBookings();
+      setShowPopup(false);
+    } catch (err) {
+      alert("Error updating booking");
+    } finally {
+      setUpdating(null);
+    }
   };
 
   const getStatusBadgeClass = (status) => {
@@ -81,30 +133,34 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
     }
   };
 
-  const toggleBookingStatus = async (bookingId, newStatus) => {
-    try {
-      setUpdating(bookingId);
-      await bookingApi.updateBookingStatus(bookingId, newStatus);
-      await refreshBookings();
-    } catch (err) {
-      console.error("Failed to update status:", err);
-      alert("Could not update status. Please try again.");
-    } finally {
-      setUpdating(null);
-    }
-  };
+const toggleBookingStatus = async (bookingId, newStatus) => {
+  try {
+    setUpdating(bookingId);
+
+    const payload = {
+      status: newStatus
+    };
+
+    await bookingApi.updateBookingStatus(bookingId, payload);
+    await refreshBookings();
+  } catch (err) {
+    alert("Could not update status.");
+  } finally {
+    setUpdating(null);
+  }
+};
+
 
   const formatDate = (dateString) =>
     new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
-      day: "numeric",
+      day: "numeric"
     });
 
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
-
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
@@ -112,10 +168,7 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
 
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
+    for (let i = startPage; i <= endPage; i++) pages.push(i);
     return pages;
   };
 
@@ -138,14 +191,15 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
 
   return (
     <div className="booking-list-container">
-      {/* Filters + Notification Bell */}
-      <div className="booking-list-controls" style={{ alignItems: "center" }}>
+
+      {/* Filters */}
+      <div className="booking-list-controls">
         <div className="booking-search-group">
           <label className="booking-control-label">Search Bookings</label>
           <input
             type="text"
             className="booking-search-input"
-            placeholder="Search by ticket, agency, supplier, or hotel..."
+            placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -158,12 +212,12 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
           >
-            <option value="all">All Statuses</option>
+            <option value="all">All</option>
             <option value="Confirmed">Confirmed</option>
             <option value="Reconfirmed(Guaranteed)">Reconfirmed</option>
             <option value="Pending">Pending</option>
             <option value="Holding">Holding</option>
-            <option value="Cancelled by Agent">Cancelled</option>
+            <option value="Cancelled by Agent">Cancelled by Agent</option>
             <option value="Cancelled by Hotel">Cancelled by Hotel</option>
             <option value="Completed">Completed</option>
           </select>
@@ -176,41 +230,24 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
             value={agencyFilter}
             onChange={(e) => setAgencyFilter(e.target.value)}
           >
-            <option value="all">All Agencies</option>
+            <option value="all">All</option>
             {agencies.map((agency) => (
-              <option key={agency} value={agency}>
-                {agency}
-              </option>
+              <option key={agency} value={agency}>{agency}</option>
             ))}
           </select>
         </div>
 
-        {/* ✅ Notification Bell aligned right */}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "12px" }}>
-          <button
-            className="booking-btn"
-            onClick={clearFilters}
-            style={{
-              borderColor: "#6c757d",
-              color: "#6c757d",
-              height: "fit-content",
-            }}
-          >
-            Clear Filters
-          </button>
-
-          <BookingReminderBell /> {/* 🔔 bell icon added here */}
+        <div style={{ marginLeft: "auto", display: "flex", gap: "12px" }}>
+          <button className="booking-btn" onClick={clearFilters}>Clear Filters</button>
+          <BookingReminderBell />
         </div>
       </div>
 
-      {/* Results Count */}
+      {/* Count */}
       <div className="booking-results-count">
         Showing {startItem}-{endItem} of {filteredBookings.length} bookings
-        {filteredBookings.length !== bookings.length &&
-          ` (filtered from ${bookings.length} total)`}
       </div>
 
-      {/* Table */}
       <div className="booking-list-table-container">
         <table className="booking-list-table">
           <thead className="booking-list-thead">
@@ -225,27 +262,45 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
               {isAdmin && <th>ACTIONS</th>}
             </tr>
           </thead>
+
           <tbody>
-            {paginatedBookings.length > 0 ? (
-              paginatedBookings.map((booking) => (
-                <tr key={booking.id} className="booking-list-row">
-                  <td className="booking-ticket-number">{booking.ticketNumber}</td>
+            {paginatedBookings.map((booking) => (
+              <React.Fragment key={booking.id}>
+                {console.log("Backend booking:", booking.bookingRooms)}
+
+                {/* Main booking row */}
+                <tr
+                  className="booking-list-row">
+                  <td className="booking-ticket-number">
+                    {booking.ticketNumber}
+                      <span
+                        className="accordion-toggle-icon"
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent row click
+                          toggleAccordion(booking.id);
+                        }}
+                        style={{cursor  : "pointer" , margin:4} }
+                      >
+                        {expandedBookingId === booking.id ? "▲" : "▼"}
+                      </span>
+
+                  </td>
                   <td>{booking.agencyName}</td>
                   <td>{booking.supplierName}</td>
-                  <td className="booking-hotel-name">{booking.hotelName}</td>
+                  <td>{booking.hotelName}</td>
                   <td>{formatDate(booking.checkIn)}</td>
                   <td>{formatDate(booking.checkOut)}</td>
                   <td>
                     <select
                       className={`booking-status-dropdown ${getStatusBadgeClass(booking.status)}`}
                       value={booking.status}
-                      onChange={(e) => toggleBookingStatus(booking.id, e.target.value)}
+                      onChange={(e) => handleStatusChange(booking.id, e.target.value)}
                       disabled={updating === booking.id}
                     >
                       <option value="Confirmed">CONFIRMED</option>
                       <option value="Reconfirmed(Guaranteed)">RECONFIRMED</option>
                       <option value="Holding">HOLDING</option>
-                      <option value="Cancelled by Agent">CANCELLED</option>
+                      <option value="Cancelled by Agent">CANCELLED BY AGENT</option>
                       <option value="Cancelled by Hotel">CANCELLED BY HOTEL</option>
                     </select>
                   </td>
@@ -254,27 +309,63 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
                     <td className="booking-actions">
                       <button
                         className="booking-btn booking-btn-view"
-                        onClick={() => openViewModal(booking)}
+                        onClick={(e) => { e.stopPropagation(); openViewModal(booking); }}
                       >
                         View
                       </button>
                       <button
                         className="booking-btn booking-btn-edit"
-                        onClick={() => openEditModal(booking)}
+                        onClick={(e) => { e.stopPropagation(); openEditModal(booking); }}
                       >
                         Edit
                       </button>
                     </td>
                   )}
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={isAdmin ? 8 : 7} style={{ textAlign: "center", padding: "2rem" }}>
-                  No bookings match your search criteria
-                </td>
-              </tr>
-            )}
+
+                {/* ✅ Accordion Content */}
+                
+{expandedBookingId === booking.id && (
+  <tr className="booking-accordion-row">
+    <td colSpan={isAdmin ? 8 : 7}>
+      <table className="compact-room-table">
+        
+        {/* ✅ Column Header */}
+        <thead>
+          <tr>
+            <th>Room #</th>
+            <th>Room Type</th>
+            <th>Lead Guest</th>
+            <th>Guests</th>
+            <th>Ages</th>
+            <th>Other Guests</th>
+            <th>Inclusion</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {(booking.bookingRooms || []).map((room, index) => (
+            <tr key={index}>
+              <td>{booking.ticketNumber} / {index + 1}</td>
+              <td>{room.roomTypeName}</td>
+              <td>{room.leadGuestName}</td>
+              <td>{room.adults}A / {room.children}C</td>
+              <td>{(room.childrenAges || []).join(", ") || "-"}</td>
+              <td>{(room.guestNames || []).join(", ") || "-"}</td>
+              <td>{room.inclusion || "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </td>
+  </tr>
+)}
+
+
+
+
+              </React.Fragment>
+            ))}
           </tbody>
         </table>
       </div>
@@ -285,6 +376,7 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
           <div className="booking-pagination-info">
             Showing {startItem}-{endItem} of {filteredBookings.length} bookings
           </div>
+
           <div className="booking-pagination-controls">
             <button
               className="booking-pagination-btn"
@@ -293,6 +385,7 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
             >
               First
             </button>
+
             <button
               className="booking-pagination-btn"
               onClick={() => handlePageChange(currentPage - 1)}
@@ -300,6 +393,7 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
             >
               Previous
             </button>
+
             <div className="booking-pagination-pages">
               {getPageNumbers().map((page) => (
                 <button
@@ -311,6 +405,7 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
                 </button>
               ))}
             </div>
+
             <button
               className="booking-pagination-btn"
               onClick={() => handlePageChange(currentPage + 1)}
@@ -318,6 +413,7 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
             >
               Next
             </button>
+
             <button
               className="booking-pagination-btn"
               onClick={() => handlePageChange(totalPages)}
@@ -325,6 +421,7 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
             >
               Last
             </button>
+
             <select
               className="booking-pagination-select"
               value={itemsPerPage}
@@ -338,6 +435,53 @@ const BookingList = ({ bookings, loading, openViewModal, openEditModal, isAdmin,
           </div>
         </div>
       )}
+      {showPopup && (
+  <div className="popup-overlay">
+    <div className="popup-modal">
+      <h3>Update Booking Status</h3>
+
+      {popupData.status === "Reconfirmed(Guaranteed)" && (
+        <>
+          <label>Agent Voucher / LPO</label>
+          <input
+            type="text"
+            value={popupData.agentVoucher}
+            onChange={(e) =>
+              setPopupData({ ...popupData, agentVoucher: e.target.value })
+            }
+            placeholder="Enter agent voucher / LPO"
+          />
+        </>
+      )}
+
+      {popupData.status.includes("Cancelled") && (
+        <>
+          <label>Reason for Cancellation</label>
+          <textarea
+            value={popupData.cancelReason}
+            onChange={(e) =>
+              setPopupData({ ...popupData, cancelReason: e.target.value })
+            }
+            placeholder="Enter cancellation reason"
+          />
+        </>
+      )}
+
+      <div className="popup-buttons">
+        <button className="popup-btn confirm" onClick={handlePopupSubmit}>
+          Submit
+        </button>
+        <button
+          className="popup-btn cancel"
+          onClick={() => setShowPopup(false)}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 };

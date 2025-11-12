@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
+import "./UserDetailsForm.css";
 
 const passwordStrength = (pwd = "") => {
   // simple scoring: length + variety of char classes
@@ -92,167 +93,158 @@ const UserDetailsForm = ({ formData, handleChange, setCurrentStep }) => {
   ]);
 
   return (
-    <div className="form-section">
-      <h2 className="section-title">User Details</h2>
+    <div className="user-details-form">
+      <h2 className="user-details-title">User Details</h2>
 
-      {/* Name Row */}
-      <div className="form-row">
-        <div className="form-group">
-          <label className="form-label required">First Name</label>
+      <div className="user-details-grid">
+        {/* Row 1: First Name, Last Name, Email, Mobile No */}
+        <div className="user-field-group">
+          <label className="user-field-label required">First Name</label>
           <input
             type="text"
             name="firstName"
             value={formData.firstName || ""}
             onChange={handleChange}
-            className="form-input"
+            className="user-field-input"
             placeholder="Enter first name"
           />
-          {errors.firstName && <span className="error-message">{errors.firstName}</span>}
+          {errors.firstName && <span className="user-field-error">{errors.firstName}</span>}
         </div>
 
-        <div className="form-group">
-          <label className="form-label required">Last Name</label>
+        <div className="user-field-group">
+          <label className="user-field-label required">Last Name</label>
           <input
             type="text"
             name="lastName"
             value={formData.lastName || ""}
             onChange={handleChange}
-            className="form-input"
+            className="user-field-input"
             placeholder="Enter last name"
           />
-          {errors.lastName && <span className="error-message">{errors.lastName}</span>}
+          {errors.lastName && <span className="user-field-error">{errors.lastName}</span>}
         </div>
-      </div>
 
-      {/* Email + Phone */}
-      <div className="form-row">
-        <div className="form-group">
-          <label className="form-label required">Email</label>
+        <div className="user-field-group">
+          <label className="user-field-label required">Email</label>
           <input
             type="email"
             name="userEmailId"
             value={formData.userEmailId || ""}
             onChange={handleChange}
-            className="form-input"
+            className="user-field-input"
             placeholder="Enter email address"
           />
-          {errors.userEmailId && <span className="error-message">{errors.userEmailId}</span>}
+          {errors.userEmailId && <span className="user-field-error">{errors.userEmailId}</span>}
         </div>
 
-        <div className="form-group">
-          <label className="form-label">Mobile No</label>
+        <div className="user-field-group">
+          <label className="user-field-label">Mobile No</label>
           <input
             type="text"
             name="mobileNo"
             value={formData.mobileNo || ""}
             onChange={handleChange}
-            className="form-input"
+            className="user-field-input"
             placeholder="Enter mobile number"
           />
-          {errors.mobileNo && <span className="error-message">{errors.mobileNo}</span>}
+          {errors.mobileNo && <span className="user-field-error">{errors.mobileNo}</span>}
         </div>
-      </div>
 
-      {/* Username + Password */}
-      <div className="form-row">
-        <div className="form-group">
-          <label className="form-label required">Username</label>
+        {/* Row 2: Username, Password, Password Strength, Confirm Password */}
+        <div className="user-field-group">
+          <label className="user-field-label required">Username</label>
           <input
             type="text"
             name="userName"
             value={formData.userName || ""}
             onChange={handleChange}
-            className="form-input"
+            className="user-field-input"
             placeholder="Choose a username"
           />
-          {errors.userName && <span className="error-message">{errors.userName}</span>}
+          {errors.userName && <span className="user-field-error">{errors.userName}</span>}
         </div>
 
-        <div className="form-group">
-          <label className="form-label required">Password</label>
-          <div className="input-with-icon">
+        <div className="user-field-group">
+          <label className="user-field-label required">Password</label>
+          <div className="user-input-with-icon">
             <input
               type={showPassword ? "text" : "password"}
               name="password"
               value={formData.password || ""}
               onChange={handleChange}
-              className="form-input"
+              className="user-field-input"
               placeholder="Enter password"
               autoComplete="new-password"
             />
             <button
               type="button"
-              className="toggle-icon"
+              className="user-toggle-icon"
               onClick={() => setShowPassword((s) => !s)}
               aria-label="Toggle password visibility"
             >
               {showPassword ? "🙈" : "👁"}
             </button>
           </div>
-          {errors.password && <span className="error-message">{errors.password}</span>}
+          {errors.password && <span className="user-field-error">{errors.password}</span>}
+        </div>
 
-          {/* Password strength UI */}
-          <div className="password-strength" style={{ marginTop: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 120, height: 8, background: "#eee", borderRadius: 4, overflow: "hidden" }}>
-                <div
-                  style={{
-                    width: `${(pwdStrength.score / 5) * 100}%`,
-                    height: "100%",
-                    background:
-                      pwdStrength.label === "Very weak"
-                        ? "#f87171"
-                        : pwdStrength.label === "Weak"
-                        ? "#fb923c"
-                        : pwdStrength.label === "Medium"
-                        ? "#fbbf24"
-                        : "#34d399",
-                    transition: "width 160ms ease"
-                  }}
-                />
-              </div>
-              <small style={{ color: "#444" }}>{pwdStrength.label}</small>
+        <div className="user-field-group">
+          <label className="user-field-label">Password Strength</label>
+          <div className="user-password-strength">
+            <div className="user-password-strength-bar">
+              <div
+                className="user-password-strength-fill"
+                style={{
+                  width: `${(pwdStrength.score / 5) * 100}%`,
+                  backgroundColor:
+                    pwdStrength.label === "Very weak"
+                      ? "#f87171"
+                      : pwdStrength.label === "Weak"
+                      ? "#fb923c"
+                      : pwdStrength.label === "Medium"
+                      ? "#fbbf24"
+                      : "#34d399"
+                }}
+              />
             </div>
-            <small style={{ color: "#666", display: "block", marginTop: 6 }}>
-              Tip: use 10+ chars with upper, lower, numbers and symbols for a strong password.
+            <span className="user-password-strength-label">{pwdStrength.label}</span>
+            <small className="user-password-tip">
+              Use 10+ chars with upper, lower, numbers and symbols
             </small>
           </div>
         </div>
-      </div>
 
-      {/* Confirm Password */}
-      <div className="form-row">
-        <div className="form-group full-width">
-          <label className="form-label required">Confirm Password</label>
-          <div className="input-with-icon">
+        <div className="user-field-group">
+          <label className="user-field-label required">Confirm Password</label>
+          <div className="user-input-with-icon">
             <input
               type={showConfirmPassword ? "text" : "password"}
               name="confirmPassword"
               value={formData.confirmPassword || ""}
               onChange={handleChange}
-              className="form-input"
+              className="user-field-input"
               placeholder="Re-enter password"
               autoComplete="new-password"
             />
             <button
               type="button"
-              className="toggle-icon"
+              className="user-toggle-icon"
               onClick={() => setShowConfirmPassword((s) => !s)}
               aria-label="Toggle confirm password visibility"
             >
               {showConfirmPassword ? "🙈" : "👁"}
             </button>
           </div>
-          {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+          {errors.confirmPassword && <span className="user-field-error">{errors.confirmPassword}</span>}
         </div>
       </div>
 
       {/* Navigation */}
-      <div className="form-actions">
+      <div className="user-form-actions">
         <button
           type="button"
           onClick={() => setCurrentStep(1)}
-          className="secondary-button back-button"
+          className="user-back-button"
         >
           Back: Supplier Details
         </button>
@@ -260,7 +252,7 @@ const UserDetailsForm = ({ formData, handleChange, setCurrentStep }) => {
         <button
           type="button"
           onClick={() => setCurrentStep(3)}
-          className="submit-button next-button"
+          className="user-next-button"
           disabled={!isValid}
         >
           Next: Contact Details

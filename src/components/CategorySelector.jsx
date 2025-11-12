@@ -327,7 +327,20 @@ const fetchSubCategoriesForCategory = useCallback(
             ref={categoryInputRef}
             type="text"
             value={categorySearch}
-            onChange={(e) => { setCategorySearch(e.target.value); setShowCategoryDropdown(true); setSelectedCategory(null); setHighlightedIndex(prev => ({ ...prev, category: 0 })); }}
+            onChange={(e) => {
+                const value = e.target.value;
+                setCategorySearch(value);
+                setShowCategoryDropdown(true);
+                setHighlightedIndex(prev => ({ ...prev, category: 0 }));
+
+                // ✅ Only clear selection when field is actually empty
+                if (value.trim() === "") {
+                  setSelectedCategory(null);
+                  setSubCategories([]);  // Clear subcategory list too
+                  onCategorySelect?.(null);  // Notify parent form
+                }
+              }}
+
             onFocus={() => setShowCategoryDropdown(true)}
             onKeyDown={handleCategoryKeyDown}
             placeholder="Search category..."

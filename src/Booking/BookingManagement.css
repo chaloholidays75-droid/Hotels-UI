@@ -4,7 +4,9 @@
 .booking-management-container {
   max-width: 1500px;
   margin: 0 auto;
+  /* border: 1px solid #0d0d0d; */
   padding: 20px;
+  margin-left: 25px;
   font-family: "Poppins", sans-serif;
   background-color: #f5f7f9;
   min-height: 100vh;
@@ -31,7 +33,7 @@
 
 .booking-management-title-section h1 {
   margin: 0 0 8px 0;
-  font-size: 2.2rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #342d5e;
 }
@@ -536,5 +538,187 @@
   
   .booking-management-tab-content {
     box-shadow: none;
+  }
+}
+:root {
+  --bms-primary: #7269ef;
+  --bms-primary-dark: #6658dd;
+  --bms-success: #22c55e;
+  --bms-error: #ef4444;
+  --bms-warning: #f59e0b;
+  --bms-info: #3b82f6;
+  
+  --bms-bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #e0e7ff 100%);
+  --bms-card-bg: #fdfbff;
+  --bms-text-primary: #0a0214;
+  --bms-text-secondary: #9f9f9f;
+  --bms-border: #e5e7eb;
+  --bms-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --bms-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  
+  --bms-border-radius: 12px;
+  --bms-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bms-page-content {
+  background: var(--bms-bg-gradient);
+  min-height: 100vh;
+  padding: 0 24px 24px 24px;
+  color: var(--bms-text-primary);
+}
+
+.bms-system-header {
+  background: var(--bms-card-bg);
+  padding: 2rem;
+}
+
+.bms-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.bms-header-content-title {
+  flex: 1;
+}
+
+.bms-header-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--bms-text-primary);
+  letter-spacing: -0.025em;
+  font-family: 'Inter', 'Poppins', sans-serif;
+}
+
+.bms-header-subtitle {
+  font-size: 0.875rem;
+  color: var(--bms-text-secondary);
+  margin: 0 0 12px 0;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.bms-user-role-badge {
+  font-size: 0.875rem;
+  color: var(--bms-text-secondary);
+}
+
+.bms-role-admin {
+  color: var(--bms-primary);
+  font-weight: 600;
+  background: rgba(114, 105, 239, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.bms-role-employee {
+  color: var(--bms-success);
+  font-weight: 600;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.bms-nav-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.bms-nav-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--bms-text-primary);
+  background: var(--bms-card-bg);
+  border: 1px solid var(--bms-border);
+  border-radius: var(--bms-border-radius);
+  cursor: pointer;
+  transition: var(--bms-transition);
+  box-shadow: var(--bms-shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+.bms-nav-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.bms-nav-button:hover::before {
+  left: 100%;
+}
+
+.bms-nav-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--bms-shadow-lg);
+  border-color: var(--bms-primary);
+}
+
+.bms-nav-button.bms-active {
+  background: var(--bms-primary);
+  color: white;
+  border-color: var(--bms-primary);
+}
+
+.bms-content {
+  background: var(--bms-card-bg);
+  overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .bms-header-content {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .bms-nav-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .bms-page-content {
+    padding: 16px;
+  }
+  
+  .bms-system-header {
+    padding: 1.5rem;
+  }
+  
+  .bms-header-title {
+    font-size: 1.75rem;
+  }
+  
+  .bms-nav-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .bms-nav-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .bms-header-title {
+    font-size: 1.5rem;
+  }
+  
+  .bms-header-subtitle {
+    font-size: 1rem;
   }
 }

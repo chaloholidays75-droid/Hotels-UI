@@ -157,7 +157,7 @@
   cursor: pointer;
   border-radius: 8px;
   font-size: 14px;
-  color: var(--gray-700);
+  /* color: var(--gray-700); */
   transition: var(--transition);
   display: flex;
   align-items: center;
@@ -344,3 +344,120 @@
     color: var(--gray-500);
   }
 } */
+ /* ==========================================
+   FINAL POLISH FOR ROOM TYPE DROPDOWN
+   ========================================== */
+
+/* Main wrapper must be relatively positioned */
+.rt-selector-container {
+  position: relative !important;
+  overflow: visible !important;
+  z-index: 10 !important;
+}
+
+/* Dropdown popup */
+.rt-dropdown-list {
+  position: absolute !important;
+  top: calc(100% + 8px); /* 🔧 add vertical gap between input & dropdown */
+  left: 0;
+  right: 0;
+  z-index: 99999 !important;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18); /* richer shadow */
+  padding: 4px 0;
+  max-height: 260px;
+  overflow-y: auto;
+  animation: dropdownFade 0.15s ease-out;
+}
+
+/* Slide & fade animation */
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dropdown item styling */
+.rt-dropdown-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  /* color: #1e293b; */
+}
+
+.rt-dropdown-item:hover,
+.rt-dropdown-item.rt-highlighted {
+  /* background: #2563eb; */
+  /* color: #000000; */
+  border-radius: 6px;
+}
+
+/* “Add new” option */
+.rt-add-option {
+  padding: 10px 14px;
+  background: #f8fafc;
+  /* color: #334155; */
+  font-weight: 500;
+  border-top: 1px solid #e2e8f0;
+  cursor: pointer;
+}
+
+.rt-add-option:hover {
+  /* background: #ffffff; */
+  /* color: #070707; */
+}
+
+/* ✅ Ensure no clipping inside booking table */
+.booking-rooms-table-container,
+.booking-room-type,
+.booking-room-row,
+.booking-rooms-section {
+  overflow: visible !important;
+  position: relative !important;
+  z-index: auto !important;
+}
+/* ===============================
+   FIX DROPDOWN CLIPPING (NO PORTAL)
+   =============================== */
+
+/* Every table row becomes its own z-layer */
+.booking-room-row {
+  position: relative !important;
+  z-index: 0; /* default */
+  overflow: visible !important;
+  transform: translateZ(0); /* isolate stacking context safely */
+}
+
+/* Raise the row when dropdown is open */
+.booking-room-row.dropdown-open {
+  z-index: 9999 !important;
+}
+
+/* Base dropdown styling */
+.rt-dropdown-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #f2f2f2;
+  border: 1px solid #0c4a9b;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+  max-height: 260px;
+  overflow-y: auto;
+  animation: dropdownFade 0.15s ease-out;
+  z-index: 1000;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}

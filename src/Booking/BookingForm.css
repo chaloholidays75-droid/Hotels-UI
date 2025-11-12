@@ -809,3 +809,266 @@
   gap: 23px;
   margin: 23px;
 }
+/* Wrapper that spans both date fields row */
+.booking-date-range-wrapper {
+  position: relative;
+  grid-column: 1 / -1; /* span full row in your grid */
+  height: 0;           /* avoid layout shift; popup is absolutely positioned */
+}
+
+/* Popup base */
+.booking-calendar-popup {
+  position: absolute;
+  z-index: 2000;
+  top: 1px; /* distance below the fields row; tweak as needed */
+  left: 30%;
+  transform: translateX(-50%);
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.15);
+  overflow: hidden;
+}
+
+/* Slightly wider for dual months */
+.booking-calendar-centered {
+  width: max-content;
+}
+
+/* Clickable display boxes for dates */
+.booking-clickable-date-input {
+  border: 1px solid var(--border-color, #ccc);
+  border-radius: 6px;
+  padding: 10px 14px;
+  background: #fff;
+  cursor: pointer;
+  font-weight: 500;
+  color: #1e293b;
+  user-select: none;
+}
+.booking-clickable-date-input:focus {
+  outline: 2px solid var(--primary-color, #2563eb);
+  outline-offset: 2px;
+}
+/* Rooms Table Styles */
+.booking-rooms-table-container {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.booking-rooms-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.booking-rooms-table th {
+  background: #f8fafc;
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.booking-rooms-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: top;
+}
+
+.booking-room-row:hover {
+  background: #f8fafc;
+}
+
+.booking-room-row:last-child td {
+  border-bottom: none;
+}
+
+/* Table-specific input styles */
+.booking-table-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.booking-table-input:focus {
+  border-color: #667eea;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.booking-table-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.booking-table-select:focus {
+  border-color: #667eea;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Number inputs in table */
+.booking-table-input.booking-number-input {
+  text-align: center;
+  width: 70px;
+}
+
+/* Room number cell */
+.booking-room-number {
+  font-weight: 600;
+  color: #1e293b;
+  min-width: 80px;
+}
+
+/* Children ages in table */
+.booking-children-ages {
+  min-width: 150px;
+}
+
+.booking-ages-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.booking-ages-grid {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.booking-no-children {
+  color: #94a3b8;
+  font-style: italic;
+  font-size: 13px;
+}
+
+/* Room type selector in table */
+.booking-room-type {
+  position:static;
+  min-width: 180px;
+  z-index: 1000;
+}
+.booking-room-type .room-type-selector {
+  position: relative;
+  z-index: 100;
+}
+
+.booking-room-type .room-type-dropdown {
+  z-index: 1000 !important;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+}
+
+/* Override any table-specific z-index issues */
+.booking-rooms-table-container {
+  position: relative;
+  z-index: 1;
+}
+
+.booking-rooms-table {
+  position: relative;
+  z-index: 1;
+}
+
+.booking-room-row {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ensure dropdown appears above table rows */
+.booking-room-type .room-type-dropdown,
+.booking-room-type .dropdown-list,
+.booking-room-type .booking-dropdown-list {
+  z-index: 1000 !important;
+  position: absolute !important;
+}
+
+/* Responsive table styles */
+@media (max-width: 1024px) {
+  .booking-rooms-table-container {
+    overflow-x: auto;
+  }
+  
+  .booking-rooms-table {
+    min-width: 800px;
+  }
+}
+
+@media (max-width: 768px) {
+  .booking-rooms-table th,
+  .booking-rooms-table td {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+  
+  .booking-table-input,
+  .booking-table-select {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  
+  .booking-table-input.booking-number-input {
+    width: 60px;
+  }
+  
+  .booking-ages-grid {
+    gap: 4px;
+  }
+  
+  .booking-age-input {
+    width: 50px;
+    padding: 6px;
+    font-size: 12px;
+  }
+}
+
+/* Age input in table */
+.booking-age-input {
+  width: 55px;
+  padding: 6px;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 12px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.booking-age-input:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+/* Remove the old card layout styles */
+.booking-rooms-grid,
+.booking-room-box,
+.booking-room-header,
+.booking-room-fields,
+.booking-field-box {
+  /* These styles are no longer needed for the table layout */
+}
+/* ==============================
+   FIX DROPDOWN CLIPPING IN ROOM TABLE
+   ============================== */
+

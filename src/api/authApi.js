@@ -23,19 +23,44 @@ const decodeJwt = (token) => {
 // }
 
 
-export async function login(email, password) {
+export async function login({ email, password, rememberMe }) {
   try {
-    const { data } = await api.post("/auth/login", { email, password });
-    console.log("✅ Login successful");
+    console.log("🔍 Debug - Login attempt with:", { email, password, rememberMe });
+    console.log("🔍 Debug - Request URL:", "/auth/login");
+    
+    const requestData = { email, password, rememberMe };
+    console.log("🔍 Debug - Request payload:", JSON.stringify(requestData));
+    
+    const { data } = await api.post("/auth/login", requestData);
+
+    console.log("✅ Login successful", data);
+
+    // Save access token (if returned)
+    if (data?.accessToken) {
+      localStorage.setItem("accessToken", data.accessToken);
+      console.log("🔍 Debug - Access token saved");
+    }
+
+    // ✅ Save rememberToken as a secure cookie if backend sent it
+    if (data?.rememberToken) {
+      document.cookie = `rememberToken=${data.rememberToken}; Secure; SameSite=None; Domain=.chaloholidayonline.com; Path=/; Max-Age=${
+        30 * 24 * 60 * 60
+      }`;
+      console.log("🔍 Debug - Remember token cookie set");
+    }
+
     return data;
   } catch (err) {
-    console.error("❌ Login failed:", err);
+    console.error("❌ Login failed - Full error:", err);
+    console.error("❌ Login failed - Response data:", err.response?.data);
+    console.error("❌ Login failed - Response status:", err.response?.status);
+    console.error("❌ Login failed - Response headers:", err.response?.headers);
     throw err;
   }
 }
 export async function autoLogin() {
   // uses rememberToken cookie; server returns fresh tokens
-  const { data } = await api.post("/auth/auto-login");
+  // const { data } = await api.post("/auth/auto-login");
   if (data.accessToken) localStorage.setItem("accessToken", data.accessToken);
   if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
   const { name, role } = extractUserFromToken(data.accessToken);

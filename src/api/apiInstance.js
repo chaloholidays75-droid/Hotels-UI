@@ -53,35 +53,37 @@ const api = axios.create({
   withCredentials: true, // ✅ send cookies automatically
 });
 
-// 🚫 No need to attach Authorization manually
+// Add request interceptor for debugging
 api.interceptors.request.use((config) => {
+  console.log("🚀 API Request:", {
+    url: config.url,
+    method: config.method,
+    data: config.data,
+    headers: config.headers
+  });
   return config;
 });
 
+// Add response interceptor for debugging
 api.interceptors.response.use(
-  (res) => res,
+  (response) => {
+    console.log("✅ API Response:", {
+      status: response.status,
+      data: response.data,
+      headers: response.headers
+    });
+    return response;
+  },
   async (error) => {
-    const originalRequest = error.config;
-
-    // Auto-login retry if cookie session expired
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !originalRequest.url.includes("/auth/auto-login")
-    ) {
-      originalRequest._retry = true;
-      try {
-        console.warn("Attempting auto-login...");
-        const { data } = await api.post("/auth/auto-login");
-        if (data?.accessToken) {
-          // Backend will reset new cookies automatically
-          return api(originalRequest);
-        }
-      } catch (err) {
-        console.error("Auto-login failed:", err);
+    console.error("❌ API Error:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      config: {
+        url: error.config?.url,
+        method: error.config?.method,
+        data: error.config?.data
       }
-    }
-
+    });
     return Promise.reject(error);
   }
 );

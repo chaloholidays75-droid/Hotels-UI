@@ -1,4 +1,4 @@
-import api from './apiInstance'; // your pre-configured axios instance with interceptors
+import api from './apiInstance'; // your pre-configured axios instance with interceptors  
 
 // Get all hotels
 export async function getHotelSales() {

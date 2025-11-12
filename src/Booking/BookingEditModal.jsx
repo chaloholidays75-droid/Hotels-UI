@@ -1,1217 +1,625 @@
 import React, { useState, useEffect } from "react";
 import bookingApi from "../api/bookingApi";
-import agencyApi from "../api/agencyApi";
-import supplierApi from "../api/supplierApi";
-import { getHotelSales } from "../api/hotelApi";
 import "./BookingEditModal.css";
 import {
   getCommercialByBooking,
-  createCommercial,
   updateCommercial,
-  linkCommercialToBooking,
+  createCommercial,
 } from "../api/commercialApi";
-import { calculateCommercial } from "../utils/commercialCalculations";
 
-const BookingEditModal = ({ editModal, setEditModal, closeEditModal, refreshBookings }) => {
+const sanitizeId = (value) => {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
+// ✅ Converts DB value → editable array format
+const parseList = (val) => {
+  if (!val) return [];
+
+  if (Array.isArray(val)) return val;
+
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {}
+
+    return val
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+// ✅ Chip list component
+function ChipList({ values, onChange }) {
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editValue, setEditValue] = useState("");
+  const [newValue, setNewValue] = useState("");
+
+  const addValue = () => {
+    if (!newValue.trim()) return;
+    onChange([...values, newValue.trim()]);
+    setNewValue("");
+  };
+
+  const removeValue = (index) => {
+    const updated = values.filter((_, i) => i !== index);
+    onChange(updated);
+  };
+
+  const startEdit = (index) => {
+    setEditingIndex(index);
+    setEditValue(values[index]);
+  };
+
+  const saveEdit = () => {
+    if (editingIndex === null) return;
+    const updated = [...values];
+    updated[editingIndex] = editValue.trim();
+    onChange(updated);
+    setEditingIndex(null);
+    setEditValue("");
+  };
+
+  return (
+    <div className="chip-container">
+      {values.map((v, i) => (
+        <div className="chip" key={i}>
+          {editingIndex === i ? (
+            <input
+              className="chip-edit-input"
+              value={editValue}
+              autoFocus
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={saveEdit}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") saveEdit();
+                if (e.key === "Escape") setEditingIndex(null);
+              }}
+            />
+          ) : (
+            <span onClick={() => startEdit(i)} className="chip-text">
+              {v}
+            </span>
+          )}
+          <button className="chip-remove" onClick={() => removeValue(i)}>
+            ✖
+          </button>
+        </div>
+      ))}
+
+      <div className="chip-add-block">
+        <input
+          type="text"
+          placeholder="Add..."
+          value={newValue}
+          onChange={(e) => setNewValue(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && addValue()}
+        />
+        <button className="chip-add-btn" onClick={addValue}>
+          + Add
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function BookingEditModal({
+  editModal,
+  closeEditModal,
+  refreshBookings,
+}) {
+  const b = editModal.booking;
+
+  const [fullBooking, setFullBooking] = useState(null);
+  const [rooms, setRooms] = useState([]);
+  const [roomTypes, setRoomTypes] = useState([]);
+
   const [bookingData, setBookingData] = useState({
-    agencyId: "",
-    supplierId: "",
-    hotelId: "",
-    hotelName: "",
     checkIn: "",
     checkOut: "",
-    numberOfRooms: 1,
+    deadline: "",
     specialRequest: "",
   });
 
-  // Separate state for rooms with their own guest details
-  const [rooms, setRooms] = useState([
-    {
-      roomTypeId: "",
-      adults: 1,
-      children: 0,
-      childrenAges: "",
-    }
-  ]);
-
-  // Commercial Data State
-  const [commercialData, setCommercialData] = useState({
-    buyingAmount: "",
+  const [commercial, setCommercial] = useState({
+    id: null,
     buyingCurrency: "USD",
-    sellingPrice: "",
+    buyingAmount: "",
     sellingCurrency: "USD",
-    exchangeRate: "1.0",
-    commissionable: false,
+    sellingPrice: "",
     commissionType: "percentage",
     commissionValue: "",
-    incentive: false,
     incentiveType: "percentage",
     incentiveValue: "",
-    buyingVatIncluded: false,
-    buyingVatPercent: "0",
-    sellingVatIncluded: false,
-    sellingVatPercent: "0",
-    additionalCosts: [],
-    discounts: []
+    profit: 0,
+    profitMarginPercent: 0,
+    markupPercent: 0,
   });
 
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [ageWarnings, setAgeWarnings] = useState({}); // Now an object to track per room
-  const [agencies, setAgencies] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [hotelsList, setHotelsList] = useState([]);
-  const [roomTypes, setRoomTypes] = useState([]);
-  
-  // Search states
-  const [filteredAgencies, setFilteredAgencies] = useState([]);
-  const [filteredSuppliers, setFilteredSuppliers] = useState([]);
-  const [filteredHotels, setFilteredHotels] = useState([]);
-  
-  const [agencyQuery, setAgencyQuery] = useState("");
-  const [supplierQuery, setSupplierQuery] = useState("");
-  const [hotelQuery, setHotelQuery] = useState("");
-  
-  const [showAgencyDropdown, setShowAgencyDropdown] = useState(false);
-  const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
-  const [showHotelDropdown, setShowHotelDropdown] = useState(false);
-  
-  const [fetchLoading, setFetchLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("booking"); // "booking" or "commercial"
-
   const today = new Date().toISOString().slice(0, 16);
 
-  // Calculate total people whenever rooms change
+  const calculateNights = (ci, co) => {
+    if (!ci || !co) return 0;
+    const start = new Date(ci);
+    const end = new Date(co);
+    const diff = end - start;
+    return diff > 0 ? diff / (1000 * 60 * 60 * 24) : 0;
+  };
+
+  const nights = calculateNights(bookingData.checkIn, bookingData.checkOut);
+
+  // ✅ Load booking + commercial
   useEffect(() => {
-    const totalPeople = rooms.reduce((total, room) => 
-      total + parseInt(room.adults || 0) + parseInt(room.children || 0), 0
-    );
-    setBookingData(prev => ({ ...prev, totalPeople }));
-  }, [rooms]);
+    if (!editModal.isOpen || !b?.id) return;
 
-  // Update number of rooms when rooms array changes
-  useEffect(() => {
-    setBookingData(prev => ({ ...prev, numberOfRooms: rooms.length }));
-  }, [rooms.length]);
+    bookingApi.getBookingById(b.id).then((bb) => {
+      setFullBooking(bb);
+      setBookingData({
+        checkIn: new Date(bb.checkIn).toISOString().slice(0, 16),
+        checkOut: new Date(bb.checkOut).toISOString().slice(0, 16),
+        deadline: bb.deadline
+          ? new Date(bb.deadline).toISOString().slice(0, 16)
+          : "",
+        specialRequest: bb.specialRequest || "",
+      });
 
-  // Fetch room types when hotel is selected
-  useEffect(() => {
-    const fetchRoomTypes = async () => {
-      if (bookingData.hotelId) {
-        try {
-          const roomTypesData = await bookingApi.getRoomTypesByHotel(bookingData.hotelId);
-          setRoomTypes(roomTypesData || []);
-        } catch (err) {
-          console.error("Failed to fetch room types:", err);
-          setRoomTypes([]);
-        }
-      } else {
-        setRoomTypes([]);
-      }
-    };
+      bookingApi.getRoomTypesByHotel(bb.hotelId).then((rt) => {
+        setRoomTypes(rt || []);
+        const rawRooms =
+          bb.bookingRooms && Array.isArray(bb.bookingRooms)
+            ? bb.bookingRooms
+            : bb.rooms && Array.isArray(bb.rooms)
+            ? bb.rooms
+            : [];
+        setRooms(
+          rawRooms.map((r) => ({
+            id: r.id,
+            roomTypeId: r.roomTypeId ? Number(r.roomTypeId) : null,
+            adults: Number(r.adults) || 1,
+            children: Number(r.children) || 0,
+            childrenAges: parseList(r.childrenAges),
+            inclusion: r.inclusion || "",
+            leadGuestName: r.leadGuestName || "",
+            guestNames: parseList(r.guestNames),
+          }))
+        );
+      });
+    });
 
-    fetchRoomTypes();
-  }, [bookingData.hotelId]);
-
-  // Fetch agencies, suppliers, hotels, and commercial data when modal opens
-  useEffect(() => {
-    if (!editModal.isOpen) return;
-
-    const fetchData = async () => {
-      try {
-        setFetchLoading(true);
-
-        const [agencyList, supplierList, hotelsRaw] = await Promise.all([
-          agencyApi.getAgencies(),
-          supplierApi.getSuppliers(),
-          getHotelSales(),
-        ]);
-
-        const agenciesData = agencyList || [];
-        const suppliersData = supplierList || [];
-        
-        setAgencies(agenciesData);
-        setSuppliers(suppliersData);
-        setFilteredAgencies(agenciesData);
-        setFilteredSuppliers(suppliersData);
-
-        // Map hotels safely
-        const allHotels = (hotelsRaw || []).map(h => ({
-          id: h.id.toString(),
-          hotelName: h.hotelName || "Unnamed Hotel",
-        }));
-
-        setHotelsList(allHotels);
-        setFilteredHotels(allHotels);
-
-        // Prefill booking data if editing
-        if (editModal.booking) {
-          const agencyMatch = agenciesData.find(a => a.agencyName === editModal.booking.agencyName);
-          const supplierMatch = suppliersData.find(s => s.supplierName === editModal.booking.supplierName);
-          const hotelMatch = allHotels.find(h => h.hotelName === editModal.booking.hotelName);
-
-          // Extract rooms data from booking
-          const existingRooms = editModal.booking.rooms?.map(room => ({
-            roomTypeId: room.roomTypeId?.toString() || "",
-            adults: room.adults || 1,
-            children: room.children || 0,
-            childrenAges: room.childrenAges || "",
-          })) || [{
-            roomTypeId: "",
-            adults: 1,
-            children: 0,
-            childrenAges: "",
-          }];
-
-          setBookingData({
-            agencyId: agencyMatch?.id || "",
-            supplierId: supplierMatch?.id || "",
-            hotelId: hotelMatch?.id || "",
-            hotelName: hotelMatch?.hotelName || editModal.booking.hotelName || "",
-            checkIn: editModal.booking.checkIn ? editModal.booking.checkIn.slice(0, 16) : "",
-            checkOut: editModal.booking.checkOut ? editModal.booking.checkOut.slice(0, 16) : "",
-            numberOfRooms: editModal.booking.numberOfRooms || 1,
-            specialRequest: editModal.booking.specialRequest || "",
+    // 🔹 Load commercial for this booking
+    getCommercialByBooking(b.id)
+      .then((c) => {
+        if (c) {
+          setCommercial({
+            id: c.id,
+            buyingCurrency: c.buyingCurrency || "USD",
+            buyingAmount: c.buyingAmount || "",
+            sellingCurrency: c.sellingCurrency || "USD",
+            sellingPrice: c.sellingPrice || "",
+            commissionType: c.commissionType || "percentage",
+            commissionValue: c.commissionValue || "",
+            incentiveType: c.incentiveType || "percentage",
+            incentiveValue: c.incentiveValue || "",
+            profit: c.profit || 0,
+            profitMarginPercent: c.profitMarginPercent || 0,
+            markupPercent: c.markupPercent || 0,
           });
-
-          setRooms(existingRooms);
-          setAgencyQuery(editModal.booking.agencyName || "");
-          setSupplierQuery(editModal.booking.supplierName || "");
-          setHotelQuery(editModal.booking.hotelName || "");
-
-          // Fetch room types for the selected hotel
-          if (hotelMatch?.id) {
-            try {
-              const roomTypesData = await bookingApi.getRoomTypesByHotel(hotelMatch.id);
-              setRoomTypes(roomTypesData || []);
-            } catch (err) {
-              console.error("Failed to fetch room types:", err);
-              setRoomTypes([]);
-            }
-          }
-
-          // Fetch commercial data if available
-          try {
-            const commercialResponse = await getCommercialByBooking(editModal.booking.id);
-            if (commercialResponse) {
-              setCommercialData({
-                buyingAmount: commercialResponse.buyingAmount || "",
-                buyingCurrency: commercialResponse.buyingCurrency || "USD",
-                sellingPrice: commercialResponse.sellingPrice || "",
-                sellingCurrency: commercialResponse.sellingCurrency || "USD",
-                exchangeRate: commercialResponse.exchangeRate || "1.0",
-                commissionable: commercialResponse.commissionable || false,
-                commissionType: commercialResponse.commissionType || "percentage",
-                commissionValue: commercialResponse.commissionValue || "",
-                incentive: commercialResponse.incentive || false,
-                incentiveType: commercialResponse.incentiveType || "percentage",
-                incentiveValue: commercialResponse.incentiveValue || "",
-                buyingVatIncluded: commercialResponse.buyingVatIncluded || false,
-                buyingVatPercent: commercialResponse.buyingVatPercent || "0",
-                sellingVatIncluded: commercialResponse.sellingVatIncluded || false,
-                sellingVatPercent: commercialResponse.sellingVatPercent || "0",
-                additionalCosts: commercialResponse.additionalCostsJson ? JSON.parse(commercialResponse.additionalCostsJson) : [],
-                discounts: commercialResponse.discountsJson ? JSON.parse(commercialResponse.discountsJson) : []
-              });
-            }
-          } catch (error) {
-            console.error("Failed to fetch commercial data:", error);
-          }
         }
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
-      } finally {
-        setFetchLoading(false);
-      }
-    };
+      })
+      .catch(() => {
+        console.warn("No commercial found for this booking, will create new.");
+      });
+  }, [editModal.isOpen]);
 
-    fetchData();
-  }, [editModal.isOpen, editModal.booking]);
-const [commercialSummary, setCommercialSummary] = useState({
-  grossBuying: 0,
-  netBuying: 0,
-  grossSelling: 0,
-  netSelling: 0,
-  profit: 0,
-  margin: 0,
-  markup: 0,
-});
-
-useEffect(() => {
-  const buying = {
-    amount: commercialData.buyingAmount,
-    currency: commercialData.buyingCurrency,
-    vatIncluded: commercialData.buyingVatIncluded,
-    vatPercent: commercialData.buyingVatPercent,
-    commissionable: commercialData.commissionable,
-    commissionType: commercialData.commissionType,
-    commissionValue: commercialData.commissionValue,
-    additionalCosts: commercialData.additionalCosts,
-  };
-
-  const selling = {
-    price: commercialData.sellingPrice,
-    currency: commercialData.sellingCurrency,
-    vatIncluded: commercialData.sellingVatIncluded,
-    vatPercent: commercialData.sellingVatPercent,
-    incentive: commercialData.incentive,
-    incentiveType: commercialData.incentiveType,
-    incentiveValue: commercialData.incentiveValue,
-    discounts: commercialData.discounts,
-  };
-
-  const result = calculateCommercial(buying, selling, commercialData.exchangeRate);
-  setCommercialSummary(result);
-}, [commercialData]);
-
-  // Filter functions
+  // ✅ Auto-calc profit, margin, markup
   useEffect(() => {
-    const filtered = agencies.filter(a =>
-      a.agencyName.toLowerCase().includes(agencyQuery.toLowerCase())
-    );
-    setFilteredAgencies(filtered);
-  }, [agencyQuery, agencies]);
+    const buy = parseFloat(commercial.buyingAmount) || 0;
+    const sell = parseFloat(commercial.sellingPrice) || 0;
+    const profit = sell - buy;
+    const margin = buy ? ((profit / buy) * 100).toFixed(2) : 0;
+    const markup = buy ? ((sell / buy - 1) * 100).toFixed(2) : 0;
 
-  useEffect(() => {
-    const filtered = suppliers.filter(s =>
-      s.supplierName.toLowerCase().includes(supplierQuery.toLowerCase())
-    );
-    setFilteredSuppliers(filtered);
-  }, [supplierQuery, suppliers]);
-
-  useEffect(() => {
-    const filtered = hotelsList.filter(h =>
-      h.hotelName.toLowerCase().includes(hotelQuery.toLowerCase())
-    );
-    setFilteredHotels(filtered);
-  }, [hotelQuery, hotelsList]);
-
-  // Generic handler for dropdown selection
-  const handleDropdownSelect = async (type, id, name) => {
-    setBookingData(prev => ({ 
-      ...prev, 
-      [`${type}Id`]: id,
-      ...(type === 'hotel' && { hotelName: name })
-    }));
-    
-    if (type === 'agency') {
-      setAgencyQuery(name);
-      setShowAgencyDropdown(false);
-    } else if (type === 'supplier') {
-      setSupplierQuery(name);
-      setShowSupplierDropdown(false);
-    } else if (type === 'hotel') {
-      setHotelQuery(name);
-      setShowHotelDropdown(false);
-      
-      // Fetch room types when hotel is selected
-      try {
-        const roomTypesData = await bookingApi.getRoomTypesByHotel(id);
-        setRoomTypes(roomTypesData || []);
-        // Reset room type selections when hotel changes
-        setRooms(prev => prev.map(room => ({ ...room, roomTypeId: "" })));
-      } catch (err) {
-        console.error("Failed to fetch room types:", err);
-        setRoomTypes([]);
-      }
-    }
-
-    if (errors[`${type}Id`]) {
-      setErrors(prev => ({ ...prev, [`${type}Id`]: "" }));
-    }
-  };
-
-  // Handle search input changes
-  const handleSearchChange = (type, value) => {
-    if (type === 'agency') {
-      setAgencyQuery(value);
-      setShowAgencyDropdown(true);
-      if (bookingData.agencyId) setBookingData(prev => ({ ...prev, agencyId: "" }));
-    } else if (type === 'supplier') {
-      setSupplierQuery(value);
-      setShowSupplierDropdown(true);
-      if (bookingData.supplierId) setBookingData(prev => ({ ...prev, supplierId: "" }));
-    } else if (type === 'hotel') {
-      setHotelQuery(value);
-      setShowHotelDropdown(true);
-      if (bookingData.hotelName !== value) {
-        setBookingData(prev => ({ ...prev, hotelId: "" }));
-        setRoomTypes([]);
-        setRooms(prev => prev.map(room => ({ ...room, roomTypeId: "" })));
-      }
-    }
-  };
-
-  // Handle booking data changes
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setBookingData(prev => ({ ...prev, [name]: value }));
-
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: "" }));
-    }
-  };
-
-  // Handle commercial data changes
-  const handleCommercialChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setCommercialData(prev => ({
+    setCommercial((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      profit,
+      profitMarginPercent: margin,
+      markupPercent: markup,
     }));
-  };
+  }, [commercial.buyingAmount, commercial.sellingPrice]);
 
-  // Handle room changes
-  const handleRoomChange = (index, field, value) => {
-    setRooms(prev => prev.map((room, i) => 
-      i === index ? { ...room, [field]: value } : room
-    ));
-
-    // Clear errors for this field
-    if (errors[`room_${index}_${field}`]) {
-      setErrors(prev => ({ ...prev, [`room_${index}_${field}`]: "" }));
-    }
-  };
-
-  // Handle children ages input with per-room warnings
-  const handleChildrenAgesChange = (index, value) => {
-    setRooms(prev => prev.map((room, i) => 
-      i === index ? { ...room, childrenAges: value } : room
-    ));
-
-    if (!value) {
-      setAgeWarnings(prev => ({ ...prev, [index]: [] }));
-      return;
-    }
-
-    const ages = value.split(",").map(a => a.trim());
-    const warnings = [];
-    ages.forEach((age, idx) => {
-      const n = parseInt(age);
-      if (isNaN(n)) warnings.push(`Child ${idx + 1} has invalid age`);
-      else if (n > 12) warnings.push(`Child ${idx + 1} (age ${age}) will be counted as adult`);
-      else if (n < 0) warnings.push(`Child ${idx + 1} age cannot be negative`);
+  const updateRoom = (i, field, value) => {
+    setRooms((prev) => {
+      const copy = JSON.parse(JSON.stringify(prev));
+      copy[i][field] = value;
+      return copy;
     });
-    setAgeWarnings(prev => ({ ...prev, [index]: warnings }));
   };
 
-  // Add room
-  const addRoom = () => {
-    setRooms(prev => [...prev, {
-      roomTypeId: "",
-      adults: 1,
-      children: 0,
-      childrenAges: "",
-    }]);
-  };
-
-  // Remove room
-  const removeRoom = () => {
-    if (rooms.length > 1) {
-      setRooms(prev => prev.slice(0, -1));
-    }
-  };
-
-  // Add additional cost
-  const addAdditionalCost = () => {
-    setCommercialData(prev => ({
-      ...prev,
-      additionalCosts: [...prev.additionalCosts, { description: "", amount: "" }]
-    }));
-  };
-
-  // Remove additional cost
-  const removeAdditionalCost = (index) => {
-    setCommercialData(prev => ({
-      ...prev,
-      additionalCosts: prev.additionalCosts.filter((_, i) => i !== index)
-    }));
-  };
-
-  // Handle additional cost change
-  const handleAdditionalCostChange = (index, field, value) => {
-    setCommercialData(prev => ({
-      ...prev,
-      additionalCosts: prev.additionalCosts.map((cost, i) => 
-        i === index ? { ...cost, [field]: value } : cost
-      )
-    }));
-  };
-
-  // Add discount
-  const addDiscount = () => {
-    setCommercialData(prev => ({
-      ...prev,
-      discounts: [...prev.discounts, { description: "", amount: "" }]
-    }));
-  };
-
-  // Remove discount
-  const removeDiscount = (index) => {
-    setCommercialData(prev => ({
-      ...prev,
-      discounts: prev.discounts.filter((_, i) => i !== index)
-    }));
-  };
-
-  // Handle discount change
-  const handleDiscountChange = (index, field, value) => {
-    setCommercialData(prev => ({
-      ...prev,
-      discounts: prev.discounts.map((discount, i) => 
-        i === index ? { ...discount, [field]: value } : discount
-      )
-    }));
-  };
-
-  // Validate form
-  const validateForm = () => {
-    const newErrors = {};
-    
-    // Booking level validations
-    if (!bookingData.agencyId) newErrors.agencyId = "Please select an agency";
-    if (!bookingData.supplierId) newErrors.supplierId = "Please select a supplier";
-    if (!bookingData.hotelId) newErrors.hotelId = "Please select a hotel";
-    if (!bookingData.checkIn) newErrors.checkIn = "Check-in is required";
-    if (!bookingData.checkOut) newErrors.checkOut = "Check-out is required";
-    if (bookingData.numberOfRooms < 1) newErrors.numberOfRooms = "At least 1 room is required";
-
-    // Room level validations
-    rooms.forEach((room, index) => {
-      if (!room.roomTypeId) newErrors[`room_${index}_roomTypeId`] = "Room type is required";
-      if (room.adults < 1) newErrors[`room_${index}_adults`] = "At least 1 adult is required";
-      if (room.children < 0) newErrors[`room_${index}_children`] = "Children cannot be negative";
-      if (room.children > 0 && !room.childrenAges) {
-        newErrors[`room_${index}_childrenAges`] = "Children ages required";
-      }
-      
-      // Validate children ages count matches children number
-      if (room.children > 0 && room.childrenAges) {
-        const agesArray = room.childrenAges.split(',').map(age => age.trim()).filter(age => age !== '');
-        if (agesArray.length !== parseInt(room.children)) {
-          newErrors[`room_${index}_childrenAges`] = `Number of children ages (${agesArray.length}) must match number of children (${room.children})`;
-        }
-      }
-    });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Save changes
   const handleSave = async () => {
     try {
-      // Validate form before saving
-      if (!validateForm()) return;
+      setLoading(true);
 
-      // Auto calculate numberOfRooms and numberOfPeople
-      const numberOfRooms = rooms.length;
-      const numberOfPeople = rooms.reduce(
-        (sum, r) => sum + (parseInt(r.adults) || 0) + (parseInt(r.children) || 0),
-        0
-      );
-
-      // Convert childrenAges from string "5,7" → [5,7]
-      const bookingRooms = rooms.map((room) => ({
-        roomTypeId: parseInt(room.roomTypeId),
-        adults: parseInt(room.adults),
-        children: parseInt(room.children),
-        childrenAges: room.childrenAges
-          ? room.childrenAges.split(",").map((a) => parseInt(a.trim()))
-          : []
+      const cleanedRooms = rooms.map((r) => ({
+        id: sanitizeId(r.id),
+        roomTypeId: sanitizeId(r.roomTypeId),
+        adults: Number(r.adults),
+        children: Number(r.children),
+        childrenAges: Array.isArray(r.childrenAges) ? r.childrenAges : [],
+        inclusion: r.inclusion || "",
+        leadGuestName: r.leadGuestName || "",
+        guestNames: Array.isArray(r.guestNames) ? r.guestNames : [],
       }));
 
-      // Build payload
-      const bookingPayload = {
-        agencyId: parseInt(bookingData.agencyId),
-        supplierId: parseInt(bookingData.supplierId),
-        hotelId: parseInt(bookingData.hotelId),
-        checkIn: bookingData.checkIn,
-        checkOut: bookingData.checkOut,
-        status: editModal.booking?.status || "Pending",
-        specialRequest: bookingData.specialRequest || "",
-        numberOfRooms,
-        numberOfPeople,
-        bookingRooms
+      const payload = {
+        hotelId: sanitizeId(fullBooking?.hotelId),
+        agencyId: sanitizeId(fullBooking?.agencyId),
+        supplierId: sanitizeId(fullBooking?.supplierId),
+        agencyStaffId: sanitizeId(fullBooking?.agencyStaffId),
+        checkIn: bookingData.checkIn
+          ? new Date(bookingData.checkIn).toISOString()
+          : null,
+        checkOut: bookingData.checkOut
+          ? new Date(bookingData.checkOut).toISOString()
+          : null,
+        deadline: bookingData.deadline
+          ? new Date(bookingData.deadline).toISOString()
+          : null,
+        specialRequest: bookingData.specialRequest,
+        numberOfRooms: cleanedRooms.length,
+        numberOfPeople: cleanedRooms.reduce(
+          (sum, r) => sum + r.adults + r.children,
+          0
+        ),
+        bookingRooms: cleanedRooms,
       };
 
-      console.log("Sending payload:", bookingPayload);
+      await bookingApi.updateBooking(b.id, payload);
 
-      // Send update request
-      await bookingApi.updateBooking(editModal.booking.id, bookingPayload);
+      // ✅ Save or update commercial
+      if (commercial.id) {
+        await updateCommercial(commercial.id, {
+          buyingCurrency: commercial.buyingCurrency,
+          buyingAmount: parseFloat(commercial.buyingAmount) || 0,
+          sellingCurrency: commercial.sellingCurrency,
+          sellingPrice: parseFloat(commercial.sellingPrice) || 0,
+          commissionType: commercial.commissionType,
+          commissionValue: parseFloat(commercial.commissionValue) || 0,
+          incentiveType: commercial.incentiveType,
+          incentiveValue: parseFloat(commercial.incentiveValue) || 0,
+          profit: parseFloat(commercial.profit) || 0,
+          profitMarginPercent: parseFloat(commercial.profitMarginPercent) || 0,
+          markupPercent: parseFloat(commercial.markupPercent) || 0,
+        });
+      } else {
+        await createCommercial({
+          bookingId: b.id,
+          buyingCurrency: commercial.buyingCurrency,
+          buyingAmount: parseFloat(commercial.buyingAmount) || 0,
+          sellingCurrency: commercial.sellingCurrency,
+          sellingPrice: parseFloat(commercial.sellingPrice) || 0,
+          commissionType: commercial.commissionType,
+          commissionValue: parseFloat(commercial.commissionValue) || 0,
+          incentiveType: commercial.incentiveType,
+          incentiveValue: parseFloat(commercial.incentiveValue) || 0,
+          profit: parseFloat(commercial.profit) || 0,
+          profitMarginPercent: parseFloat(commercial.profitMarginPercent) || 0,
+          markupPercent: parseFloat(commercial.markupPercent) || 0,
+        });
+      }
 
-      // Save commercial data if it exists
-      if (commercialData.buyingAmount || commercialData.sellingPrice) {
- const commercialPayload = {
-  bookingId: editModal.booking.id,
-  buyingCurrency: commercialData.buyingCurrency,
-  sellingCurrency: commercialData.sellingCurrency,
-  exchangeRate: parseFloat(commercialData.exchangeRate || 1),
-
-  buyingAmount: parseFloat(commercialData.buyingAmount || 0),
-  buyingVatIncluded: !!commercialData.buyingVatIncluded,
-  buyingVatPercent: parseFloat(commercialData.buyingVatPercent || 0),
-
-  sellingPrice: parseFloat(commercialData.sellingPrice || 0),
-  sellingVatIncluded: !!commercialData.sellingVatIncluded,
-  sellingVatPercent: parseFloat(commercialData.sellingVatPercent || 0),
-
-  commissionable: !!commercialData.commissionable,
-  commissionType: commercialData.commissionType,
-  commissionValue: parseFloat(commercialData.commissionValue || 0),
-
-  incentive: !!commercialData.incentive,
-  incentiveType: commercialData.incentiveType,
-  incentiveValue: parseFloat(commercialData.incentiveValue || 0),
-
-  additionalCostsJson: JSON.stringify(commercialData.additionalCosts || []),
-  discountsJson: JSON.stringify(commercialData.discounts || [])
-};
-
-          console.log("💼 Sending Commercial payload:", commercialPayload);
- try {
-  console.group("🧾 COMMERCIAL DEBUG LOG");
-  console.log("📤 Payload sent to backend:", commercialPayload);
-
-  const existing = await getCommercialByBooking(editModal.booking.id);
-  console.log("🔍 Existing commercial from backend:", existing);
-
-  let commercialId;
-  if (existing && existing.id) {
-    console.log("➡️ Updating commercial ID:", existing.id);
-    const res = await updateCommercial(existing.id, commercialPayload);
-    console.log("✅ Backend update response:", res);
-    commercialId = res.id || existing.id;
-  } else {
-    console.log("➡️ Creating new commercial");
-    const res = await createCommercial(commercialPayload);
-    console.log("✅ Backend create response:", res);
-    commercialId = res.id;
-  }
-
-  if (commercialId) {
-    console.log(`🔗 Linking Booking ${editModal.booking.id} to Commercial ${commercialId}`);
-    const linkRes = await linkCommercialToBooking(editModal.booking.id, commercialId);
-    console.log("✅ Link response:", linkRes);
-  }
-
-  console.groupEnd();
-} catch (error) {
-  console.error("❌ Failed to save or link commercial data:", error);
-  if (error.response) {
-    console.error("📥 Backend Response Data:", error.response.data);
-    console.error("📥 Backend Status:", error.response.status);
-  }
-}
-      alert("✅ Booking & Commercial saved successfully!");
       refreshBookings();
       closeEditModal();
-      }
+    } catch (err) {
+      console.error("❌ SAVE ERROR:", err);
+      alert("Failed to update booking or commercial!");
+    } finally {
+      setLoading(false);
     }
-    catch (error) {
-      console.error("❌ Update failed:", error);
-      alert("Failed to update booking!");
-    }
-  }
-  
-    //     // 5️⃣ Link Booking ↔ Commercial
-    //     if (commercialId) {
-    //       await linkCommercialToBooking(editModal.booking.id, commercialId);
-    //       console.log(`🔗 Linked Booking ${editModal.booking.id} with Commercial ${commercialId}`);
-    //     }
-    //   } catch (error) {
-    //     console.error("❌ Failed to save or link commercial data:", error);
-    //   }
-    // }
-
-    // alert("✅ Booking & Commercial saved successfully!");
-    // refreshBookings();
-    // closeEditModal();
-  // } catch (error) {
-  //   console.error("❌ Update failed:", error);
-  //   alert("Failed to update booking!");
-  // }
-
+  };
 
   if (!editModal.isOpen) return null;
 
   return (
-    <div className="booking-edit-modal-overlay">
-      <div className="booking-edit-modal-content">
-        <div className="booking-edit-modal-header">
-          <h2 className="booking-edit-modal-title">Edit Booking</h2>
-          <button className="booking-edit-modal-close" onClick={closeEditModal} disabled={loading}>×</button>
+    <div className="edit-modal">
+      <div className="edit-container">
+        <div className="edit-header">
+          <h2>Edit Booking</h2>
+          <button onClick={closeEditModal}>×</button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="booking-edit-modal-tabs">
-          <button 
-            className={`booking-edit-modal-tab ${activeTab === "booking" ? "active" : ""}`}
-            onClick={() => setActiveTab("booking")}
-          >
-            Booking Details
-          </button>
-          <button 
-            className={`booking-edit-modal-tab ${activeTab === "commercial" ? "active" : ""}`}
-            onClick={() => setActiveTab("commercial")}
-          >
-            Commercial Data
-          </button>
-        </div>
-
-        <div className="booking-edit-modal-body">
-          {fetchLoading ? (
-            <div className="booking-edit-modal-loading">
-              <div className="booking-edit-modal-spinner"></div>
-              <p>Loading booking data...</p>
+        <div className="edit-body">
+          {/* Booking fields */}
+          <div className="row-3">
+            <div className="input-block">
+              <label>Agency</label>
+              <input type="text" value={fullBooking?.agencyName || ""} disabled />
             </div>
-          ) : (
-            <div className="booking-edit-modal-form-sections">
-              {/* Booking Details Tab */}
-              {activeTab === "booking" && (
-                <>
-                  {/* Booking Details Section */}
-                  <div className="booking-edit-modal-section">
-                    <h3 className="booking-edit-modal-section-title">Booking Details</h3>
-                    <div className="booking-edit-modal-section-grid">
-                      {/* Agency Search Dropdown */}
-                      <div className="booking-edit-modal-form-group">
-                        <label>Agency *</label>
-                        <div className="booking-edit-modal-search-dropdown">
-                          <input
-                            type="text"
-                            value={agencyQuery}
-                            placeholder="Search agency..."
-                            onChange={e => handleSearchChange('agency', e.target.value)}
-                            onFocus={() => setShowAgencyDropdown(true)}
-                            onBlur={() => setTimeout(() => setShowAgencyDropdown(false), 200)}
-                            disabled={loading}
-                          />
-                          {showAgencyDropdown && filteredAgencies.length > 0 && (
-                            <div className="booking-edit-modal-search-dropdown-list">
-                              {filteredAgencies.map(agency => (
-                                <div 
-                                  key={agency.id} 
-                                  onClick={() => handleDropdownSelect('agency', agency.id, agency.agencyName)}
-                                >
-                                  {agency.agencyName}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        {errors.agencyId && <div className="booking-edit-modal-error-message">{errors.agencyId}</div>}
-                      </div>
+            <div className="input-block">
+              <label>Hotel</label>
+              <input type="text" value={fullBooking?.hotelName || ""} disabled />
+            </div>
+            <div className="input-block">
+              <label>Supplier</label>
+              <input type="text" value={fullBooking?.supplierName || ""} disabled />
+            </div>
+          </div>
 
-                      {/* Supplier Search Dropdown */}
-                      <div className="booking-edit-modal-form-group">
-                        <label>Supplier *</label>
-                        <div className="booking-edit-modal-search-dropdown">
-                          <input
-                            type="text"
-                            value={supplierQuery}
-                            placeholder="Search supplier..."
-                            onChange={e => handleSearchChange('supplier', e.target.value)}
-                            onFocus={() => setShowSupplierDropdown(true)}
-                            onBlur={() => setTimeout(() => setShowSupplierDropdown(false), 200)}
-                            disabled={loading}
-                          />
-                          {showSupplierDropdown && filteredSuppliers.length > 0 && (
-                            <div className="booking-edit-modal-search-dropdown-list">
-                              {filteredSuppliers.map(supplier => (
-                                <div 
-                                  key={supplier.id} 
-                                  onClick={() => handleDropdownSelect('supplier', supplier.id, supplier.supplierName)}
-                                >
-                                  {supplier.supplierName}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        {errors.supplierId && <div className="booking-edit-modal-error-message">{errors.supplierId}</div>}
-                      </div>
+          {/* Dates */}
+          <div className="row-3">
+            <div className="input-block">
+              <label>Check-In</label>
+              <input
+                type="datetime-local"
+                value={bookingData.checkIn}
+                min={today}
+                onChange={(e) =>
+                  setBookingData({ ...bookingData, checkIn: e.target.value })
+                }
+              />
+            </div>
+            <div className="input-block">
+              <label>Check-Out</label>
+              <input
+                type="datetime-local"
+                value={bookingData.checkOut}
+                min={bookingData.checkIn || today}
+                onChange={(e) =>
+                  setBookingData({ ...bookingData, checkOut: e.target.value })
+                }
+              />
+            </div>
+            <div className="input-block">
+              <label>Nights</label>
+              <input type="number" value={nights} disabled />
+            </div>
+          </div>
 
-                      {/* Hotel Search Dropdown */}
-                      <div className="booking-edit-modal-form-group">
-                        <label>Hotel *</label>
-                        <div className="booking-edit-modal-search-dropdown">
-                          <input
-                            type="text"
-                            value={hotelQuery}
-                            placeholder="Search hotel..."
-                            onChange={e => handleSearchChange('hotel', e.target.value)}
-                            onFocus={() => setShowHotelDropdown(true)}
-                            onBlur={() => setTimeout(() => setShowHotelDropdown(false), 200)}
-                            disabled={loading}
-                          />
-                          {showHotelDropdown && filteredHotels.length > 0 && (
-                            <div className="booking-edit-modal-search-dropdown-list">
-                              {filteredHotels.map(hotel => (
-                                <div 
-                                  key={hotel.id} 
-                                  onClick={() => handleDropdownSelect('hotel', hotel.id, hotel.hotelName)}
-                                >
-                                  {hotel.hotelName}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        {errors.hotelId && <div className="booking-edit-modal-error-message">{errors.hotelId}</div>}
-                      </div>
-
-                      {/* Total People Display */}
-                      <div className="booking-edit-modal-form-group">
-                        <label>Total People</label>
-                        <div className="booking-edit-modal-total-display">
-                          {bookingData.totalPeople || 0} people
-                        </div>
-                        <div className="booking-edit-modal-hint">
-                          {rooms.length} room(s) with {bookingData.totalPeople || 0} total guests
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Dates Section */}
-                  <div className="booking-edit-modal-section">
-                    <h3 className="booking-edit-modal-section-title">Dates</h3>
-                    <div className="booking-edit-modal-section-grid">
-                      <div className="booking-edit-modal-form-group">
-                        <label>Check-In *</label>
-                        <input type="datetime-local" value={bookingData.checkIn} name="checkIn" onChange={handleChange} min={today} disabled={loading} />
-                        {errors.checkIn && <div className="booking-edit-modal-error-message">{errors.checkIn}</div>}
-                      </div>
-
-                      <div className="booking-edit-modal-form-group">
-                        <label>Check-Out *</label>
-                        <input type="datetime-local" value={bookingData.checkOut} name="checkOut" onChange={handleChange} min={bookingData.checkIn || today} disabled={loading} />
-                        {errors.checkOut && <div className="booking-edit-modal-error-message">{errors.checkOut}</div>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Room Details Section */}
-                  <div className="booking-edit-modal-section">
-                    <h3 className="booking-edit-modal-section-title">Room Details</h3>
-                    <div className="booking-edit-modal-rooms-section">
-                      <div className="booking-edit-modal-rooms-header">
-                        <span>Rooms ({rooms.length})</span>
-                        <div className="booking-edit-modal-room-actions">
-                          <button type="button" className="booking-edit-modal-add-room" onClick={addRoom} disabled={loading}>
-                            + Add Room
-                          </button>
-                          <button type="button" className="booking-edit-modal-remove-room" onClick={removeRoom} disabled={loading || rooms.length <= 1}>
-                            - Remove Room
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className="booking-edit-modal-room-list">
-                        {rooms.map((room, index) => (
-                          <div key={index} className="booking-edit-modal-room-item">
-                            <h4>Room {index + 1}</h4>
-                            <div className="booking-edit-modal-room-grid">
-                              {/* Room Type */}
-                              <div className="booking-edit-modal-form-group">
-                                <label>Room Type *</label>
-                                <select 
-                                  value={room.roomTypeId} 
-                                  onChange={(e) => handleRoomChange(index, 'roomTypeId', e.target.value)}
-                                  disabled={loading || !bookingData.hotelId || roomTypes.length === 0}
-                                >
-                                  <option value="">
-                                    {!bookingData.hotelId 
-                                      ? "Select a hotel first" 
-                                      : roomTypes.length === 0 
-                                        ? "Loading room types..." 
-                                        : "Select a room type"
-                                    }
-                                  </option>
-                                  {roomTypes.map(roomType => (
-                                    <option key={roomType.id} value={roomType.id}>
-                                      {roomType.name}
-                                    </option>
-                                  ))}
-                                </select>
-                                {errors[`room_${index}_roomTypeId`] && (
-                                  <div className="booking-edit-modal-error-message">{errors[`room_${index}_roomTypeId`]}</div>
-                                )}
-                              </div>
-
-                              {/* Adults */}
-                              <div className="booking-edit-modal-form-group">
-                                <label>Adults *</label>
-                                <input 
-                                  type="number" 
-                                  value={room.adults} 
-                                  min="1" 
-                                  onChange={(e) => handleRoomChange(index, 'adults', e.target.value)}
-                                  disabled={loading}
-                                />
-                                {errors[`room_${index}_adults`] && (
-                                  <div className="booking-edit-modal-error-message">{errors[`room_${index}_adults`]}</div>
-                                )}
-                              </div>
-
-                              {/* Children */}
-                              <div className="booking-edit-modal-form-group">
-                                <label>Children</label>
-                                <input 
-                                  type="number" 
-                                  value={room.children} 
-                                  min="0" 
-                                  onChange={(e) => handleRoomChange(index, 'children', e.target.value)}
-                                  disabled={loading}
-                                />
-                                {errors[`room_${index}_children`] && (
-                                  <div className="booking-edit-modal-error-message">{errors[`room_${index}_children`]}</div>
-                                )}
-                              </div>
-
-                              {/* Children Ages */}
-                              {room.children > 0 && (
-                                <div className="booking-edit-modal-form-group">
-                                  <label>Children Ages *</label>
-                                  <input 
-                                    type="text" 
-                                    value={room.childrenAges} 
-                                    onChange={(e) => handleChildrenAgesChange(index, e.target.value)}
-                                    placeholder="e.g., 5, 8, 10" 
-                                    disabled={loading}
-                                  />
-                                  <div className="booking-edit-modal-hint">Enter ages separated by commas</div>
-                                  {ageWarnings[index]?.map((w, idx) => (
-                                    <div key={idx} className="booking-edit-modal-warning-message">{w}</div>
-                                  ))}
-                                  {errors[`room_${index}_childrenAges`] && (
-                                    <div className="booking-edit-modal-error-message">{errors[`room_${index}_childrenAges`]}</div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
+          {/* Room Table */}
+          <div className="room-table-wrapper">
+            <table className="room-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Type</th>
+                  <th>Adults</th>
+                  <th>Children</th>
+                  <th>Ages</th>
+                  <th>Lead Guest</th>
+                  <th>Guests</th>
+                  <th>Inclusion</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rooms.map((r, i) => (
+                  <tr key={i}>
+                    <td>{i + 1}</td>
+                    <td>
+                      <select
+                        value={r.roomTypeId ?? ""}
+                        onChange={(e) =>
+                          updateRoom(i, "roomTypeId", sanitizeId(e.target.value))
+                        }
+                      >
+                        <option value="">Select</option>
+                        {roomTypes.map((rt) => (
+                          <option key={rt.id} value={rt.id}>
+                            {rt.name}
+                          </option>
                         ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Extras Section */}
-                  <div className="booking-edit-modal-section">
-                    <h3 className="booking-edit-modal-section-title">Extras</h3>
-                    <div className="booking-edit-modal-form-group">
-                      <label>Special Request</label>
-                      <textarea value={bookingData.specialRequest} name="specialRequest" onChange={handleChange} rows="3" disabled={loading} />
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* Commercial Data Tab */}
-              {activeTab === "commercial" && (
-                <div className="booking-edit-modal-section">
-                  <h3 className="booking-edit-modal-section-title">Commercial Data</h3>
-                  
-                  {/* Currency Section */}
-                  <div className="booking-edit-modal-section-grid">
-                    <div className="booking-edit-modal-form-group">
-                      <label>Buying Currency</label>
-                      <select name="buyingCurrency" value={commercialData.buyingCurrency} onChange={handleCommercialChange}>
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="GBP">GBP</option>
-                        <option value="CAD">CAD</option>
                       </select>
-                    </div>
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        min="1"
+                        value={r.adults}
+                        onChange={(e) =>
+                          updateRoom(i, "adults", Number(e.target.value))
+                        }
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        value={r.children}
+                        onChange={(e) =>
+                          updateRoom(i, "children", Number(e.target.value))
+                        }
+                      />
+                    </td>
+                    <td>
+                      <ChipList
+                        values={r.childrenAges}
+                        onChange={(newVal) =>
+                          updateRoom(i, "childrenAges", newVal)
+                        }
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={r.leadGuestName}
+                        onChange={(e) =>
+                          updateRoom(i, "leadGuestName", e.target.value)
+                        }
+                      />
+                    </td>
+                    <td>
+                      <ChipList
+                        values={r.guestNames}
+                        onChange={(newVal) =>
+                          updateRoom(i, "guestNames", newVal)
+                        }
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        value={r.inclusion}
+                        onChange={(e) =>
+                          updateRoom(i, "inclusion", e.target.value)
+                        }
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-                    <div className="booking-edit-modal-form-group">
-                      <label>Selling Currency</label>
-                      <select name="sellingCurrency" value={commercialData.sellingCurrency} onChange={handleCommercialChange}>
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="GBP">GBP</option>
-                        <option value="CAD">CAD</option>
-                      </select>
-                    </div>
-
-                    {commercialData.buyingCurrency !== commercialData.sellingCurrency && (
-                      <div className="booking-edit-modal-form-group">
-                        <label>Exchange Rate</label>
-                        <input 
-                          type="number" 
-                          step="0.0001"
-                          name="exchangeRate" 
-                          value={commercialData.exchangeRate} 
-                          onChange={handleCommercialChange}
-                          placeholder="1.0"
-                        />
-                        <div className="booking-edit-modal-hint">
-                          1 {commercialData.buyingCurrency} = {commercialData.exchangeRate} {commercialData.sellingCurrency}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Buying Side */}
-                  <div className="booking-edit-modal-subsection">
-                    <h4 className="booking-edit-modal-subsection-title">Cost Side (Buying)</h4>
-                    <div className="booking-edit-modal-section-grid">
-                      <div className="booking-edit-modal-form-group">
-                        <label>Base Amount</label>
-                        <input 
-                          type="number" 
-                          step="0.01"
-                          name="buyingAmount" 
-                          value={commercialData.buyingAmount} 
-                          onChange={handleCommercialChange}
-                          placeholder="0.00"
-                        />
-                      </div>
-
-                      <div className="booking-edit-modal-form-group">
-                        <label className="booking-edit-modal-checkbox-label">
-                          <input 
-                            type="checkbox" 
-                            name="buyingVatIncluded" 
-                            checked={commercialData.buyingVatIncluded} 
-                            onChange={handleCommercialChange}
-                          />
-                          VAT Included
-                        </label>
-                      </div>
-
-                      {commercialData.buyingVatIncluded && (
-                        <div className="booking-edit-modal-form-group">
-                          <label>VAT Percentage</label>
-                          <input 
-                            type="number" 
-                            step="0.01"
-                            name="buyingVatPercent" 
-                            value={commercialData.buyingVatPercent} 
-                            onChange={handleCommercialChange}
-                            placeholder="0.00"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Additional Costs */}
-                    <div className="booking-edit-modal-form-group">
-                      <div className="booking-edit-modal-array-header">
-                        <label>Additional Costs</label>
-                        <button type="button" className="booking-edit-modal-add-item" onClick={addAdditionalCost}>
-                          + Add Cost
-                        </button>
-                      </div>
-                      
-                      {commercialData.additionalCosts.map((cost, index) => (
-                        <div key={index} className="booking-edit-modal-array-item">
-                          <input 
-                            type="text" 
-                            value={cost.description} 
-                            onChange={(e) => handleAdditionalCostChange(index, 'description', e.target.value)}
-                            placeholder="Description"
-                          />
-                          <input 
-                            type="number" 
-                            step="0.01"
-                            value={cost.amount} 
-                            onChange={(e) => handleAdditionalCostChange(index, 'amount', e.target.value)}
-                            placeholder="Amount"
-                          />
-                          <button 
-                            type="button" 
-                            className="booking-edit-modal-remove-item"
-                            onClick={() => removeAdditionalCost(index)}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Commission */}
-                    <div className="booking-edit-modal-section-grid">
-                      <div className="booking-edit-modal-form-group">
-                        <label className="booking-edit-modal-checkbox-label">
-                          <input 
-                            type="checkbox" 
-                            name="commissionable" 
-                            checked={commercialData.commissionable} 
-                            onChange={handleCommercialChange}
-                          />
-                          Commissionable
-                        </label>
-                      </div>
-
-                      {commercialData.commissionable && (
-                        <>
-                          <div className="booking-edit-modal-form-group">
-                            <label>Commission Type</label>
-                            <select name="commissionType" value={commercialData.commissionType} onChange={handleCommercialChange}>
-                              <option value="percentage">Percentage</option>
-                              <option value="fixed">Fixed Amount</option>
-                            </select>
-                          </div>
-
-                          <div className="booking-edit-modal-form-group">
-                            <label>Commission Value</label>
-                            <input 
-                              type="number" 
-                              step="0.01"
-                              name="commissionValue" 
-                              value={commercialData.commissionValue} 
-                              onChange={handleCommercialChange}
-                              placeholder={commercialData.commissionType === "percentage" ? "0.00%" : "0.00"}
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Selling Side */}
-                  <div className="booking-edit-modal-subsection">
-                    <h4 className="booking-edit-modal-subsection-title">Revenue Side (Selling)</h4>
-                    <div className="booking-edit-modal-section-grid">
-                      <div className="booking-edit-modal-form-group">
-                        <label>Selling Price</label>
-                        <input 
-                          type="number" 
-                          step="0.01"
-                          name="sellingPrice" 
-                          value={commercialData.sellingPrice} 
-                          onChange={handleCommercialChange}
-                          placeholder="0.00"
-                        />
-                      </div>
-
-                      <div className="booking-edit-modal-form-group">
-                        <label className="booking-edit-modal-checkbox-label">
-                          <input 
-                            type="checkbox" 
-                            name="sellingVatIncluded" 
-                            checked={commercialData.sellingVatIncluded} 
-                            onChange={handleCommercialChange}
-                          />
-                          VAT Included
-                        </label>
-                      </div>
-
-                      {commercialData.sellingVatIncluded && (
-                        <div className="booking-edit-modal-form-group">
-                          <label>VAT Percentage</label>
-                          <input 
-                            type="number" 
-                            step="0.01"
-                            name="sellingVatPercent" 
-                            value={commercialData.sellingVatPercent} 
-                            onChange={handleCommercialChange}
-                            placeholder="0.00"
-                          />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Discounts */}
-                    <div className="booking-edit-modal-form-group">
-                      <div className="booking-edit-modal-array-header">
-                        <label>Discounts</label>
-                        <button type="button" className="booking-edit-modal-add-item" onClick={addDiscount}>
-                          + Add Discount
-                        </button>
-                      </div>
-                      
-                      {commercialData.discounts.map((discount, index) => (
-                        <div key={index} className="booking-edit-modal-array-item">
-                          <input 
-                            type="text" 
-                            value={discount.description} 
-                            onChange={(e) => handleDiscountChange(index, 'description', e.target.value)}
-                            placeholder="Description"
-                          />
-                          <input 
-                            type="number" 
-                            step="0.01"
-                            value={discount.amount} 
-                            onChange={(e) => handleDiscountChange(index, 'amount', e.target.value)}
-                            placeholder="Amount"
-                          />
-                          <button 
-                            type="button" 
-                            className="booking-edit-modal-remove-item"
-                            onClick={() => removeDiscount(index)}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Incentive */}
-                    <div className="booking-edit-modal-section-grid">
-                      <div className="booking-edit-modal-form-group">
-                        <label className="booking-edit-modal-checkbox-label">
-                          <input 
-                            type="checkbox" 
-                            name="incentive" 
-                            checked={commercialData.incentive} 
-                            onChange={handleCommercialChange}
-                          />
-                          Incentive
-                        </label>
-                      </div>
-
-                      {commercialData.incentive && (
-                        <>
-                          <div className="booking-edit-modal-form-group">
-                            <label>Incentive Type</label>
-                            <select name="incentiveType" value={commercialData.incentiveType} onChange={handleCommercialChange}>
-                              <option value="percentage">Percentage</option>
-                              <option value="fixed">Fixed Amount</option>
-                            </select>
-                          </div>
-
-                          <div className="booking-edit-modal-form-group">
-                            <label>Incentive Value</label>
-                            <input 
-                              type="number" 
-                              step="0.01"
-                              name="incentiveValue" 
-                              value={commercialData.incentiveValue} 
-                              onChange={handleCommercialChange}
-                              placeholder={commercialData.incentiveType === "percentage" ? "0.00%" : "0.00"}
-                            />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                    <div className="booking-commercial-summary">
-                      <p>Gross Buying: {commercialSummary.grossBuying.toFixed(2)}</p>
-                      <p>Net Buying: {commercialSummary.netBuying.toFixed(2)}</p>
-                      <p>Gross Selling: {commercialSummary.grossSelling.toFixed(2)}</p>
-                      <p>Net Selling: {commercialSummary.netSelling.toFixed(2)}</p>
-                      <p>Profit: {commercialSummary.profit.toFixed(2)}</p>
-                      <p>Profit Margin: {commercialSummary.margin.toFixed(2)}%</p>
-                    </div>
-
-                </div>
-              )}
+          {/* Special Request & Deadline */}
+          <div className="split-row">
+            <div className="special-block">
+              <label>Special Request</label>
+              <textarea
+                value={bookingData.specialRequest}
+                onChange={(e) =>
+                  setBookingData({
+                    ...bookingData,
+                    specialRequest: e.target.value,
+                  })
+                }
+              ></textarea>
             </div>
-          )}
+            <div className="deadline-block">
+              <label>Deadline</label>
+              <input
+                type="datetime-local"
+                value={bookingData.deadline}
+                onChange={(e) =>
+                  setBookingData({ ...bookingData, deadline: e.target.value })
+                }
+              />
+            </div>
+          </div>
+
+          {/* 💼 Commercial Section */}
+          <div className="commercial-section">
+            <h3>💼 Commercial Details</h3>
+
+            <div className="row-3">
+              <div className="input-block">
+                <label>Buying Currency</label>
+                <input
+                  value={commercial.buyingCurrency}
+                  onChange={(e) =>
+                    setCommercial({
+                      ...commercial,
+                      buyingCurrency: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="input-block">
+                <label>Buying Amount</label>
+                <input
+                  type="number"
+                  value={commercial.buyingAmount}
+                  onChange={(e) =>
+                    setCommercial({
+                      ...commercial,
+                      buyingAmount: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="input-block">
+                <label>Selling Price</label>
+                <input
+                  type="number"
+                  value={commercial.sellingPrice}
+                  onChange={(e) =>
+                    setCommercial({
+                      ...commercial,
+                      sellingPrice: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="row-3">
+              <div className="input-block">
+                <label>Commission Type</label>
+                <select
+                  value={commercial.commissionType}
+                  onChange={(e) =>
+                    setCommercial({
+                      ...commercial,
+                      commissionType: e.target.value,
+                    })
+                  }
+                >
+                  <option value="percentage">Percentage</option>
+                  <option value="fixed">Fixed</option>
+                </select>
+              </div>
+              <div className="input-block">
+                <label>Commission Value</label>
+                <input
+                  type="number"
+                  value={commercial.commissionValue}
+                  onChange={(e) =>
+                    setCommercial({
+                      ...commercial,
+                      commissionValue: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="input-block">
+                <label>Incentive Value</label>
+                <input
+                  type="number"
+                  value={commercial.incentiveValue}
+                  onChange={(e) =>
+                    setCommercial({
+                      ...commercial,
+                      incentiveValue: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="row-3">
+              <div className="input-block">
+                <label>Profit</label>
+                <input type="number" value={commercial.profit} disabled />
+              </div>
+              <div className="input-block">
+                <label>Profit Margin %</label>
+                <input
+                  type="number"
+                  value={commercial.profitMarginPercent}
+                  disabled
+                />
+              </div>
+              <div className="input-block">
+                <label>Markup %</label>
+                <input
+                  type="number"
+                  value={commercial.markupPercent}
+                  disabled
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="booking-edit-modal-footer">
-          <button onClick={closeEditModal} disabled={loading}>Cancel</button>
-          <button onClick={handleSave} disabled={loading || fetchLoading}>
+        <div className="edit-footer">
+          <button onClick={closeEditModal}>Cancel</button>
+          <button disabled={loading} onClick={handleSave}>
             {loading ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
     </div>
   );
-};
-
-export default BookingEditModal;
+}

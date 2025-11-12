@@ -7,10 +7,12 @@ import {
   updateCommercial,
   linkCommercialToBooking,
 } from "../api/commercialApi";
+import bookingApi from "../api/bookingApi";
 
 
 export default function CommercialForm() {
   const [bookings, setBookings] = useState([]);
+  const [bookingDetails, setBookingDetails] = useState(null);
   const [selectedBookingId, setSelectedBookingId] = useState("");
   const [loading, setLoading] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -27,7 +29,7 @@ export default function CommercialForm() {
     vatPercent: "20",
     additionalCosts: [{ id: 1, description: "", amount: "", type: "fixed" }],
   });
-
+const formDisabled = !selectedBookingId; 
   const [selling, setSelling] = useState({
     currency: "USD",
     price: "",
@@ -41,8 +43,36 @@ export default function CommercialForm() {
 
   const [exchangeRate, setExchangeRate] = useState("");
   const [autoCalculateRate, setAutoCalculateRate] = useState(false);
+// ✅ Keep selling.currency automatically synced with buying.currency (one-way)
+useEffect(() => {
+  // Prevent infinite loop or unnecessary re-render
+  if (selling.currency !== buying.currency) {
+    setSelling(prev => ({
+      ...prev,
+      currency: buying.currency,
+    }));
+  }
+}, [buying.currency]);
 
+  useEffect(() => {
+  if (!selectedBookingId) {
+    setBookingDetails(null);
+    return;
+  }
 
+  const fetchBookingDetails = async () => {
+    try {
+      const data = await bookingApi.getBookingById(selectedBookingId);
+      setBookingDetails(data);
+      console.log("Full booking details:", data);
+    } catch (err) {
+      console.error("Failed to load booking details:", err);
+      setBookingDetails(null);
+    }
+  };
+
+  fetchBookingDetails();
+}, [selectedBookingId]);
    useEffect(() => {
     const fetchBookings = async () => {
       try {
@@ -168,24 +198,24 @@ const selectedBooking = bookings.find(b => b.id === selectedBookingId);
     }));
   };
 // ✅ Auto-toggle Commission checkbox based on its value
-useEffect(() => {
-  if (parseFloat(buying.commissionValue) > 0) {
-    setBuying(prev => ({ ...prev, commissionable: true }));
-  }
-  if (parseFloat(selling.incentiveValue) > 0) {
-    setSelling(prev => ({ ...prev, incentive: true }));
-  }
-}, [buying.commissionValue, selling.incentiveValue]);
+// useEffect( () => {
+//   if (parseFloat(buying.commissionValue) > 0) {
+//     setBuying(prev => ({ ...prev, commissionable: true }));
+//   }
+//   if (parseFloat(selling.incentiveValue) > 0) {
+//     setSelling(prev => ({ ...prev, incentive: true }));
+//   }
+// }, [buying.commissionValue, selling.incentiveValue]);
 
-// ✅ Auto-toggle Incentive checkbox based on its value
-useEffect(() => {
-  if (parseFloat(selling.incentiveValue) > 0 && !selling.incentive) {
-    setSelling(prev => ({ ...prev, incentive: true }));
-  }
-  if ((!selling.incentiveValue || parseFloat(selling.incentiveValue) === 0) && selling.incentive) {
-    setSelling(prev => ({ ...prev, incentive: false }));
-  }
-}, [selling.incentiveValue]);
+// // ✅ Auto-toggle Incentive checkbox based on its value
+// useEffect(() => {
+//   if (parseFloat(selling.incentiveValue) > 0 && !selling.incentive) {
+//     setSelling(prev => ({ ...prev, incentive: true }));
+//   }
+//   if ((!selling.incentiveValue || parseFloat(selling.incentiveValue) === 0) && selling.incentive) {
+//     setSelling(prev => ({ ...prev, incentive: false }));
+//   }
+// }, [selling.incentiveValue]);
 
   const addAdditionalCost = () => {
     setBuying((prev) => ({
@@ -538,7 +568,7 @@ const [profitSummary, setProfitSummary] = useState({
       commissionType: "percentage",
       commissionValue: "",
       vatIncluded: false,
-      vatPercent: "18",
+      vatPercent: "20",
       additionalCosts: [{ id: 1, description: "", amount: "", type: "fixed" }],
     });
     setSelling({
@@ -548,7 +578,7 @@ const [profitSummary, setProfitSummary] = useState({
       incentiveType: "percentage",
       incentiveValue: "",
       vatIncluded: false,
-      vatPercent: "18",
+      vatPercent: "20",
       discounts: [{ id: 1, description: "", amount: "", type: "fixed" }],
     });
     setExchangeRate("");
@@ -578,7 +608,7 @@ const [profitSummary, setProfitSummary] = useState({
           commissionType: data.commissionType || "percentage",
           commissionValue: data.commissionValue || "",
           vatIncluded: data.buyingVatIncluded || false,
-          vatPercent: data.buyingVatPercent?.toString() || "18",
+          vatPercent: data.buyingVatPercent?.toString() || "20",
           additionalCosts: data.additionalCostsJson
             ? JSON.parse(data.additionalCostsJson)
             : [{ id: 1, description: "", amount: "", type: "fixed" }],
@@ -591,7 +621,7 @@ const [profitSummary, setProfitSummary] = useState({
           incentiveType: data.incentiveType || "percentage",
           incentiveValue: data.incentiveValue || "",
           vatIncluded: data.sellingVatIncluded || false,
-          vatPercent: data.sellingVatPercent?.toString() || "18",
+          vatPercent: data.sellingVatPercent?.toString() || "20",
           discounts: data.discountsJson
             ? JSON.parse(data.discountsJson)
             : [{ id: 1, description: "", amount: "", type: "fixed" }],
@@ -615,47 +645,73 @@ const [profitSummary, setProfitSummary] = useState({
 // ✅ Auto-tick commission and incentive checkboxes if their values already exist (after loading)
 // ✅ Auto-tick commission and incentive checkboxes if their values exist (after loading or prefill)
 // ✅ Auto-tick or untick Commission, Incentive, and VAT checkboxes dynamically
+// useEffect(() => {
+//   if (!loading) {
+//     // --- COMMISSION (BUYING SIDE) ---
+//     const commValue = parseFloat(buying.commissionValue) || 0;
+//     if (commValue > 0 && !buying.commissionable) {
+//       setBuying(prev => ({ ...prev, commissionable: true }));
+//     } else if ((commValue === 0 || buying.commissionValue === "" || buying.commissionValue === null) && buying.commissionable) {
+//       setBuying(prev => ({ ...prev, commissionable: false }));
+//     }
+
+//     // --- INCENTIVE (SELLING SIDE) ---
+//     const incValue = parseFloat(selling.incentiveValue) || 0;
+//     if (incValue > 0 && !selling.incentive) {
+//       setSelling(prev => ({ ...prev, incentive: true }));
+//     } else if ((incValue === 0 || selling.incentiveValue === "" || selling.incentiveValue === null) && selling.incentive) {
+//       setSelling(prev => ({ ...prev, incentive: false }));
+//     }
+
+//     // --- VAT (BUYING SIDE) ---
+//     const vatPercentBuy = parseFloat(buying.vatPercent) || 0;
+//     if (vatPercentBuy > 0 && !buying.vatIncluded) {
+//       setBuying(prev => ({ ...prev, vatIncluded: true }));
+//     } else if ((vatPercentBuy === 0 || buying.vatPercent === "" || buying.vatPercent === null) && buying.vatIncluded) {
+//       setBuying(prev => ({ ...prev, vatIncluded: false }));
+//     }
+
+//     // --- VAT (SELLING SIDE) ---
+//     const vatPercentSell = parseFloat(selling.vatPercent) || 0;
+//     if (vatPercentSell > 0 && !selling.vatIncluded) {
+//       setSelling(prev => ({ ...prev, vatIncluded: true }));
+//     } else if ((vatPercentSell === 0 || selling.vatPercent === "" || selling.vatPercent === null) && selling.vatIncluded) {
+//       setSelling(prev => ({ ...prev, vatIncluded: false }));
+//     }
+//   }
+// }, [
+//   loading,
+//   buying.commissionValue,
+//   selling.incentiveValue,
+//   buying.vatPercent,
+//   selling.vatPercent,
+// ]);
 useEffect(() => {
-  if (!loading) {
-    // --- COMMISSION (BUYING SIDE) ---
-    const commValue = parseFloat(buying.commissionValue) || 0;
-    if (commValue > 0 && !buying.commissionable) {
-      setBuying(prev => ({ ...prev, commissionable: true }));
-    } else if ((commValue === 0 || buying.commissionValue === "" || buying.commissionValue === null) && buying.commissionable) {
-      setBuying(prev => ({ ...prev, commissionable: false }));
-    }
-
-    // --- INCENTIVE (SELLING SIDE) ---
-    const incValue = parseFloat(selling.incentiveValue) || 0;
-    if (incValue > 0 && !selling.incentive) {
-      setSelling(prev => ({ ...prev, incentive: true }));
-    } else if ((incValue === 0 || selling.incentiveValue === "" || selling.incentiveValue === null) && selling.incentive) {
-      setSelling(prev => ({ ...prev, incentive: false }));
-    }
-
-    // --- VAT (BUYING SIDE) ---
-    const vatPercentBuy = parseFloat(buying.vatPercent) || 0;
-    if (vatPercentBuy > 0 && !buying.vatIncluded) {
-      setBuying(prev => ({ ...prev, vatIncluded: true }));
-    } else if ((vatPercentBuy === 0 || buying.vatPercent === "" || buying.vatPercent === null) && buying.vatIncluded) {
-      setBuying(prev => ({ ...prev, vatIncluded: false }));
-    }
-
-    // --- VAT (SELLING SIDE) ---
-    const vatPercentSell = parseFloat(selling.vatPercent) || 0;
-    if (vatPercentSell > 0 && !selling.vatIncluded) {
-      setSelling(prev => ({ ...prev, vatIncluded: true }));
-    } else if ((vatPercentSell === 0 || selling.vatPercent === "" || selling.vatPercent === null) && selling.vatIncluded) {
-      setSelling(prev => ({ ...prev, vatIncluded: false }));
-    }
+  const v = parseFloat(buying.commissionValue);
+  if (!isNaN(v) && v > 0 && !buying.commissionable) {
+    setBuying(prev => ({ ...prev, commissionable: true }));
   }
-}, [
-  loading,
-  buying.commissionValue,
-  selling.incentiveValue,
-  buying.vatPercent,
-  selling.vatPercent,
-]);
+}, [buying.commissionValue]);
+useEffect(() => {
+  const v = parseFloat(selling.incentiveValue);
+  if (!isNaN(v) && v > 0 && !selling.incentive) {
+    setSelling(prev => ({ ...prev, incentive: true }));
+  }
+}, [selling.incentiveValue]);
+useEffect(() => {
+  const v = parseFloat(buying.vatPercent);
+  if (!isNaN(v) && v > 0 && !buying.vatIncluded) {
+    setBuying(prev => ({ ...prev, vatIncluded: true }));
+  }
+}, [buying.vatPercent]);
+
+useEffect(() => {
+  const v = parseFloat(selling.vatPercent);
+  if (!isNaN(v) && v > 0 && !selling.vatIncluded) {
+    setSelling(prev => ({ ...prev, vatIncluded: true }));
+  }
+}, [selling.vatPercent]);
+
 useEffect(() => {
   const value = parseFloat(selling.incentiveValue);
 
@@ -666,9 +722,9 @@ useEffect(() => {
     }
   } else {
     // ❌ Auto-untick if 0, empty, or invalid
-    if (selling.incentive) {
-      setSelling(prev => ({ ...prev, incentive: false }));
-    }
+    // if (selling.incentive) {
+    //   setSelling(prev => ({ ...prev, incentive: false }));
+    // }
   }
 }, [selling.incentiveValue]);
 
@@ -764,10 +820,70 @@ useEffect(() => {
             </div>
           </div>
         )}
+        {bookingDetails && (
+  <div
+    style={{
+      background: "#f8f9fa",
+      border: "1px solid #ddd",
+      borderRadius: "10px",
+      padding: "15px 20px",
+      margin: "15px 0 25px 0",
+      boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+    }}
+  >
+    <h3 style={{ marginTop: 0, color: "#333" }}>Booking Details</h3>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+      <p><strong>Ticket No:</strong> {bookingDetails.ticketNumber}</p>
+      <p><strong>Hotel:</strong> {bookingDetails.hotelName}</p>
+      <p><strong>Agency:</strong> {bookingDetails.agencyName}</p>
+      <p><strong>Check-in:</strong> {bookingDetails.checkIn}</p>
+      <p><strong>Check-out:</strong> {bookingDetails.checkOut}</p>
+      <p><strong>No. of People:</strong> {bookingDetails.numberOfPeople}</p>
+      <p><strong>Status:</strong> {bookingDetails.status}</p>
+      {bookingDetails.supplier && (
+        <p><strong>Supplier:</strong> {bookingDetails.supplier.supplierName}</p>
+      )}
+      {bookingDetails.totalAmount && (
+        <p><strong>Total Amount:</strong> {bookingDetails.totalAmount}</p>
+      )}
+    </div>
+  </div>
+)}
+
       </div>
      
 
  
+<div
+  className="commercial-form-container"
+  style={{
+    pointerEvents: !selectedBookingId ? "none" : "auto",
+    opacity: !selectedBookingId ? 0.4 : 1,
+    position: "relative",
+  }}
+>
+  {!selectedBookingId && (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background: "rgba(255,255,255,0.6)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "18px",
+        fontWeight: "bold",
+        color: "#444",
+        borderRadius: "10px",
+        zIndex: 5,
+      }}
+    >
+      🔒 Please select a booking first
+    </div>
+  )}
+
+  {/* 🔽 everything else stays here (Buying, Selling, Exchange, Profit, etc.) */}
+
 
       {/* TWO COLUMN GRID */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "20px" }}>
@@ -827,6 +943,7 @@ useEffect(() => {
                 <input
                   name="amount"
                   type="number"
+                  onWheel={(e) => e.target.blur()}
                   value={buying.amount}
                   onChange={handleBuyingChange}
                   placeholder="0.00"
@@ -862,6 +979,7 @@ useEffect(() => {
                     <input
                       name="commissionValue"
                       type="number"
+                      onWheel={(e) => e.target.blur()}
                       value={buying.commissionValue}
                       onChange={handleBuyingChange}
                       placeholder={buying.commissionType === "percentage" ? "0.00%" : "0.00"}
@@ -885,6 +1003,7 @@ useEffect(() => {
                 <input
                   name="vatPercent"
                   type="number"
+                  onWheel={(e) => e.target.blur()}
                   onChange={handleBuyingChange}
                   value={buying.vatPercent}
                   step="0.1"
@@ -933,6 +1052,7 @@ useEffect(() => {
                 />
                 <input
                   type="number"
+                  onWheel={(e) => e.target.blur()}
                   placeholder="Amount"
                   value={cost.amount}
                   onChange={(e) => updateAdditionalCost(cost.id, "amount", e.target.value)}
@@ -1039,6 +1159,7 @@ useEffect(() => {
                 <input
                   name="price"
                   type="number"
+                  onWheel={(e) => e.target.blur()}
                   value={selling.price}
                   onChange={handleSellingChange}
                   placeholder="0.00"
@@ -1074,6 +1195,7 @@ useEffect(() => {
                     <input
                       name="incentiveValue"
                       type="number"
+                      onWheel={(e) => e.target.blur()}
                       onChange={handleSellingChange}
                       placeholder={selling.incentiveType === "percentage" ? "0.00%" : "0.00"}
                       style={{ width: "100%", padding: "8px", border: "1px solid #ddd", borderRadius: "5px" }}
@@ -1096,6 +1218,7 @@ useEffect(() => {
                 <input
                   name="vatPercent"
                   type="number"
+                  onWheel={(e) => e.target.blur()}
                   onChange={handleSellingChange}
                   value={selling.vatPercent}
                   step="0.1"
@@ -1144,6 +1267,7 @@ useEffect(() => {
                 />
                 <input
                   type="number"
+                  onWheel={(e) => e.target.blur()}
                   placeholder="Amount"
                   value={discount.amount}
                   onChange={(e) => updateDiscount(discount.id, "amount", e.target.value)}
@@ -1213,6 +1337,7 @@ useEffect(() => {
               <label style={{ fontWeight: "bold", color: "#555" }}>Exchange Rate</label>
               <input
                 type="number"
+                onWheel={(e) => e.target.blur()}
                 value={exchangeRate}
                 onChange={(e) => setExchangeRate(e.target.value)}
                 step="0.0001"
@@ -1474,7 +1599,7 @@ useEffect(() => {
 
   <div style={{ display: "flex", justifyContent: "space-between" }}>
     <span>
-      Base Selling (excluding VAT)
+      Base Sell (excluding VAT)
       {selling.vatIncluded && (
         <span style={{ color: "#777" }}> ({selling.price || 0} incl. VAT)</span>
       )}
@@ -1501,7 +1626,7 @@ useEffect(() => {
   {selling.incentive && sellingCalc.incentiveValue > 0 && (
     <div style={{ display: "flex", justifyContent: "space-between" }}>
       <span>
-        Incentive Given (to Supplier/Agent){" "}
+        Incentive Given (to Booker){" "}
         <span style={{ color: "#777" }}>
           ({selling.incentiveType === "percentage"
             ? `${selling.incentiveValue || 0}%`
@@ -1606,6 +1731,7 @@ useEffect(() => {
     ' Save Commercial'
   )}
 </button>
+    </div>
     </div>
   );
 }

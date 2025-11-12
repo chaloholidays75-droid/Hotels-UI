@@ -15,6 +15,11 @@ import SupplierManagement from './Supplier/SupplierManagement';
 import RecentActivityPage from './Pages/RecentActivityPage';
 import BookingManagement from './Booking/BookingManagement';
 import CommercialForm from './Booking/CommercialForm';
+import TransportationForm from './Transportation/TransportationForm';
+import SettingsPage from './Pages/SettingsPage';
+import ReportsPage from './Pages/ReportsPage';
+import RecentActivitiesPage from './Pages/RecentActivityPage';
+import MultiRoot from './Multi/MultiRoot';
 import './App.css';
 
 // Layout for authenticated pages
@@ -79,11 +84,52 @@ function App() {
           }
         />
         <Route
+          path="/backend/product/multi"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Layout userName={userName} onLogout={handleLogout}>
+                <MultiRoot />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/backend/product/dashboard"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
                 <Dashboard userName={userName} />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/backend/product/settings"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Layout userName={userName} onLogout={handleLogout}>
+                <SettingsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/backend/product/recent-activities"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Layout userName={userName} onLogout={handleLogout}>
+                <RecentActivitiesPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/backend/product/Reports"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Layout userName={userName} onLogout={handleLogout}>
+                <ReportsPage/>
               </Layout>
             </ProtectedRoute>
           }
@@ -134,6 +180,16 @@ function App() {
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
                 <BookingManagement />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/backend/product/transportation"
+          element={
+            <ProtectedRoute isAuthenticated={isAuthenticated}>
+              <Layout userName={userName} onLogout={handleLogout}>
+                <TransportationForm />
               </Layout>
             </ProtectedRoute>
           }

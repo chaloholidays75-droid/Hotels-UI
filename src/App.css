@@ -1,20 +1,32 @@
+/* Base app container */
 .app-container {
   display: flex;
   min-height: 100vh;
-    background-color: #03045e;
-
+  /* background: var(--sb-bg-secondary, #f8f9fa); */
 }
 
-.main-content {
+/* Aligns with sidebar width from sidebar.css */
+.page-content {
   flex: 1;
-  /* Same as sidebar width */
-  padding: 2px 20px;
-  transition: margin-left 0.3s ease;
+  margin-left: 240px;
+  padding: 0.5rem;
+  transition: var(--sb-transition);
+  background: var(--sb-bg-secondary, #f8f9fa);
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
 /* When sidebar is collapsed */
-.sidebar.collapsed ~ .main-content {
-  margin-left: 70px; /* Same as collapsed sidebar width */
+.sb-collapsed ~ .page-content,
+.app-container.sb-collapsed .page-content {
+  margin-left: 50px;
+}
+
+/* On mobile (sidebar hidden) */
+@media (max-width: 768px) {
+  .page-content {
+    margin-left: 0 !important;
+  }
 }
 
 /* For mobile responsiveness */

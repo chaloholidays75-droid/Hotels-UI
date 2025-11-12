@@ -18,59 +18,66 @@ const bookingApi = {
     return res.data;
   },
 
-  // Create booking with rooms
-  createBooking: async (data) => {
-    const payload = {
-      agencyId: data.agencyId,
-      supplierId: data.supplierId,
-      hotelId: data.hotelId,
-      checkIn: data.checkIn,
-      checkOut: data.checkOut,
-      status: data.status || "Confirmed", // ✅ always Confirmed by default
-      deadline: data.deadline || null,
-      specialRequest: data.specialRequest || "",
-      bookingRooms: (data.bookingRooms || []).map((r) => ({
-        roomTypeId: r.roomTypeId,
-        adults: r.adults,
-        children: r.children,
-        childrenAges: Array.isArray(r.childrenAges) ? r.childrenAges : [],
-      })),
-    };
-    const res = await api.post("/Booking", payload);
-    return res.data;
-  },
+// Create booking with rooms
+createBooking: async (data) => {
+  const payload = {
+    agencyId: data.agencyId,
+    agencyStaffId: data.agencyStaffId || null,
+    supplierId: data.supplierId,
+    hotelId: data.hotelId,
+    checkIn: data.checkIn,
+    checkOut: data.checkOut,
+    status: data.status || "Confirmed", // ✅ always Confirmed by default
+    deadline: data.deadline || null,
+    specialRequest: data.specialRequest || "",
+    bookingRooms: (data.bookingRooms || []).map((r) => ({
+      roomTypeId: r.roomTypeId,
+      adults: r.adults,
+      children: r.children,
+      childrenAges: Array.isArray(r.childrenAges) ? r.childrenAges : [],
+      inclusion: r.inclusion || "",
+      leadGuestName: r.leadGuestName || "",    // ✅ lead guest name    
+      guestNames: r.guestNames || [],              // ✅ list of other guests
+    })),
+  };
 
-  // Update booking (full)
-  updateBooking: async (id, data) => {
-    const numberOfRooms = data.bookingRooms?.length || 0;
-    const numberOfPeople =
-      data.bookingRooms?.reduce(
-        (sum, r) => sum + (Number(r.adults) || 0) + (Number(r.children) || 0),
-        0
-      ) || 0;
+  const res = await api.post("/Booking", payload);
+  return res.data;
+},
 
-    const payload = {
-      agencyId: data.agencyId,
-      supplierId: data.supplierId,
-      hotelId: data.hotelId,
-      checkIn: data.checkIn,
-      checkOut: data.checkOut,
-      status: data.status || "Confirmed",
-      deadline: data.deadline || null,
-      specialRequest: data.specialRequest || "",
-      numberOfRooms,
-      numberOfPeople,
-      bookingRooms: (data.bookingRooms || []).map((r) => ({
-        roomTypeId: r.roomTypeId,
-        adults: r.adults,
-        children: r.children,
-        childrenAges: r.childrenAges || [],
-      })),
-    };
+ updateBooking: async (id, data) => {
+  const numberOfRooms = data.bookingRooms?.length || 0;
+  const numberOfPeople =
+    data.bookingRooms?.reduce(
+      (sum, r) => sum + (Number(r.adults) || 0) + (Number(r.children) || 0),
+      0
+    ) || 0;
 
-    const res = await api.put(`/Booking/${id}`, payload);
-    return res.data;
-  },
+  const payload = {
+    agencyId: data.agencyId,
+    supplierId: data.supplierId,
+    hotelId: data.hotelId,
+    checkIn: data.checkIn,
+    checkOut: data.checkOut,
+    status: data.status || "Confirmed",
+    deadline: data.deadline || null,
+    specialRequest: data.specialRequest || "",
+    numberOfRooms,
+    numberOfPeople,
+    bookingRooms: (data.bookingRooms || []).map((r) => ({
+      roomTypeId: r.roomTypeId,
+      adults: r.adults,
+      children: r.children,
+      childrenAges: Array.isArray(r.childrenAges) ? r.childrenAges : [],
+      inclusion: r.inclusion || "",
+      leadGuestName: r.leadGuestName || "",
+      guestNames: Array.isArray(r.guestNames) ? r.guestNames : [],
+    })),
+  };
+
+  const res = await api.put(`/Booking/${id}`, payload);
+  return res.data;
+},
 
   // Delete booking
   deleteBooking: async (id) => {
@@ -155,10 +162,11 @@ const bookingApi = {
   // --------------------------
 
   // Update only booking status (used by dropdown)
-  updateBookingStatus: async (id, status) => {
-    const { data } = await api.put(`/booking/${id}`, { status });
-    return data;
-  },
+ updateBookingStatus: async (id, payload) => {
+  const { data } = await api.patch(`/booking/${id}/status`, payload);
+  return data;
+},
+
 
   // Get bookings still not reconfirmed (for staff reminder)
   getPendingReconfirmations: async () => {

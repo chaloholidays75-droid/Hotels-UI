@@ -1,0 +1,215 @@
+/* Supplier Details Form - 4 Column Layout */
+.supplier-details-form {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.supplier-details-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: #1f2937;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.75rem;
+}
+
+.supplier-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.supplier-field-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.supplier-field-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: #374151;
+  line-height: 1.25;
+}
+
+.supplier-field-label.required::after {
+  content: " *";
+  color: #dc2626;
+}
+
+.supplier-field-input {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: all 0.2s ease-in-out;
+  background-color: #fff;
+}
+
+.supplier-field-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background-color: #fafafa;
+}
+
+.supplier-field-input:hover {
+  border-color: #9ca3af;
+}
+
+.supplier-field-input::placeholder {
+  color: #9ca3af;
+  font-size: 0.8rem;
+}
+
+.supplier-field-input:disabled {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.supplier-field-error {
+  font-size: 0.75rem;
+  color: #dc2626;
+  margin-top: 0.25rem;
+  display: block;
+  line-height: 1.25;
+}
+
+/* Location Selector Styling */
+.supplier-location-wrapper {
+  width: 100%;
+}
+
+.supplier-location-wrapper :global(.location-selector) {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.supplier-location-wrapper :global(.country-selector),
+.supplier-location-wrapper :global(.city-selector) {
+  width: 100%;
+}
+
+.supplier-location-wrapper :global(.location-selector input),
+.supplier-location-wrapper :global(.location-selector select) {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+}
+
+/* Form Actions */
+.supplier-form-actions {
+  grid-column: 1 / -1;
+  margin-top: 2rem;
+  text-align: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.supplier-next-button {
+  padding: 0.875rem 2rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  min-width: 180px;
+}
+
+.supplier-next-button:hover:not(:disabled) {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.supplier-next-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.supplier-next-button:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .supplier-details-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .supplier-details-form {
+    padding: 1rem;
+    max-width: 100%;
+  }
+  
+  .supplier-details-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .supplier-details-title {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .supplier-next-button {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .supplier-details-form {
+    padding: 0.75rem;
+  }
+  
+  .supplier-details-title {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+  }
+  
+  .supplier-field-input {
+    padding: 0.625rem 0.75rem;
+  }
+  
+  .supplier-next-button {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Animation for form interactions */
+.supplier-field-group {
+  animation: supplierFadeInUp 0.3s ease-out;
+}
+
+@keyframes supplierFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

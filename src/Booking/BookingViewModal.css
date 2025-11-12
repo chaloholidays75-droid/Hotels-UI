@@ -255,7 +255,7 @@
   /* position: relative; */
   border: 1px solid #e2e8f0;
   margin-top: 20px;
-  width: 1000px;
+  width: 850px;
  
 }
 
@@ -681,4 +681,695 @@
 /* Adjust spacing for tabbed layout */
 .booking-view-ticket-column.tabbed {
   margin-top: 0;
+}
+/* BookingViewModal.css */
+
+.booking-view-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.booking-view-modal-content-ticket {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.booking-view-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 20px 0 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.booking-view-modal-title-section {
+  flex: 1;
+}
+
+.booking-view-modal-title {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.booking-view-modal-subtitle {
+  margin: 5px 0 0 0;
+  color: #7f8c8d;
+  font-size: 14px;
+}
+
+.booking-view-modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: #95a5a6;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.booking-view-modal-close:hover {
+  background: #f8f9fa;
+  color: #e74c3c;
+}
+
+/* Action Buttons Header */
+.booking-view-modal-actions-header {
+  display: flex;
+  gap: 10px;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  flex-wrap: wrap;
+}
+
+.booking-view-action-btn {
+  padding: 10px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.booking-view-action-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.booking-view-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.booking-view-print-btn {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.booking-view-download-btn {
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.booking-view-email-btn {
+  border-color: #6c757d;
+  color: #6c757d;
+}
+
+.booking-view-print-btn:hover:not(:disabled) {
+  background: #007bff;
+  color: white;
+}
+
+.booking-view-download-btn:hover:not(:disabled) {
+  background: #28a745;
+  color: white;
+}
+
+.booking-view-email-btn:hover:not(:disabled) {
+  background: #6c757d;
+  color: white;
+}
+
+.booking-view-modal-body-ticket {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.booking-view-modal-tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  padding: 0 20px;
+}
+
+.booking-view-modal-tab {
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6c757d;
+  transition: all 0.2s ease;
+}
+
+.booking-view-modal-tab:hover {
+  color: #495057;
+  background: #e9ecef;
+}
+
+.booking-view-modal-tab.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  background: white;
+}
+
+.booking-view-modal-tab-content {
+  padding: 20px;
+}
+
+.booking-view-ticket-two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.booking-view-ticket-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.booking-view-ticket-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.booking-view-ticket-label {
+  font-weight: 600;
+  color: #495057;
+  min-width: 120px;
+}
+
+.booking-view-ticket-value {
+  color: #2c3e50;
+  text-align: right;
+  flex: 1;
+  margin-left: 15px;
+}
+
+.booking-view-ticket-spacer {
+  height: 1px;
+  background: #e9ecef;
+  margin: 10px 0;
+}
+
+.booking-view-ticket-rooms-list {
+  margin-top: 10px;
+}
+
+.booking-view-ticket-room-item {
+  margin-bottom: 15px;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #007bff;
+}
+
+.booking-view-ticket-room-header {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.booking-view-ticket-room-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.booking-view-ticket-indented-line {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.booking-view-ticket-special-request {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 12px;
+  margin-top: 8px;
+  color: #856404;
+  font-style: italic;
+}
+
+.booking-view-commercial-tab {
+  padding: 10px 0;
+}
+
+.booking-view-commercial-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.booking-view-commercial-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.booking-view-commercial-side {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.booking-view-commercial-side h4 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 16px;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 8px;
+}
+
+.booking-view-commercial-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.booking-view-commercial-label {
+  font-weight: 500;
+  color: #495057;
+}
+
+.booking-view-commercial-value {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.booking-view-commercial-subheader {
+  font-weight: 600;
+  color: #6c757d;
+  margin: 10px 0 5px 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.booking-view-commercial-indented {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0 4px 15px;
+  font-size: 13px;
+}
+
+.booking-view-commercial-line.total {
+  border-top: 2px solid #dee2e6;
+  border-bottom: none;
+  margin-top: 10px;
+  padding-top: 12px;
+  font-weight: 700;
+}
+
+.booking-view-commercial-exchange {
+  grid-column: 1 / -1;
+  padding: 15px;
+  background: #e8f4fd;
+  border-radius: 6px;
+  border: 1px solid #b8daff;
+}
+
+.booking-view-commercial-profit {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 2px solid #e9ecef;
+}
+
+.booking-view-commercial-line.profit {
+  font-size: 18px;
+  padding: 12px 0;
+  border-bottom: none;
+}
+
+.booking-view-commercial-value.positive {
+  color: #28a745;
+}
+
+.booking-view-commercial-value.negative {
+  color: #dc3545;
+}
+
+.booking-view-commercial-loading,
+.booking-view-no-commercial,
+.booking-view-ticket-no-rooms {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.booking-view-modal-actions {
+  padding: 20px;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+  background: #f8f9fa;
+}
+
+.booking-view-close-btn {
+  padding: 10px 24px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.booking-view-close-btn:hover {
+  background: #5a6268;
+}
+
+/* Print Styles */
+@media print {
+  .booking-view-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: 9999;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .booking-view-modal-content-ticket {
+    box-shadow: none;
+    margin: 0;
+    max-width: none;
+    max-height: none;
+    border: none;
+  }
+  
+  .booking-view-modal-actions-header,
+  .booking-view-modal-actions,
+  .booking-view-modal-close,
+  .booking-view-modal-tabs {
+    display: none !important;
+  }
+  
+  .booking-view-modal-header {
+    border-bottom: 2px solid #000;
+  }
+  
+  .booking-view-modal-body-ticket {
+    overflow: visible;
+  }
+  
+  .booking-view-modal-tab-content > div {
+    display: block !important;
+  }
+  
+  .booking-view-commercial-side {
+    border: 1px solid #000 !important;
+    page-break-inside: avoid;
+  }
+  
+  .booking-view-ticket-room-item {
+    border-left: 3px solid #000 !important;
+    page-break-inside: avoid;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .booking-view-modal-content-ticket {
+    max-width: 95%;
+    margin: 10px;
+  }
+  
+  .booking-view-ticket-two-column {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .booking-view-commercial-details {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .booking-view-modal-actions-header {
+    justify-content: center;
+  }
+  
+  .booking-view-action-btn {
+    flex: 1;
+    min-width: 120px;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .booking-view-modal-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .booking-view-modal-actions-header {
+    flex-direction: column;
+  }
+  
+  .booking-view-modal-tabs {
+    flex-direction: column;
+    padding: 0;
+  }
+  
+  .booking-view-modal-tab {
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+    border-left: 3px solid transparent;
+  }
+  
+  .booking-view-modal-tab.active {
+    border-left-color: #007bff;
+    border-bottom-color: #e0e0e0;
+  }
+}
+/* Invoice container for better PDF generation */
+.invoice-preview-container {
+  background: white;
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.invoice-preview {
+  font-family: 'Courier New', monospace;
+  background: white;
+  border: 1px solid #ddd;
+}
+
+/* Ensure proper display for PDF generation */
+.invoice-print-container {
+  padding: 20px;
+  font-family: 'Courier New', monospace;
+}
+
+/* Print styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  
+  .invoice-print-container,
+  .invoice-print-container * {
+    visibility: visible;
+  }
+  
+  .invoice-print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  
+  .booking-view-modal-actions-header,
+  .booking-view-modal-actions,
+  .booking-view-modal-close,
+  .booking-view-modal-tabs {
+    display: none !important;
+  }
+}
+/* Compact Invoice Styles for Single Page */
+.compact-invoice .invoice-company-header {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+}
+
+.compact-invoice .invoice-company-name {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.compact-invoice .invoice-company-address {
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.compact-invoice .invoice-preview-table {
+  margin: 10px 0;
+  font-size: 10px;
+}
+
+.compact-invoice .invoice-preview-table td {
+  padding: 3px 6px;
+  line-height: 1.1;
+}
+
+.compact-invoice .invoice-label {
+  width: 100px;
+  font-size: 10px;
+}
+
+.compact-invoice .invoice-value {
+  padding-left: 8px !important;
+  font-size: 10px;
+}
+
+.compact-invoice .invoice-total-amount {
+  font-size: 11px;
+  margin: 8px 0;
+  padding: 6px;
+}
+
+.compact-invoice .invoice-note {
+  font-size: 9px;
+  margin: 6px 0;
+}
+
+.compact-invoice .invoice-bank-details {
+  font-size: 9px;
+  margin-top: 10px;
+  padding: 8px;
+  line-height: 1.2;
+}
+
+/* Force single page for PDF */
+@media print {
+  .invoice-preview {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  .invoice-company-header {
+    page-break-after: avoid;
+  }
+  
+  .invoice-total-amount {
+    page-break-before: avoid;
+  }
+  
+  .invoice-bank-details {
+    page-break-before: avoid;
+  }
+}
+/* Compact Invoice Styles for Single Page */
+.compact-invoice .invoice-company-header {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+}
+
+.compact-invoice .invoice-company-name {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.compact-invoice .invoice-company-address {
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+.compact-invoice .invoice-preview-table {
+  margin: 10px 0;
+  font-size: 10px;
+}
+
+.compact-invoice .invoice-preview-table td {
+  padding: 3px 6px;
+  line-height: 1.1;
+}
+
+.compact-invoice .invoice-label {
+  width: 100px;
+  font-size: 10px;
+}
+
+.compact-invoice .invoice-value {
+  padding-left: 8px !important;
+  font-size: 10px;
+}
+
+.compact-invoice .invoice-total-amount {
+  font-size: 11px;
+  margin: 8px 0;
+  padding: 6px;
+}
+
+.compact-invoice .invoice-note {
+  font-size: 9px;
+  margin: 6px 0;
+}
+
+.compact-invoice .invoice-bank-details {
+  font-size: 9px;
+  margin-top: 10px;
+  padding: 8px;
+  line-height: 1.2;
+}
+
+/* Force single page for PDF */
+@media print {
+  .invoice-preview {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  .invoice-company-header {
+    page-break-after: avoid;
+  }
+  
+  .invoice-total-amount {
+    page-break-before: avoid;
+  }
+  
+  .invoice-bank-details {
+    page-break-before: avoid;
+  }
 }

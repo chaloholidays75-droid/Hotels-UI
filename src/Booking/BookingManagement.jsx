@@ -2,8 +2,8 @@ import React, { useState, useEffect, useContext } from "react";
 import BookingForm from "./BookingForm";
 import BookingList from "./BookingList";
 import BookingViewModal from "./BookingViewModal";
-import BookingEditModal from "./BookingEditModal";
-import CommercialForm from "./CommercialForm"; // Import the CommercialForm
+import BookingEditModal from "./Edit/BookingEditModal";
+import CommercialForm from "./CommercialForm";
 import bookingApi from "../api/bookingApi";
 import "./BookingManagement.css"
 import { AuthContext } from "../context/AuthContext";
@@ -17,9 +17,7 @@ const BookingManagement = () => {
   const [bookings, setBookings] = useState([]);
   const [viewModal, setViewModal] = useState({ isOpen: false, booking: null });
   const [editModal, setEditModal] = useState({ isOpen: false, booking: null });
-  const [loading, setLoading] = useState(false);
   const [commercialModal, setCommercialModal] = useState({ isOpen: false, booking: null });
-
 
   const isAdmin = userRole.toLowerCase() === "admin";
 
@@ -30,19 +28,16 @@ const BookingManagement = () => {
   }, [activeTab]);
 
   const fetchBookings = async () => {
-    setLoading(true);
     try {
       const data = await bookingApi.getBookings();
-      console.log('API Response:', data);
       
-      // Calculate nights for each booking and ensure specialRequest exists
       const mappedBookings = data.map((b) => {
         const nights = Math.ceil((new Date(b.checkOut) - new Date(b.checkIn)) / (1000 * 60 * 60 * 24));
         
         return {
-          ...b, // Keep all the original API data
+          ...b,
           nights: nights,
-          specialRequest: b.specialRequest || "" // Add specialRequest if missing
+          specialRequest: b.specialRequest || ""
         };
       });
       
@@ -50,15 +45,10 @@ const BookingManagement = () => {
     } catch (error) {
       console.error("Error fetching bookings:", error);
       alert("Failed to fetch bookings");
-    } finally {
-      setLoading(false);
     }
   };
 
   const openViewModal = (booking) => {
-    console.log('Opening view modal with booking:', booking);
-    console.log('Booking rooms:', booking.rooms);
-    console.log('Number of people:', booking.numberOfPeople);
     setViewModal({ isOpen: true, booking });
   };
 
@@ -95,62 +85,61 @@ const BookingManagement = () => {
     } catch (err) {
       console.error(err);
       alert("Failed to update booking status");
-      // rollback
       setBookings((prev) =>
         prev.map((b) => (b.id === id ? { ...b, status: currentStatus } : b))
       );
     }
   };
+
   const openCommercialModal = (booking) => {
-  if (!isAdmin) {
-    alert("You do not have permission to edit commercial data.");
-    return;
-  }
-  setCommercialModal({ isOpen: true, booking });
-};
+    if (!isAdmin) {
+      alert("You do not have permission to edit commercial data.");
+      return;
+    }
+    setCommercialModal({ isOpen: true, booking });
+  };
 
-const closeCommercialModal = () => {
-  setCommercialModal({ isOpen: false, booking: null });
-  fetchBookings(); // Refresh to show updated commercial data
-};
-
+  const closeCommercialModal = () => {
+    setCommercialModal({ isOpen: false, booking: null });
+    fetchBookings();
+  };
 
   return (
-    <div className="booking-management-container">
-      <div className="booking-management-header-tabs-container">
-        <div className="booking-management-header-section">
-          <div className="booking-management-title-section">
-            <h1 className="booking-management-main-title">📖 Booking Management</h1>
-            <p className="booking-management-subtitle">Manage bookings, hotels, agencies, and suppliers</p>
+    <div className="bms-page-content">
+      <div className="bms-system-header">
+        <div className="bms-header-content">
+          <div className="bms-header-content-title">
+            <h1 className="bms-header-title">Booking Management</h1>
+            <p className="bms-header-subtitle">Manage bookings, hotels, agencies, and suppliers</p>
+            <div className="bms-user-role-badge">
+              Logged in as: <span className={`bms-role-${userRole.toLowerCase()}`}>{userRole}</span>
+            </div>
           </div>
-          <div className="booking-management-user-role-badge">
-            Logged in as: <span className={`booking-management-role-${userRole.toLowerCase()}`}>{userRole}</span>
-          </div>
-        </div>
 
-        <div className="booking-management-tabs-section">
-          <button
-            className={activeTab === "add" ? "booking-management-tab booking-management-tab-active" : "booking-management-tab"}
-            onClick={() => handleTabChange("add")}
-          >
-            Quick Booking
-          </button>
-          <button
-            className={activeTab === "view" ? "booking-management-tab booking-management-tab-active" : "booking-management-tab"}
-            onClick={() => handleTabChange("view")}
-          >
-            View Bookings ({bookings.length})
-          </button>
-          <button
-            className={activeTab === "commercial" ? "booking-management-tab booking-management-tab-active" : "booking-management-tab"}
-            onClick={() => handleTabChange("commercial")}
-          >
-             Booking + Commercial
-          </button>
+          <div className="bms-nav-buttons">
+            <button
+              className={`bms-nav-button ${activeTab === "add" ? "bms-active" : ""}`}
+              onClick={() => handleTabChange("add")}
+            >
+              Quick Booking
+            </button>
+            <button
+              className={`bms-nav-button ${activeTab === "view" ? "bms-active" : ""}`}
+              onClick={() => handleTabChange("view")}
+            >
+              View Bookings ({bookings.length})
+            </button>
+            <button
+              className={`bms-nav-button ${activeTab === "commercial" ? "bms-active" : ""}`}
+              onClick={() => handleTabChange("commercial")}
+            >
+              Booking + Commercial
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="booking-management-tab-content">
+      <div className="bms-content">
         {activeTab === "add" ? (
           <BookingForm
             booking={null}
@@ -163,7 +152,6 @@ const closeCommercialModal = () => {
         ) : activeTab === "view" ? (
           <BookingList
             bookings={bookings}
-            loading={loading}
             openViewModal={openViewModal}
             openEditModal={openEditModal}
             toggleBookingStatus={toggleBookingStatus}
@@ -182,22 +170,22 @@ const closeCommercialModal = () => {
           />
         )}
       </div>
-{viewModal.isOpen && (
-  <BookingViewModal 
-    booking={viewModal.booking} 
-    onClose={closeViewModal}
-    onEditCommercial={openCommercialModal} // Add this prop
-  />
-)}
 
-{/* // Add Commercial Modal: */}
-{commercialModal.isOpen && (
-  <CommercialForm 
-    bookingId={commercialModal.booking?.id}
-    onClose={closeCommercialModal}
-    onSave={closeCommercialModal}
-  />
-)}
+      {viewModal.isOpen && (
+        <BookingViewModal 
+          booking={viewModal.booking} 
+          onClose={closeViewModal}
+          onEditCommercial={openCommercialModal}
+        />
+      )}
+
+      {commercialModal.isOpen && (
+        <CommercialForm 
+          bookingId={commercialModal.booking?.id}
+          onClose={closeCommercialModal}
+          onSave={closeCommercialModal}
+        />
+      )}
 
       {editModal.isOpen && (
         <BookingEditModal

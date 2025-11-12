@@ -31,6 +31,13 @@ const RoomTypeSelector = forwardRef(
       isValid: () => !!selectedRoom,
       getSelected: () => selectedRoom
     }));
+useEffect(() => {
+  // find closest table row for z-index bump
+  const row = wrapperRef.current?.closest(".booking-room-row");
+  if (!row) return;
+  if (showDropdown) row.classList.add("dropdown-open");
+  else row.classList.remove("dropdown-open");
+}, [showDropdown]);
 
     // ✅ Close dropdown when clicking outside
     useEffect(() => {
@@ -66,7 +73,7 @@ const RoomTypeSelector = forwardRef(
   const found = roomTypes.find(rt => rt.id === value);
   if (found) {
     setSelectedRoom(found);
-    setRoomSearch(found.name);
+    setRoomSearch(found?.name || "");
   } else {
     // fallback: fetch single room type by ID
     (async () => {
@@ -74,7 +81,7 @@ const RoomTypeSelector = forwardRef(
         const single = await bookingApi.getRoomTypeById(value);
         if (single) {
           setSelectedRoom(single);
-          setRoomSearch(single.name);
+          setRoomSearch(single?.name || "");
         }
       } catch (e) {
         console.warn("Room type fetch failed:", e);
@@ -88,9 +95,12 @@ const RoomTypeSelector = forwardRef(
     }, [fetchRoomTypes]);
 
     // ✅ Filtered list
-    const filteredRooms = roomTypes.filter((rt) =>
-      (rt.name || "").toLowerCase().includes(roomSearch.toLowerCase())
-    );
+    // ✅ Filtered list - crash-proof
+    const filteredRooms = roomTypes.filter((rt) => {
+      const roomName = (rt?.name || "").toLowerCase();
+      const searchTerm = (roomSearch || "").toLowerCase();
+      return roomName.includes(searchTerm);
+    });
 
     // ✅ Handle selection
     const handleSelect = (room) => {
@@ -207,14 +217,14 @@ const RoomTypeSelector = forwardRef(
     };
 
     return (
-      <div className="rt-selector-container" ref={wrapperRef}>
+      <div className="rt-selector-container" ref={wrapperRef} style={{ position: "relative", zIndex: 9999 }}>
         {notice && <div className="rt-selector-notice">{notice}</div>}
 
         <div
           className={`rt-form-group ${errors.roomType ? "rt-error" : ""}`}
           style={{ position: "relative" }}
         >
-          <label className="rt-form-label rt-required">Room Type</label>
+          {/* <label className="rt-form-label rt-required">Room Type</label> */}
           <div className="rt-input-wrapper">
             <input
               ref={inputRef}
