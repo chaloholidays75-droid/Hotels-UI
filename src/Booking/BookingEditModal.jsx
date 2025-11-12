@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from "react";
 import bookingApi from "../api/bookingApi";
 import "./BookingEditModal.css";
-import {
-  getCommercialByBooking,
-  updateCommercial,
-  createCommercial,
-} from "../api/commercialApi";
 
 const sanitizeId = (value) => {
   if (value === null || value === undefined || value === "") return null;
@@ -25,10 +20,7 @@ const parseList = (val) => {
       if (Array.isArray(parsed)) return parsed;
     } catch (e) {}
 
-    return val
-      .split(",")
-      .map((x) => x.trim())
-      .filter(Boolean);
+    return val.split(",").map((x) => x.trim()).filter(Boolean);
   }
   return [];
 };
@@ -57,17 +49,21 @@ function ChipList({ values, onChange }) {
 
   const saveEdit = () => {
     if (editingIndex === null) return;
+
     const updated = [...values];
     updated[editingIndex] = editValue.trim();
     onChange(updated);
+
     setEditingIndex(null);
     setEditValue("");
   };
 
   return (
     <div className="chip-container">
+
       {values.map((v, i) => (
         <div className="chip" key={i}>
+          
           {editingIndex === i ? (
             <input
               className="chip-edit-input"
@@ -85,6 +81,7 @@ function ChipList({ values, onChange }) {
               {v}
             </span>
           )}
+
           <button className="chip-remove" onClick={() => removeValue(i)}>
             ✖
           </button>
@@ -107,10 +104,11 @@ function ChipList({ values, onChange }) {
   );
 }
 
+
 export default function BookingEditModal({
   editModal,
   closeEditModal,
-  refreshBookings,
+  refreshBookings
 }) {
   const b = editModal.booking;
 
@@ -122,22 +120,7 @@ export default function BookingEditModal({
     checkIn: "",
     checkOut: "",
     deadline: "",
-    specialRequest: "",
-  });
-
-  const [commercial, setCommercial] = useState({
-    id: null,
-    buyingCurrency: "USD",
-    buyingAmount: "",
-    sellingCurrency: "USD",
-    sellingPrice: "",
-    commissionType: "percentage",
-    commissionValue: "",
-    incentiveType: "percentage",
-    incentiveValue: "",
-    profit: 0,
-    profitMarginPercent: 0,
-    markupPercent: 0,
+    specialRequest: ""
   });
 
   const [loading, setLoading] = useState(false);
@@ -153,84 +136,46 @@ export default function BookingEditModal({
 
   const nights = calculateNights(bookingData.checkIn, bookingData.checkOut);
 
-  // ✅ Load booking + commercial
   useEffect(() => {
     if (!editModal.isOpen || !b?.id) return;
 
     bookingApi.getBookingById(b.id).then((bb) => {
       setFullBooking(bb);
+
       setBookingData({
         checkIn: new Date(bb.checkIn).toISOString().slice(0, 16),
         checkOut: new Date(bb.checkOut).toISOString().slice(0, 16),
         deadline: bb.deadline
           ? new Date(bb.deadline).toISOString().slice(0, 16)
           : "",
-        specialRequest: bb.specialRequest || "",
+        specialRequest: bb.specialRequest || ""
       });
 
       bookingApi.getRoomTypesByHotel(bb.hotelId).then((rt) => {
         setRoomTypes(rt || []);
+
         const rawRooms =
           bb.bookingRooms && Array.isArray(bb.bookingRooms)
             ? bb.bookingRooms
             : bb.rooms && Array.isArray(bb.rooms)
             ? bb.rooms
             : [];
+
         setRooms(
           rawRooms.map((r) => ({
             id: r.id,
             roomTypeId: r.roomTypeId ? Number(r.roomTypeId) : null,
             adults: Number(r.adults) || 1,
             children: Number(r.children) || 0,
-            childrenAges: parseList(r.childrenAges),
+            childrenAges: parseList(r.childrenAges), // ✅ FIX
             inclusion: r.inclusion || "",
             leadGuestName: r.leadGuestName || "",
-            guestNames: parseList(r.guestNames),
+            guestNames: parseList(r.guestNames) // ✅ FIX
           }))
         );
       });
     });
-
-    // 🔹 Load commercial for this booking
-    getCommercialByBooking(b.id)
-      .then((c) => {
-        if (c) {
-          setCommercial({
-            id: c.id,
-            buyingCurrency: c.buyingCurrency || "USD",
-            buyingAmount: c.buyingAmount || "",
-            sellingCurrency: c.sellingCurrency || "USD",
-            sellingPrice: c.sellingPrice || "",
-            commissionType: c.commissionType || "percentage",
-            commissionValue: c.commissionValue || "",
-            incentiveType: c.incentiveType || "percentage",
-            incentiveValue: c.incentiveValue || "",
-            profit: c.profit || 0,
-            profitMarginPercent: c.profitMarginPercent || 0,
-            markupPercent: c.markupPercent || 0,
-          });
-        }
-      })
-      .catch(() => {
-        console.warn("No commercial found for this booking, will create new.");
-      });
   }, [editModal.isOpen]);
-
-  // ✅ Auto-calc profit, margin, markup
-  useEffect(() => {
-    const buy = parseFloat(commercial.buyingAmount) || 0;
-    const sell = parseFloat(commercial.sellingPrice) || 0;
-    const profit = sell - buy;
-    const margin = buy ? ((profit / buy) * 100).toFixed(2) : 0;
-    const markup = buy ? ((sell / buy - 1) * 100).toFixed(2) : 0;
-
-    setCommercial((prev) => ({
-      ...prev,
-      profit,
-      profitMarginPercent: margin,
-      markupPercent: markup,
-    }));
-  }, [commercial.buyingAmount, commercial.sellingPrice]);
 
   const updateRoom = (i, field, value) => {
     setRooms((prev) => {
@@ -249,10 +194,10 @@ export default function BookingEditModal({
         roomTypeId: sanitizeId(r.roomTypeId),
         adults: Number(r.adults),
         children: Number(r.children),
-        childrenAges: Array.isArray(r.childrenAges) ? r.childrenAges : [],
+        childrenAges: r.childrenAges && Array.isArray(r.childrenAges) ? r.childrenAges : [], //✅ FIX
         inclusion: r.inclusion || "",
         leadGuestName: r.leadGuestName || "",
-        guestNames: Array.isArray(r.guestNames) ? r.guestNames : [],
+        guestNames: r.guestNames && Array.isArray(r.guestNames) ? r.guestNames : [],
       }));
 
       const payload = {
@@ -260,6 +205,7 @@ export default function BookingEditModal({
         agencyId: sanitizeId(fullBooking?.agencyId),
         supplierId: sanitizeId(fullBooking?.supplierId),
         agencyStaffId: sanitizeId(fullBooking?.agencyStaffId),
+
         checkIn: bookingData.checkIn
           ? new Date(bookingData.checkIn).toISOString()
           : null,
@@ -269,54 +215,24 @@ export default function BookingEditModal({
         deadline: bookingData.deadline
           ? new Date(bookingData.deadline).toISOString()
           : null,
+
         specialRequest: bookingData.specialRequest,
         numberOfRooms: cleanedRooms.length,
         numberOfPeople: cleanedRooms.reduce(
           (sum, r) => sum + r.adults + r.children,
           0
         ),
-        bookingRooms: cleanedRooms,
+
+        bookingRooms: cleanedRooms
       };
 
       await bookingApi.updateBooking(b.id, payload);
-
-      // ✅ Save or update commercial
-      if (commercial.id) {
-        await updateCommercial(commercial.id, {
-          buyingCurrency: commercial.buyingCurrency,
-          buyingAmount: parseFloat(commercial.buyingAmount) || 0,
-          sellingCurrency: commercial.sellingCurrency,
-          sellingPrice: parseFloat(commercial.sellingPrice) || 0,
-          commissionType: commercial.commissionType,
-          commissionValue: parseFloat(commercial.commissionValue) || 0,
-          incentiveType: commercial.incentiveType,
-          incentiveValue: parseFloat(commercial.incentiveValue) || 0,
-          profit: parseFloat(commercial.profit) || 0,
-          profitMarginPercent: parseFloat(commercial.profitMarginPercent) || 0,
-          markupPercent: parseFloat(commercial.markupPercent) || 0,
-        });
-      } else {
-        await createCommercial({
-          bookingId: b.id,
-          buyingCurrency: commercial.buyingCurrency,
-          buyingAmount: parseFloat(commercial.buyingAmount) || 0,
-          sellingCurrency: commercial.sellingCurrency,
-          sellingPrice: parseFloat(commercial.sellingPrice) || 0,
-          commissionType: commercial.commissionType,
-          commissionValue: parseFloat(commercial.commissionValue) || 0,
-          incentiveType: commercial.incentiveType,
-          incentiveValue: parseFloat(commercial.incentiveValue) || 0,
-          profit: parseFloat(commercial.profit) || 0,
-          profitMarginPercent: parseFloat(commercial.profitMarginPercent) || 0,
-          markupPercent: parseFloat(commercial.markupPercent) || 0,
-        });
-      }
 
       refreshBookings();
       closeEditModal();
     } catch (err) {
       console.error("❌ SAVE ERROR:", err);
-      alert("Failed to update booking or commercial!");
+      alert("Failed to update booking!");
     } finally {
       setLoading(false);
     }
@@ -333,23 +249,23 @@ export default function BookingEditModal({
         </div>
 
         <div className="edit-body">
-          {/* Booking fields */}
           <div className="row-3">
             <div className="input-block">
               <label>Agency</label>
               <input type="text" value={fullBooking?.agencyName || ""} disabled />
             </div>
+
             <div className="input-block">
               <label>Hotel</label>
               <input type="text" value={fullBooking?.hotelName || ""} disabled />
             </div>
+
             <div className="input-block">
               <label>Supplier</label>
               <input type="text" value={fullBooking?.supplierName || ""} disabled />
             </div>
           </div>
 
-          {/* Dates */}
           <div className="row-3">
             <div className="input-block">
               <label>Check-In</label>
@@ -362,6 +278,7 @@ export default function BookingEditModal({
                 }
               />
             </div>
+
             <div className="input-block">
               <label>Check-Out</label>
               <input
@@ -373,13 +290,14 @@ export default function BookingEditModal({
                 }
               />
             </div>
+
             <div className="input-block">
               <label>Nights</label>
               <input type="number" value={nights} disabled />
             </div>
           </div>
 
-          {/* Room Table */}
+          {/* ✅ Room table */}
           <div className="room-table-wrapper">
             <table className="room-table">
               <thead>
@@ -394,10 +312,12 @@ export default function BookingEditModal({
                   <th>Inclusion</th>
                 </tr>
               </thead>
+
               <tbody>
                 {rooms.map((r, i) => (
                   <tr key={i}>
                     <td>{i + 1}</td>
+
                     <td>
                       <select
                         value={r.roomTypeId ?? ""}
@@ -413,6 +333,7 @@ export default function BookingEditModal({
                         ))}
                       </select>
                     </td>
+
                     <td>
                       <input
                         type="number"
@@ -423,6 +344,7 @@ export default function BookingEditModal({
                         }
                       />
                     </td>
+
                     <td>
                       <input
                         type="number"
@@ -433,14 +355,16 @@ export default function BookingEditModal({
                         }
                       />
                     </td>
+
+                    {/* ✅ CHILDREN AGES */}
                     <td>
                       <ChipList
                         values={r.childrenAges}
-                        onChange={(newVal) =>
-                          updateRoom(i, "childrenAges", newVal)
-                        }
+                        onChange={(newVal) => updateRoom(i, "childrenAges", newVal)}
                       />
                     </td>
+
+                    {/* ✅ LEAD GUEST */}
                     <td>
                       <input
                         type="text"
@@ -450,14 +374,15 @@ export default function BookingEditModal({
                         }
                       />
                     </td>
+
+                    {/* ✅ GUEST NAMES */}
                     <td>
                       <ChipList
                         values={r.guestNames}
-                        onChange={(newVal) =>
-                          updateRoom(i, "guestNames", newVal)
-                        }
+                        onChange={(newVal) => updateRoom(i, "guestNames", newVal)}
                       />
                     </td>
+
                     <td>
                       <input
                         type="text"
@@ -473,7 +398,6 @@ export default function BookingEditModal({
             </table>
           </div>
 
-          {/* Special Request & Deadline */}
           <div className="split-row">
             <div className="special-block">
               <label>Special Request</label>
@@ -482,11 +406,12 @@ export default function BookingEditModal({
                 onChange={(e) =>
                   setBookingData({
                     ...bookingData,
-                    specialRequest: e.target.value,
+                    specialRequest: e.target.value
                   })
                 }
               ></textarea>
             </div>
+
             <div className="deadline-block">
               <label>Deadline</label>
               <input
@@ -496,119 +421,6 @@ export default function BookingEditModal({
                   setBookingData({ ...bookingData, deadline: e.target.value })
                 }
               />
-            </div>
-          </div>
-
-          {/* 💼 Commercial Section */}
-          <div className="commercial-section">
-            <h3>💼 Commercial Details</h3>
-
-            <div className="row-3">
-              <div className="input-block">
-                <label>Buying Currency</label>
-                <input
-                  value={commercial.buyingCurrency}
-                  onChange={(e) =>
-                    setCommercial({
-                      ...commercial,
-                      buyingCurrency: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="input-block">
-                <label>Buying Amount</label>
-                <input
-                  type="number"
-                  value={commercial.buyingAmount}
-                  onChange={(e) =>
-                    setCommercial({
-                      ...commercial,
-                      buyingAmount: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="input-block">
-                <label>Selling Price</label>
-                <input
-                  type="number"
-                  value={commercial.sellingPrice}
-                  onChange={(e) =>
-                    setCommercial({
-                      ...commercial,
-                      sellingPrice: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="row-3">
-              <div className="input-block">
-                <label>Commission Type</label>
-                <select
-                  value={commercial.commissionType}
-                  onChange={(e) =>
-                    setCommercial({
-                      ...commercial,
-                      commissionType: e.target.value,
-                    })
-                  }
-                >
-                  <option value="percentage">Percentage</option>
-                  <option value="fixed">Fixed</option>
-                </select>
-              </div>
-              <div className="input-block">
-                <label>Commission Value</label>
-                <input
-                  type="number"
-                  value={commercial.commissionValue}
-                  onChange={(e) =>
-                    setCommercial({
-                      ...commercial,
-                      commissionValue: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="input-block">
-                <label>Incentive Value</label>
-                <input
-                  type="number"
-                  value={commercial.incentiveValue}
-                  onChange={(e) =>
-                    setCommercial({
-                      ...commercial,
-                      incentiveValue: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="row-3">
-              <div className="input-block">
-                <label>Profit</label>
-                <input type="number" value={commercial.profit} disabled />
-              </div>
-              <div className="input-block">
-                <label>Profit Margin %</label>
-                <input
-                  type="number"
-                  value={commercial.profitMarginPercent}
-                  disabled
-                />
-              </div>
-              <div className="input-block">
-                <label>Markup %</label>
-                <input
-                  type="number"
-                  value={commercial.markupPercent}
-                  disabled
-                />
-              </div>
             </div>
           </div>
         </div>
