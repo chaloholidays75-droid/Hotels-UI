@@ -2013,3 +2013,33 @@ input[disabled] {
   font-weight: bold;
   color: #c00;
 }
+.add-room-wrapper {
+  text-align: right;
+  margin-top: 8px;
+}
+
+.add-room-btn {
+  background-color: #0077b6;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.add-room-btn:hover {
+  background-color: #005f8a;
+}
+
+.remove-room-btn {
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.remove-room-btn:hover {
+  background: #d93636;
+}
