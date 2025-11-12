@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import BookingForm from "./BookingForm";
 import BookingList from "./BookingList";
 import BookingViewModal from "./BookingViewModal";
-import BookingEditModal from "./Edit/BookingEditModal";
+import BookingEditModal from "./BookingEditModal";
 import CommercialForm from "./CommercialForm";
 import bookingApi from "../api/bookingApi";
 import "./BookingManagement.css"
