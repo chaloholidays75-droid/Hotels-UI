@@ -184,6 +184,24 @@ export default function BookingEditModal({
       return copy;
     });
   };
+// 🧩 Add these functions just above handleSave()
+const addRoom = () => {
+  const newRoom = {
+    id: null,
+    roomTypeId: null,
+    adults: 1,
+    children: 0,
+    childrenAges: [],
+    inclusion: "",
+    leadGuestName: "",
+    guestNames: []
+  };
+  setRooms((prev) => [...prev, newRoom]);
+};
+
+const removeRoom = (index) => {
+  setRooms((prev) => prev.filter((_, i) => i !== index));
+};
 
   const handleSave = async () => {
     try {
@@ -298,105 +316,122 @@ export default function BookingEditModal({
           </div>
 
           {/* ✅ Room table */}
-          <div className="room-table-wrapper">
-            <table className="room-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Type</th>
-                  <th>Adults</th>
-                  <th>Children</th>
-                  <th>Ages</th>
-                  <th>Lead Guest</th>
-                  <th>Guests</th>
-                  <th>Inclusion</th>
-                </tr>
-              </thead>
+<div className="room-table-wrapper">
+  <table className="room-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Type</th>
+        <th>Adults</th>
+        <th>Children</th>
+        <th>Ages</th>
+        <th>Lead Guest</th>
+        <th>Guests</th>
+        <th>Inclusion</th>
+        <th>Action</th>
+      </tr>
+    </thead>
 
-              <tbody>
-                {rooms.map((r, i) => (
-                  <tr key={i}>
-                    <td>{i + 1}</td>
+    <tbody>
+      {rooms.map((r, i) => (
+        <tr key={i}>
+          <td>{i + 1}</td>
 
-                    <td>
-                      <select
-                        value={r.roomTypeId ?? ""}
-                        onChange={(e) =>
-                          updateRoom(i, "roomTypeId", sanitizeId(e.target.value))
-                        }
-                      >
-                        <option value="">Select</option>
-                        {roomTypes.map((rt) => (
-                          <option key={rt.id} value={rt.id}>
-                            {rt.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
+          <td>
+            <select
+              value={r.roomTypeId ?? ""}
+              onChange={(e) =>
+                updateRoom(i, "roomTypeId", sanitizeId(e.target.value))
+              }
+            >
+              <option value="">Select</option>
+              {roomTypes.map((rt) => (
+                <option key={rt.id} value={rt.id}>
+                  {rt.name}
+                </option>
+              ))}
+            </select>
+          </td>
 
-                    <td>
-                      <input
-                        type="number"
-                        min="1"
-                        value={r.adults}
-                        onChange={(e) =>
-                          updateRoom(i, "adults", Number(e.target.value))
-                        }
-                      />
-                    </td>
+          <td>
+            <input
+              type="number"
+              min="1"
+              value={r.adults}
+              onChange={(e) =>
+                updateRoom(i, "adults", Number(e.target.value))
+              }
+            />
+          </td>
 
-                    <td>
-                      <input
-                        type="number"
-                        min="0"
-                        value={r.children}
-                        onChange={(e) =>
-                          updateRoom(i, "children", Number(e.target.value))
-                        }
-                      />
-                    </td>
+          <td>
+            <input
+              type="number"
+              min="0"
+              value={r.children}
+              onChange={(e) =>
+                updateRoom(i, "children", Number(e.target.value))
+              }
+            />
+          </td>
 
-                    {/* ✅ CHILDREN AGES */}
-                    <td>
-                      <ChipList
-                        values={r.childrenAges}
-                        onChange={(newVal) => updateRoom(i, "childrenAges", newVal)}
-                      />
-                    </td>
+          <td>
+            <ChipList
+              values={r.childrenAges}
+              onChange={(newVal) => updateRoom(i, "childrenAges", newVal)}
+            />
+          </td>
 
-                    {/* ✅ LEAD GUEST */}
-                    <td>
-                      <input
-                        type="text"
-                        value={r.leadGuestName}
-                        onChange={(e) =>
-                          updateRoom(i, "leadGuestName", e.target.value)
-                        }
-                      />
-                    </td>
+          <td>
+            <input
+              type="text"
+              value={r.leadGuestName}
+              onChange={(e) =>
+                updateRoom(i, "leadGuestName", e.target.value)
+              }
+            />
+          </td>
 
-                    {/* ✅ GUEST NAMES */}
-                    <td>
-                      <ChipList
-                        values={r.guestNames}
-                        onChange={(newVal) => updateRoom(i, "guestNames", newVal)}
-                      />
-                    </td>
+          <td>
+            <ChipList
+              values={r.guestNames}
+              onChange={(newVal) => updateRoom(i, "guestNames", newVal)}
+            />
+          </td>
 
-                    <td>
-                      <input
-                        type="text"
-                        value={r.inclusion}
-                        onChange={(e) =>
-                          updateRoom(i, "inclusion", e.target.value)
-                        }
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <td>
+            <input
+              type="text"
+              value={r.inclusion}
+              onChange={(e) =>
+                updateRoom(i, "inclusion", e.target.value)
+              }
+            />
+          </td>
+
+          {/* 🗑️ Remove Button */}
+          <td>
+            <button
+              className="remove-room-btn"
+              onClick={() => removeRoom(i)}
+              title="Remove this room"
+            >
+              🗑️
+            </button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  {/* ➕ Add Room Button */}
+  <div className="add-room-wrapper">
+    <button className="add-room-btn" onClick={addRoom}>
+      ➕ Add Room
+    </button>
+  </div>
+</div>
+
 
           <div className="split-row">
             <div className="special-block">
