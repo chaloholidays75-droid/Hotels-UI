@@ -60,7 +60,7 @@ export async function login({ email, password, rememberMe }) {
 }
 export async function autoLogin() {
   // uses rememberToken cookie; server returns fresh tokens
-  // const { data } = await api.post("/auth/auto-login");
+  const { data } = await api.post("/auth/auto-login");
   if (data.accessToken) localStorage.setItem("accessToken", data.accessToken);
   if (data.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
   const { name, role } = extractUserFromToken(data.accessToken);
