@@ -4,16 +4,6 @@ import { getCommercialByBooking } from "../api/commercialApi";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
-// Helper function available to all components
-const formatCurrency = (amount, currency = "EUR") => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount || 0);
-};
-
 const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
   const [commercialData, setCommercialData] = useState(null);
   const [loadingCommercial, setLoadingCommercial] = useState(false);
@@ -24,6 +14,7 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
 
   if (!booking) return null;
 
+  // Fetch commercial data when booking is available
   useEffect(() => {
     const fetchCommercialData = async () => {
       if (booking?.id) {
@@ -33,6 +24,7 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
           setCommercialData(data);
         } catch (error) {
           console.error("Failed to fetch commercial data:", error);
+          // Create fallback commercial data
           setCommercialData({
             buyingAmount: booking.totalAmount ? booking.totalAmount * 0.7 : 0,
             sellingPrice: booking.totalAmount || 0,
@@ -60,6 +52,16 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
     }).replace(',', '');
   };
 
+  const formatCurrency = (amount, currency = "EUR") => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount || 0);
+  };
+
+  // Calculate total people from rooms
   const calculateTotalPeople = () => {
     if (booking.numberOfPeople && booking.numberOfPeople > 0) {
       return booking.numberOfPeople;
@@ -78,8 +80,10 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
   const totalPeople = calculateTotalPeople();
   const numberOfRooms = booking.numberOfRooms || (booking.bookingRooms ? booking.bookingRooms.length : 0);
 
+  // Calculate commercial breakdown
   const calculateCommercialBreakdown = () => {
     if (!commercialData) {
+      // Fallback calculation
       const fallbackAmount = booking.totalAmount || (booking.ratePerNight || 0) * nights;
       return {
         buyingCurrency: 'EUR',
@@ -114,6 +118,7 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
       return total + (parseFloat(discount.amount) || 0);
     }, 0);
 
+    // Commission calculation
     let commissionAmount = 0;
     if (commercialData.commissionable && commercialData.commissionValue) {
       const vatRate = commercialData.buyingVatIncluded ? parseFloat(commercialData.buyingVatPercent) / 100 : 0;
@@ -128,6 +133,7 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
       }
     }
 
+    // Incentive calculation
     let incentiveValue = 0;
     if (commercialData.incentive && commercialData.incentiveValue) {
       const vatRate = commercialData.sellingVatIncluded ? parseFloat(commercialData.sellingVatPercent) / 100 : 0;
@@ -174,239 +180,311 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
 
   const commercialBreakdown = calculateCommercialBreakdown();
 
-  // SINGLE generatePDF function with larger fonts for PDF
-  const generatePDF = async () => {
-    setIsGenerating(true);
-    try {
-      if (activeTab !== "invoice") {
-        setActiveTab("invoice");
-        await new Promise(resolve => setTimeout(resolve, 300));
-      }
-
-      const element = invoiceRef.current;
-      if (!element) throw new Error("Invoice element not found");
-
-      // Create a clone with larger styles for PDF
-      const clone = element.cloneNode(true);
-      
-      // Apply larger font styles for PDF
-      clone.style.fontSize = '18px';
-      clone.style.padding = '25px';
-      clone.style.boxSizing = 'border-box';
-      clone.style.width = '210mm'; // A4 width
-      document.body.appendChild(clone);
-
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        width: clone.scrollWidth,
-        height: clone.scrollHeight,
-      });
-
-      document.body.removeChild(clone);
-
-      const imgData = canvas.toDataURL('image/png', 1.0);
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
-      // Use full page width with small margins
-      const imgWidth = pdfWidth - 20;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-      return pdf;
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      throw error;
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  // Print function with larger fonts
-  const handlePrint = () => {
-    setIsGenerating(true);
-    
+  // Generate PDF with improved implementation
+// Generate PDF with optimized single-page approach
+const generatePDF = async () => {
+  setIsGenerating(true);
+  try {
+    // Ensure invoice tab is active and rendered
     if (activeTab !== "invoice") {
       setActiveTab("invoice");
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
 
-    setTimeout(() => {
-      const invoiceElement = invoiceRef.current;
-      if (!invoiceElement) {
-        alert("Invoice content not available for printing. Please try again.");
-        setIsGenerating(false);
-        return;
-      }
+    const element = invoiceRef.current;
+    if (!element) {
+      throw new Error("Invoice element not found");
+    }
 
-      const printContent = invoiceElement.innerHTML;
-      const printWindow = window.open('', '_blank', 'width=800,height=600');
+    // Create a clone of the element for PDF generation
+    const clone = element.cloneNode(true);
+    clone.style.width = '190mm'; // Set fixed width for A4
+    clone.style.padding = '20px';
+    clone.style.boxSizing = 'border-box';
+    document.body.appendChild(clone);
+
+    const canvas = await html2canvas(clone, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      width: 794, // A4 width in pixels at 96 DPI (210mm * 3.78)
+      height: clone.scrollHeight,
+      windowWidth: 794,
+      windowHeight: clone.scrollHeight,
+      scrollX: 0,
+      scrollY: 0
+    });
+
+    // Remove clone from DOM
+    document.body.removeChild(clone);
+
+    const imgData = canvas.toDataURL('image/png', 1.0);
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    // Calculate image dimensions to fit on one page
+    const imgWidth = pdfWidth - 20; // 10mm margins on each side
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    // Check if content fits on one page
+    if (imgHeight <= pdfHeight - 20) {
+      // Single page
+      pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
+    } else {
+      // Multiple pages needed (unlikely with invoice format)
+      let position = 10;
+      let remainingHeight = imgHeight;
       
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Invoice - ${booking.ticketNumber || 'Booking'}</title>
-            <style>
-              @media print {
-                @page { 
-                  margin: 10mm; 
-                }
-                body { 
-                  margin: 0; 
-                  padding: 0; 
-                  font-family: 'Courier New', monospace; 
-                  font-size: 18px;
-                  line-height: 1.4;
-                }
-                .invoice-print-fullpage { 
-                  width: 100%; 
-                  height: 100%; 
-                  padding: 15mm;
-                  box-sizing: border-box;
-                }
-                .invoice-header { 
-                  text-align: center; 
-                  margin-bottom: 20px; 
-                }
-                .invoice-company-name { 
-                  font-size: 32px;
-                  font-weight: bold; 
-                  margin: 0 0 10px 0; 
-                }
-                .invoice-company-address { 
-                  font-size: 16px;
-                  line-height: 1.4; 
-                }
-                .invoice-table { 
-                  width: 100%; 
-                  border-collapse: collapse; 
-                  margin: 25px 0;
-                  font-size: 17px;
-                }
-                .invoice-table td { 
-                  padding: 10px 15px;
-                  border-bottom: 2px solid #000;
-                  height: 30px;
-                }
-                .invoice-label { 
-                  font-weight: bold; 
-                  width: 160px;
-                  font-size: 18px;
-                }
-                .invoice-total { 
-                  font-weight: bold; 
-                  font-size: 22px;
-                  text-align: center; 
-                  margin: 30px 0;
-                  padding: 20px;
-                  border: 3px solid #000;
-                }
-                .invoice-note { 
-                  font-size: 16px;
-                  text-align: center; 
-                  margin: 20px 0;
-                  font-style: italic; 
-                }
-                .invoice-bank { 
-                  font-size: 16px;
-                  margin-top: 25px;
-                  padding: 20px;
-                  border: 2px solid #000;
-                  line-height: 1.5;
-                }
-              }
-              
-              @media screen {
-                body { 
-                  margin: 20px; 
-                  font-family: 'Courier New', monospace;
-                  background: white;
-                  font-size: 18px;
-                }
-                .invoice-print-fullpage { 
-                  max-width: 800px; 
-                  margin: 0 auto;
-                }
-                .invoice-header { 
-                  text-align: center; 
-                  margin-bottom: 25px; 
-                }
-                .invoice-company-name { 
-                  font-size: 32px; 
-                  font-weight: bold; 
-                  margin: 0 0 12px 0; 
-                }
-                .invoice-company-address { 
-                  font-size: 16px; 
-                  line-height: 1.4; 
-                }
-                .invoice-table { 
-                  width: 100%; 
-                  border-collapse: collapse; 
-                  margin: 30px 0; 
-                  font-size: 17px; 
-                }
-                .invoice-table td { 
-                  padding: 12px 16px; 
-                  border-bottom: 2px solid #000; 
-                  height: 32px;
-                }
-                .invoice-label { 
-                  font-weight: bold; 
-                  width: 160px; 
-                  font-size: 18px;
-                }
-                .invoice-total { 
-                  font-weight: bold; 
-                  font-size: 22px; 
-                  text-align: center; 
-                  margin: 35px 0; 
-                  padding: 25px; 
-                  border: 3px solid #000; 
-                }
-                .invoice-note { 
-                  font-size: 16px; 
-                  text-align: center; 
-                  margin: 25px 0; 
-                  font-style: italic; 
-                }
-                .invoice-bank { 
-                  font-size: 16px; 
-                  margin-top: 30px; 
-                  padding: 25px; 
-                  border: 2px solid #000; 
-                  line-height: 1.5;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="invoice-print-fullpage">
-              ${printContent}
-            </div>
-            <script>
-              window.onload = function() {
-                window.print();
-                setTimeout(() => window.close(), 1000);
-              }
-            </script>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-      setIsGenerating(false);
-    }, 500);
-  };
+      while (remainingHeight > 0) {
+        const pageHeight = Math.min(remainingHeight, pdfHeight - 20);
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        remainingHeight -= (pdfHeight - 20);
+        position -= (pdfHeight - 20);
+        
+        if (remainingHeight > 0) {
+          pdf.addPage();
+        }
+      }
+    }
 
+    return pdf;
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw error;
+  } finally {
+    setIsGenerating(false);
+  }
+};
+
+// Print functionality with optimized single-page approach
+const handlePrint = () => {
+  setIsGenerating(true);
+  
+  // Switch to invoice tab first
+  if (activeTab !== "invoice") {
+    setActiveTab("invoice");
+  }
+
+  // Wait for render then create print window
+  setTimeout(() => {
+    const invoiceElement = invoiceRef.current;
+    if (!invoiceElement) {
+      alert("Invoice content not available for printing. Please try again.");
+      setIsGenerating(false);
+      return;
+    }
+
+    const printContent = invoiceElement.innerHTML;
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Invoice - ${booking.ticketNumber || 'Booking'}</title>
+          <style>
+            @media print {
+              @page {
+                margin: 10mm;
+                size: A4 portrait;
+              }
+              body { 
+                margin: 0; 
+                padding: 0; 
+                font-family: 'Courier New', monospace;
+                background: white;
+                font-size: 12px;
+                line-height: 1.2;
+              }
+              .invoice-print-container { 
+                width: 190mm;
+                margin: 0 auto;
+                padding: 0;
+                page-break-inside: avoid;
+              }
+              .invoice-company-header { 
+                text-align: center; 
+                margin-bottom: 8px; 
+                border-bottom: 2px solid #000; 
+                padding-bottom: 6px; 
+                page-break-after: avoid;
+              }
+              .invoice-company-name { 
+                font-size: 20px; 
+                font-weight: bold; 
+                margin: 0 0 4px 0; 
+                color: #000;
+              }
+              .invoice-company-address { 
+                font-size: 10px; 
+                line-height: 1.2; 
+                color: #000;
+              }
+              .invoice-preview-table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin: 8px 0; 
+                font-size: 10px; 
+                page-break-inside: avoid;
+              }
+              .invoice-preview-table td { 
+                padding: 3px 6px; 
+                border-bottom: 1px solid #ddd; 
+                vertical-align: top;
+                line-height: 1.1;
+              }
+              .invoice-label { 
+                font-weight: bold; 
+                width: 100px; 
+                color: #000;
+              }
+              .invoice-value { 
+                border-left: 1px solid #ddd; 
+                padding-left: 8px !important; 
+                color: #000;
+              }
+              .invoice-total-amount { 
+                font-weight: bold; 
+                font-size: 11px; 
+                text-align: center; 
+                margin: 8px 0; 
+                padding: 6px; 
+                background: #f5f5f5; 
+                border: 1px solid #000;
+                color: #000;
+                page-break-before: avoid;
+              }
+              .invoice-note { 
+                font-size: 9px; 
+                text-align: center; 
+                margin: 6px 0; 
+                font-style: italic; 
+                color: #000;
+              }
+              .invoice-bank-details { 
+                font-size: 9px; 
+                line-height: 1.2; 
+                margin-top: 8px; 
+                padding: 8px; 
+                background: #f5f5f5; 
+                border: 1px solid #000;
+                border-left: 3px solid #000;
+                color: #000;
+                page-break-before: avoid;
+              }
+            }
+            @media screen {
+              body { 
+                margin: 20px; 
+                font-family: 'Courier New', monospace;
+                background: white;
+                font-size: 12px;
+              }
+              .invoice-print-container { 
+                max-width: 800px; 
+                margin: 0 auto;
+              }
+              .invoice-company-header { 
+                text-align: center; 
+                margin-bottom: 15px; 
+                border-bottom: 2px solid #000; 
+                padding-bottom: 10px; 
+              }
+              .invoice-company-name { 
+                font-size: 24px; 
+                font-weight: bold; 
+                margin: 0 0 8px 0; 
+              }
+              .invoice-company-address { 
+                font-size: 12px; 
+                line-height: 1.3; 
+              }
+              .invoice-preview-table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin: 15px 0; 
+                font-size: 12px; 
+              }
+              .invoice-preview-table td { 
+                padding: 5px 8px; 
+                border-bottom: 1px solid #ddd; 
+              }
+              .invoice-label { 
+                font-weight: bold; 
+                width: 120px; 
+              }
+              .invoice-value { 
+                border-left: 1px solid #ddd; 
+                padding-left: 12px !important; 
+              }
+              .invoice-total-amount { 
+                font-weight: bold; 
+                font-size: 14px; 
+                text-align: center; 
+                margin: 15px 0; 
+                padding: 8px; 
+                background: #f5f5f5; 
+                border: 1px solid #000;
+              }
+              .invoice-note { 
+                font-size: 11px; 
+                text-align: center; 
+                margin: 8px 0; 
+                font-style: italic; 
+              }
+              .invoice-bank-details { 
+                font-size: 11px; 
+                line-height: 1.3; 
+                margin-top: 15px; 
+                padding: 12px; 
+                background: #f5f5f5; 
+                border: 1px solid #000;
+                border-left: 4px solid #000;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="invoice-print-container">
+            ${printContent}
+          </div>
+          <script>
+            window.onload = function() {
+              window.focus();
+              setTimeout(function() {
+                window.print();
+              }, 500);
+            }
+            
+            window.onafterprint = function() {
+              setTimeout(function() {
+                window.close();
+              }, 500);
+            }
+            
+            // Auto-close if print dialog is cancelled
+            setTimeout(function() {
+              if (!document.hidden) {
+                window.close();
+              }
+            }, 5000);
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    
+    setIsGenerating(false);
+  }, 1000);
+};
+  // Download as PDF functionality
   const handleDownloadPDF = async () => {
     try {
       const pdf = await generatePDF();
@@ -418,16 +496,24 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
     }
   };
 
+  // Email functionality
   const handleEmail = async () => {
     try {
       const pdf = await generatePDF();
       const fileName = `invoice-${booking.ticketNumber || 'booking'}.pdf`;
+      
+      // Save PDF first
       pdf.save(fileName);
       
+      // Prepare email content
       const subject = `Invoice ${booking.ticketNumber || ''} - Chalo Holiday Limited`;
-      const body = `INVOICE - CHALO HOLIDAY LIMITED\n\nBooking Reference: ${booking.ticketNumber || 'N/A'}\nGuest: ${getGuestNames()}\nHotel: ${booking.hotelName || 'N/A'}\nCheck-in: ${booking.checkIn ? formatDate(booking.checkIn) : 'N/A'}\nCheck-out: ${booking.checkOut ? formatDate(booking.checkOut) : 'N/A'}\nNights: ${nights}\nTotal Amount: ${formatCurrency(getInvoiceData().totalAmount, getInvoiceData().currency)}\n\nPlease find the detailed invoice attached.\n\nThank you for your business!\n\nChalo Holiday Limited\n40 South Park Crescent, Ilford, London IG11XU, UK\n44 (0) 2030049978 | info@chaloholidays.com`;
+      const body = generateEmailBody();
       
-      const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      // Open email client with instructions
+      const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+        body + '\n\n---\nThe invoice PDF has been automatically downloaded. Please attach it to this email.'
+      )}`;
+      
       window.location.href = mailtoLink;
     } catch (error) {
       console.error('Error preparing email:', error);
@@ -435,6 +521,30 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
     }
   };
 
+  // Generate email body
+  const generateEmailBody = () => {
+    const invoiceData = getInvoiceData();
+
+    return `INVOICE - CHALO HOLIDAY LIMITED
+
+Booking Reference: ${booking.ticketNumber || 'N/A'}
+Guest: ${getGuestNames()}
+Hotel: ${booking.hotelName || 'N/A'}
+Check-in: ${booking.checkIn ? formatDate(booking.checkIn) : 'N/A'}
+Check-out: ${booking.checkOut ? formatDate(booking.checkOut) : 'N/A'}
+Nights: ${nights}
+Total Amount: ${formatCurrency(invoiceData.totalAmount, invoiceData.currency)}
+
+Please find the detailed invoice attached.
+
+Thank you for your business!
+
+Chalo Holiday Limited
+40 South Park Crescent, Ilford, London IG11XU, UK
+44 (0) 2030049978 | info@chaloholidays.com`.trim();
+  };
+
+  // Helper function to get occupancy type
   const getOccupancyType = (people) => {
     switch(people) {
       case 1: return 'Single';
@@ -445,6 +555,7 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
     }
   };
 
+  // Get guest names
   const getGuestNames = () => {
     if (booking.guestNames && Array.isArray(booking.guestNames)) {
       return booking.guestNames.join(', ');
@@ -454,10 +565,22 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
     return booking.guestName || 'N/A';
   };
 
+  // Get lead guest name
   const getLeadGuestName = () => {
     return booking.guestName || 'N/A';
   };
 
+  // Get room guest names
+  const getRoomGuestNames = (room) => {
+    if (room.guestNames && Array.isArray(room.guestNames)) {
+      return room.guestNames.join(', ');
+    } else if (room.guestNames) {
+      return room.guestNames;
+    }
+    return room.leadGuestName || 'N/A';
+  };
+
+  // Get invoice data for display
   const getInvoiceData = () => {
     const today = new Date();
     const formattedDate = today.toLocaleDateString('en-US', {
@@ -484,232 +607,375 @@ const BookingViewModal = ({ booking, onClose, onEditCommercial }) => {
   const invoiceData = getInvoiceData();
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-container" ref={modalRef}>
-        {/* Minimal Header */}
-        <div className="modal-header">
-          <div className="header-minimal">
-            <span className="booking-title">Booking #{booking.ticketNumber || 'N/A'}</span>
-            <button className="close-btn" onClick={onClose}>×</button>
+    <div className="booking-view-modal-overlay">
+      <div className="booking-view-modal-content-ticket" ref={modalRef}>
+        <div className="booking-view-modal-header">
+          <div className="booking-view-modal-title-section">
+            <h2 className="booking-view-modal-title">Booking Ticket</h2>
+            <p className="booking-view-modal-subtitle">
+              Ticket #: {booking.ticketNumber || 'N/A'} | {booking.hotelName || 'N/A'}
+            </p>
           </div>
+          <button 
+            className="booking-view-modal-close"
+            onClick={onClose}
+            aria-label="Close modal"
+          >
+            ×
+          </button>
         </div>
 
         {/* Action Buttons */}
-        <div className="action-bar">
+        <div className="booking-view-modal-actions-header">
           <button 
-            className={`action-btn print ${isGenerating ? 'loading' : ''}`}
+            className="booking-view-action-btn booking-view-print-btn"
             onClick={handlePrint}
             disabled={isGenerating}
           >
-            {isGenerating ? 'Generating...' : 'Print Invoice'}
+            {isGenerating ? 'Generating...' : '🖨️ Print Invoice'}
           </button>
           <button 
-            className={`action-btn download ${isGenerating ? 'loading' : ''}`}
+            className="booking-view-action-btn booking-view-download-btn"
             onClick={handleDownloadPDF}
             disabled={isGenerating}
           >
-            {isGenerating ? 'Generating...' : 'Download PDF'}
+            {isGenerating ? 'Generating...' : '📥 Download PDF'}
           </button>
           <button 
-            className="action-btn email"
+            className="booking-view-action-btn booking-view-email-btn"
             onClick={handleEmail}
             disabled={isGenerating}
           >
-            Email with PDF
+            {isGenerating ? 'Preparing...' : '📧 Email with PDF'}
           </button>
         </div>
 
-        {/* Two Tabs Only */}
-        <div className="tabs-container">
-          <button 
-            className={`tab ${activeTab === "details" ? "active" : ""}`}
-            onClick={() => setActiveTab("details")}
-          >
-            Booking & Commercial
-          </button>
-          <button 
-            className={`tab ${activeTab === "invoice" ? "active" : ""}`}
-            onClick={() => setActiveTab("invoice")}
-          >
-            Invoice Preview
-          </button>
+        <div className="booking-view-modal-body-ticket">
+          {/* Tab Navigation */}
+          <div className="booking-view-modal-tabs">
+            <button 
+              className={`booking-view-modal-tab ${activeTab === "details" ? "active" : ""}`}
+              onClick={() => setActiveTab("details")}
+            >
+              Booking Details
+            </button>
+            <button 
+              className={`booking-view-modal-tab ${activeTab === "commercial" ? "active" : ""}`}
+              onClick={() => setActiveTab("commercial")}
+            >
+              Commercial Data
+            </button>
+            <button 
+              className={`booking-view-modal-tab ${activeTab === "invoice" ? "active" : ""}`}
+              onClick={() => setActiveTab("invoice")}
+            >
+              Invoice Preview
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <div className="booking-view-modal-tab-content active">
+            {activeTab === "details" && (
+              <div className="booking-view-ticket-two-column">
+                {/* Left Column - Booking Details */}
+                <div className="booking-view-ticket-column">
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Ticket Number:</span>
+                    <span className="booking-view-ticket-value">{booking.ticketNumber || 'N/A'}</span>
+                  </div>
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Status:</span>
+                    <span className="booking-view-ticket-value">{booking.status || 'Pending'}</span>
+                  </div>
+
+                  <div className="booking-view-ticket-spacer"></div>
+
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Lead Guest:</span>
+                    <span className="booking-view-ticket-value">{getLeadGuestName()}</span>
+                  </div>
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">All Guests:</span>
+                    <span className="booking-view-ticket-value">{getGuestNames()}</span>
+                  </div>
+
+                  <div className="booking-view-ticket-spacer"></div>
+
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Agency:</span>
+                    <span className="booking-view-ticket-value">{booking.agencyName || 'N/A'}</span>
+                  </div>
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Supplier:</span>
+                    <span className="booking-view-ticket-value">{booking.supplierName || 'N/A'}</span>
+                  </div>
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Hotel:</span>
+                    <span className="booking-view-ticket-value">{booking.hotelName || 'N/A'}</span>
+                  </div>
+                </div>
+
+                {/* Right Column - Dates & Rooms */}
+                <div className="booking-view-ticket-column">
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Check In:</span>
+                    <span className="booking-view-ticket-value">
+                      {booking.checkIn ? formatDate(booking.checkIn) : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Check Out:</span>
+                    <span className="booking-view-ticket-value">
+                      {booking.checkOut ? formatDate(booking.checkOut) : 'N/A'}
+                    </span>
+                  </div>
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Nights:</span>
+                    <span className="booking-view-ticket-value">{nights}</span>
+                  </div>
+
+                  <div className="booking-view-ticket-spacer"></div>
+
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Number Of Rooms:</span>
+                    <span className="booking-view-ticket-value">{numberOfRooms}</span>
+                  </div>
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Total People:</span>
+                    <span className="booking-view-ticket-value">{totalPeople}</span>
+                  </div>
+
+                  <div className="booking-view-ticket-spacer"></div>
+
+                  <div className="booking-view-ticket-line">
+                    <span className="booking-view-ticket-label">Rooms:</span>
+                  </div>
+                  <div className="booking-view-ticket-rooms-list">
+                    {booking.bookingRooms && booking.bookingRooms.length > 0 ? (
+                      booking.bookingRooms.map((room, index) => (
+                        <div key={index} className="booking-view-ticket-room-item">
+                          <div className="booking-view-ticket-room-header">- Room {index + 1}</div>
+                          <div className="booking-view-ticket-room-details">
+                            <div className="booking-view-ticket-indented-line">
+                              <span className="booking-view-ticket-label">Room Type:</span>
+                              <span className="booking-view-ticket-value">
+                                {room.roomTypeName || `Room Type ${room.roomTypeId || 'N/A'}`}
+                              </span>
+                            </div>
+                            <div className="booking-view-ticket-indented-line">
+                              <span className="booking-view-ticket-label">Lead Guest:</span>
+                              <span className="booking-view-ticket-value">{room.leadGuestName || 'N/A'}</span>
+                            </div>
+                            <div className="booking-view-ticket-indented-line">
+                              <span className="booking-view-ticket-label">Adults:</span>
+                              <span className="booking-view-ticket-value">{room.adults || 0}</span>
+                            </div>
+                            <div className="booking-view-ticket-indented-line">
+                              <span className="booking-view-ticket-label">Children:</span>
+                              <span className="booking-view-ticket-value">{room.children || 0}</span>
+                            </div>
+                            <div className="booking-view-ticket-indented-line">
+                              <span className="booking-view-ticket-label">All Guests:</span>
+                              <span className="booking-view-ticket-value">{getRoomGuestNames(room)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="booking-view-ticket-no-rooms">No rooms information available</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "commercial" && (
+              <div className="booking-view-commercial-tab">
+                <div className="booking-view-commercial-section">
+                  {loadingCommercial ? (
+                    <div className="booking-view-commercial-loading">
+                      Loading commercial data...
+                    </div>
+                  ) : commercialBreakdown ? (
+                    <>
+                      {!commercialBreakdown.hasCommercial && (
+                        <div className="commercial-fallback-notice">
+                          <strong>Note:</strong> Using estimated commercial data. Actual commercial data is not available for this booking.
+                        </div>
+                      )}
+                      <div className="booking-view-commercial-details">
+                        <div className="booking-view-commercial-side">
+                          <h4>Cost Side (Buying)</h4>
+                          <div className="booking-view-commercial-line">
+                            <span className="booking-view-commercial-label">Base Amount:</span>
+                            <span className="booking-view-commercial-value">
+                              {formatCurrency(commercialBreakdown.buyingAmount, commercialBreakdown.buyingCurrency)}
+                            </span>
+                          </div>
+                          <div className="booking-view-commercial-line total">
+                            <span className="booking-view-commercial-label">Total Cost:</span>
+                            <span className="booking-view-commercial-value">
+                              {formatCurrency(commercialBreakdown.totalCost, commercialBreakdown.buyingCurrency)}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="booking-view-commercial-side">
+                          <h4>Revenue Side (Selling)</h4>
+                          <div className="booking-view-commercial-line">
+                            <span className="booking-view-commercial-label">Selling Price:</span>
+                            <span className="booking-view-commercial-value">
+                              {formatCurrency(commercialBreakdown.sellingPrice, commercialBreakdown.sellingCurrency)}
+                            </span>
+                          </div>
+                          <div className="booking-view-commercial-line total">
+                            <span className="booking-view-commercial-label">Total Revenue:</span>
+                            <span className="booking-view-commercial-value">
+                              {formatCurrency(commercialBreakdown.totalRevenue, commercialBreakdown.sellingCurrency)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="booking-view-commercial-profit">
+                        <div className="booking-view-commercial-line profit">
+                          <span className="booking-view-commercial-label">Net Profit/Loss:</span>
+                          <span className={`booking-view-commercial-value ${commercialBreakdown.profit >= 0 ? 'positive' : 'negative'}`}>
+                            {formatCurrency(commercialBreakdown.profit, commercialBreakdown.sellingCurrency)}
+                          </span>
+                        </div>
+                        <div className="booking-view-commercial-line">
+                          <span className="booking-view-commercial-label">Profit Margin:</span>
+                          <span className="booking-view-commercial-value">
+                            {commercialBreakdown.profitMargin.toFixed(2)}%
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="booking-view-no-commercial">
+                      No commercial data available
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "invoice" && (
+              <div className="booking-view-invoice-tab">
+                <div className="invoice-preview-container">
+                  <div className="invoice-preview" ref={invoiceRef} id="invoice-preview">
+                    <div className="invoice-company-header">
+                      <h1 className="invoice-company-name">Chalo Holiday Limited</h1>
+                      <div className="invoice-company-address">
+                        Address : 40 South Park Crescent, Ilford, London IG11XU, UK<br />
+                        44 (0) 2030049978  info@chaloholidays.com
+                      </div>
+                    </div>
+
+                    <table className="invoice-preview-table">
+                      <tbody>
+                        <tr>
+                          <td className="invoice-label">Date</td>
+                          <td className="invoice-value">{invoiceData.date}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">To</td>
+                          <td className="invoice-value">{booking.agencyName || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">INVOICE #</td>
+                          <td className="invoice-value">{booking.ticketNumber || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Booking Status</td>
+                          <td className="invoice-value">{booking.status || 'Confirmed'}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Agent Name</td>
+                          <td className="invoice-value">{booking.agencyName || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Guest Name</td>
+                          <td className="invoice-value">{getGuestNames()}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Hotel Name</td>
+                          <td className="invoice-value">{booking.hotelName || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">CHECK-IN</td>
+                          <td className="invoice-value">{booking.checkIn ? formatDate(booking.checkIn) : 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">CHECK-OUT</td>
+                          <td className="invoice-value">{booking.checkOut ? formatDate(booking.checkOut) : 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Nts</td>
+                          <td className="invoice-value">{nights}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">No of Room</td>
+                          <td className="invoice-value">{numberOfRooms} Room's</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Room Category</td>
+                          <td className="invoice-value">{booking.roomCategory || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Occupancy</td>
+                          <td className="invoice-value">{getOccupancyType(totalPeople)} ({totalPeople}Pax)</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Curr</td>
+                          <td className="invoice-value">{invoiceData.currency}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Rate/nt.</td>
+                          <td className="invoice-value">{invoiceData.ratePerNight.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Net Amt.</td>
+                          <td className="invoice-value">{invoiceData.netAmount.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Balance</td>
+                          <td className="invoice-value">{invoiceData.netAmount.toFixed(2)}</td>
+                        </tr>
+                        <tr>
+                          <td className="invoice-label">Bank Charges</td>
+                          <td className="invoice-value">{invoiceData.bankCharges.toFixed(2)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    <div className="invoice-total-amount">
+                      Total Net Payable to Chalo Holiday: {formatCurrency(invoiceData.totalAmount, invoiceData.currency)}
+                    </div>
+
+                    <div className="invoice-note">
+                      Note: Bank Transfer All Charges to be covered by sender
+                    </div>
+
+                    <div className="invoice-bank-details">
+                      <strong>Bank Name : HSBC</strong><br />
+                      <strong>Account Name: CHALO HOLIDAY LIMITED</strong><br />
+                      <strong>Bank Address: 196 Oxford St, Fitzrovia, London W1D 1NT (UK)</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Content Area */}
-        <div className="modal-content">
-          {activeTab === "details" && (
-            <div className="content-grid">
-              {/* Booking Details */}
-              <div className="section">
-                <h3>Booking Information</h3>
-                <div className="info-list">
-                  <div className="info-item">
-                    <span>Ticket Number:</span>
-                    <span>{booking.ticketNumber || 'N/A'}</span>
-                  </div>
-                  <div className="info-item">
-                    <span>Status:</span>
-                    <span>{booking.status || 'Pending'}</span>
-                  </div>
-                  <div className="info-item">
-                    <span>Lead Guest:</span>
-                    <span>{booking.leadGuestName || "Not Defined"}</span>
-                  </div>
-                  <div className="info-item">
-                    <span>Agency:</span>
-                    <span>{booking.agencyName || 'N/A'}</span>
-                  </div>
-                  <div className="info-item">
-                    <span>Supplier:</span>
-                    <span>{booking.supplierName || 'N/A'}</span>
-                  </div>
-                  <div className="info-item">
-                    <span>Hotel:</span>
-                    <span>{booking.hotelName || 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stay Details */}
-              <div className="section">
-                <h3>Stay Details</h3>
-                <div className="info-list">
-                  <div className="info-item">
-                    <span>Check In:</span>
-                    <span>{formatDate(booking.checkIn)}</span>
-                  </div>
-                  <div className="info-item">
-                    <span>Check Out:</span>
-                    <span>{formatDate(booking.checkOut)}</span>
-                  </div>
-                  <div className="info-item">
-                    <span>Nights:</span>
-                    <span>{nights}</span>
-                  </div>
-                  <div className="info-item">
-                    <span>Rooms:</span>
-                    <span>{numberOfRooms}</span>
-                  </div>
-                  <div className="info-item">
-                    <span>Total Guests:</span>
-                    <span>{totalPeople}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Commercial Data */}
-              <div className="section full-width">
-                <h3>Commercial Data</h3>
-                {loadingCommercial ? (
-                  <div className="loading">Loading commercial data...</div>
-                ) : commercialBreakdown ? (
-                  <div className="commercial-grid">
-                    <div className="commercial-card">
-                      <h4>Cost Side</h4>
-                      <div className="commercial-item">
-                        <span>Base Amount:</span>
-                        <span>{formatCurrency(commercialBreakdown.buyingAmount, commercialBreakdown.buyingCurrency)}</span>
-                      </div>
-                      <div className="commercial-item">
-                        <span>Additional Costs:</span>
-                        <span>{formatCurrency(commercialBreakdown.totalAdditionalCosts, commercialBreakdown.buyingCurrency)}</span>
-                      </div>
-                      <div className="commercial-item total">
-                        <span>Total Cost:</span>
-                        <span>{formatCurrency(commercialBreakdown.totalCost, commercialBreakdown.buyingCurrency)}</span>
-                      </div>
-                    </div>
-
-                    <div className="commercial-card">
-                      <h4>Revenue Side</h4>
-                      <div className="commercial-item">
-                        <span>Selling Price:</span>
-                        <span>{formatCurrency(commercialBreakdown.sellingPrice, commercialBreakdown.sellingCurrency)}</span>
-                      </div>
-                      <div className="commercial-item">
-                        <span>Discounts:</span>
-                        <span>{formatCurrency(commercialBreakdown.totalDiscounts, commercialBreakdown.sellingCurrency)}</span>
-                      </div>
-                      <div className="commercial-item total">
-                        <span>Total Revenue:</span>
-                        <span>{formatCurrency(commercialBreakdown.totalRevenue, commercialBreakdown.sellingCurrency)}</span>
-                      </div>
-                    </div>
-
-                    <div className="profit-card">
-                      <h4>Profit Analysis</h4>
-                      <div className="commercial-item">
-                        <span>Net Profit/Loss:</span>
-                        <span className={commercialBreakdown.profit >= 0 ? 'positive' : 'negative'}>
-                          {formatCurrency(commercialBreakdown.profit, commercialBreakdown.sellingCurrency)}
-                        </span>
-                      </div>
-                      <div className="commercial-item">
-                        <span>Profit Margin:</span>
-                        <span>{commercialBreakdown.profitMargin.toFixed(2)}%</span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="no-data">No commercial data available</div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === "invoice" && (
-            <div className="invoice-preview-large" ref={invoiceRef}>
-              <div className="invoice-header-large">
-                <h1 className="invoice-company-name-large">Chalo Holiday Limited</h1>
-                <div className="company-address-large">
-                  40 South Park Crescent, Ilford, London IG11XU, UK<br />
-                  44 (0) 2030049978  info@chaloholidays.com
-                </div>
-              </div>
-
-              <table className="invoice-table-large">
-                <tbody>
-                  {[
-                    { label: "Date", value: invoiceData.date },
-                    { label: "To", value: booking.agencyName },
-                    { label: "INVOICE #", value: booking.ticketNumber },
-                    { label: "Booking Status", value: booking.status },
-                    { label: "Guest Name", value: getGuestNames() },
-                    { label: "Hotel Name", value: booking.hotelName },
-                    { label: "CHECK-IN", value: formatDate(booking.checkIn) },
-                    { label: "CHECK-OUT", value: formatDate(booking.checkOut) },
-                    { label: "Nts", value: nights },
-                    { label: "No of Room", value: `${numberOfRooms} Room's` },
-                    { label: "Room Category", value: booking.roomCategory },
-                    { label: "Occupancy", value: `${getOccupancyType(totalPeople)} (${totalPeople}Pax)` },
-                    { label: "Curr", value: invoiceData.currency },
-                    { label: "Rate/nt.", value: invoiceData.ratePerNight.toFixed(2) },
-                    { label: "Net Amt.", value: invoiceData.netAmount.toFixed(2) },
-                    { label: "Bank Charges", value: invoiceData.bankCharges.toFixed(2) }
-                  ].map((item, index) => (
-                    <tr key={index}>
-                      <td className="invoice-label-large">{item.label}</td>
-                      <td className="invoice-value-large">{item.value || 'N/A'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="invoice-total-large">
-                Total Net Payable to Chalo Holiday: {formatCurrency(invoiceData.totalAmount, invoiceData.currency)}
-              </div>
-
-              <div className="invoice-note-large">
-                Note: Bank Transfer All Charges to be covered by sender
-              </div>
-
-              <div className="invoice-bank-large">
-                <strong>Bank Name : HSBC</strong><br />
-                <strong>Account Name: CHALO HOLIDAY LIMITED</strong><br />
-                <strong>Bank Address: 196 Oxford St, Fitzrovia, London W1D 1NT (UK)</strong>
-              </div>
-            </div>
-          )}
+        <div className="booking-view-modal-actions">
+          <button 
+            className="booking-view-close-btn"
+            onClick={onClose}
+          >
+            Close Ticket
+          </button>
         </div>
       </div>
     </div>
