@@ -7,18 +7,17 @@ import ResetPassword from './Login/ResetPassword';
 import HotelManagementSystem from './Hotel/HotelManagementSystem';
 import AgencyManagement from './Agent/AgencyManagement';
 import Dashboard from './Pages/dashboard';
-import { checkAuth } from './api/authApi';
+import { checkAuth, autoLogin, refreshTokens, logoutApi } from './api/authApi';
 import Loader from './components/loader';
 import HotelSalesList from './Hotel/HotelSalesList';
 import Sidebar from './components/Sidebar';
 import SupplierManagement from './Supplier/SupplierManagement';
-import RecentActivityPage from './Pages/RecentActivityPage';
+import RecentActivitiesPage from './Pages/RecentActivityPage';
 import BookingManagement from './Booking/BookingManagement';
 import CommercialForm from './Booking/CommercialForm';
 import TransportationForm from './Transportation/TransportationForm';
 import SettingsPage from './Pages/SettingsPage';
 import ReportsPage from './Pages/ReportsPage';
-import RecentActivitiesPage from './Pages/RecentActivityPage';
 import MultiRoot from './Multi/MultiRoot';
 import './App.css';
 
@@ -32,7 +31,6 @@ function Layout({ children, userName, onLogout }) {
   );
 }
 
-// Protect routes
 function ProtectedRoute({ children, isAuthenticated }) {
   return isAuthenticated ? children : <Navigate to="/backend/login" replace />;
 }
@@ -42,15 +40,25 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 🔒 Initial auth check + silent auto-login
   useEffect(() => {
     async function verifyAuth() {
       try {
         const { isAuthenticated, userFullName } = await checkAuth();
-        setIsAuthenticated(isAuthenticated);
-        setUserName(userFullName || null);
-      } catch {
+        if (isAuthenticated) {
+          setUserName(userFullName);
+          setIsAuthenticated(true);
+        } else {
+          // fallback to cookie auto-login
+          const auto = await autoLogin();
+          if (auto) {
+            setUserName(auto.userFullName);
+            setIsAuthenticated(true);
+          }
+        }
+      } catch (err) {
+        console.warn("Auth check failed", err);
         setIsAuthenticated(false);
-        setUserName(null);
       } finally {
         setIsLoading(false);
       }
@@ -58,21 +66,50 @@ function App() {
     verifyAuth();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    setIsAuthenticated(false);
-    setUserName(null);
+  // 🔁 Periodically refresh tokens (every 10 min)
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        if (isAuthenticated) await refreshTokens();
+      } catch (e) {
+        console.warn("Token refresh failed", e);
+      }
+    }, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
+
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } finally {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      setIsAuthenticated(false);
+      setUserName(null);
+    }
   };
 
-  if (isLoading) {
-    return <Loader />;
-  }
+  if (isLoading) return <Loader />;
 
   return (
     <Router>
       <Routes>
-        {/* Protected pages with sidebar */}
+        {/* Auth routes */}
+        <Route
+          path="/backend/login"
+          element={
+            isAuthenticated ? (
+              <Navigate to="/" replace />
+            ) : (
+              <Login setUserName={setUserName} setIsAuthenticated={setIsAuthenticated} />
+            )
+          }
+        />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+
+        {/* Protected routes */}
         <Route
           path="/"
           element={
@@ -93,7 +130,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/backend/product/dashboard"
           element={
@@ -125,11 +161,11 @@ function App() {
           }
         />
         <Route
-          path="/backend/product/Reports"
+          path="/backend/product/reports"
           element={
             <ProtectedRoute isAuthenticated={isAuthenticated}>
               <Layout userName={userName} onLogout={handleLogout}>
-                <ReportsPage/>
+                <ReportsPage />
               </Layout>
             </ProtectedRoute>
           }
@@ -205,23 +241,6 @@ function App() {
           }
         />
 
-        {/* Auth routes WITHOUT sidebar */}
-        <Route
-          path="/backend/login"
-          element={
-            isAuthenticated ? (
-              <Navigate to="/" replace />
-            ) : (
-              <Login setUserName={setUserName} setIsAuthenticated={setIsAuthenticated} />
-            )
-          }
-        />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/recent-activities" element={<RecentActivityPage />} />
-
-        {/* Catch-all */}
         <Route path="*" element={<Navigate to="/backend/login" replace />} />
       </Routes>
     </Router>
