@@ -1,10 +1,10 @@
 // Dashboard.jsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { Line, Bar, Doughnut } from "react-chartjs-2";
-import "chart.js/auto";
-import './Dashboard.css';
-import CommercialForm from "../Booking/CommercialForm";
+// import axios from "axios";
+// import { Line, Bar, Doughnut } from "react-chartjs-2";
+// import "chart.js/auto";
+// import './Dashboard.css';
+// import CommercialForm from "../Booking/CommercialForm";
 
 const Dashboard = () => {
   // const [summary, setSummary] = useState({});
