@@ -58,48 +58,46 @@ const decodeJwt = (token) => {
 //     throw err;
 //   }
 // }
-
 export async function login({ email, password, rememberMe }) {
   try {
-    console.log("🔍 LOGIN ATTEMPT...");
-    console.log("➡️ Payload:", { email, passwordMasked: password ? "***" : "", rememberMe });
+    console.log("🔐 Starting login process...");
+    console.log("➡️ Login request details:", {
+      email,
+      rememberMe,
+      password: password ? "(hidden)" : "(empty)"
+    });
 
     const requestBody = { email, password, rememberMe };
 
-    console.log("📤 Sending POST /auth/login");
-    console.log("📦 Body Sent:", requestBody);
+    console.log("📨 Sending POST request → /auth/login");
+    console.log("📦 Request body:", requestBody);
 
     const { data } = await api.post("/auth/login", requestBody);
 
-    console.log("✅ LOGIN SUCCESS RESPONSE:", data);
-
-    // ---------------------------------------------
-    // IMPORTANT:
-    // We DO NOT touch cookies here.
-    // Backend sets HttpOnly cookies automatically.
-    // ---------------------------------------------
+    console.log("✅ Login successful. Server response:", data);
 
     if (data?.accessToken) {
       localStorage.setItem("accessToken", data.accessToken);
-      console.log("💾 Saved accessToken to localStorage");
+      console.log("💾 Access token saved to localStorage.");
     }
 
     if (data?.refreshToken) {
       localStorage.setItem("refreshToken", data.refreshToken);
-      console.log("💾 Saved refreshToken to localStorage");
+      console.log("💾 Refresh token saved to localStorage.");
     }
 
-    console.log("🎉 LOGIN COMPLETED SUCCESSFULLY");
+    console.log("🎉 Login completed successfully.");
     return data;
 
   } catch (err) {
-    console.error("❌ LOGIN FAILED");
-    console.error("❌ ERROR MESSAGE:", err.message);
-    console.error("❌ STATUS:", err.response?.status);
-    console.error("❌ RESPONSE DATA:", err.response?.data);
+    console.error("❌ Login failed.");
+    console.error("⚠️ Reason:", err.message);
+    console.error("📌 Status Code:", err.response?.status);
+    console.error("📄 Server Response:", err.response?.data);
     throw err;
   }
 }
+
 
 export async function autoLogin() {
   // uses rememberToken cookie; server returns fresh tokens
