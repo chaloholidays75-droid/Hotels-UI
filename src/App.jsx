@@ -1,247 +1,225 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import Login from './Login/login';
-import Register from './Login/register';
-import ForgotPassword from './Login/ForgotPassword';
-import ResetPassword from './Login/ResetPassword';
-import HotelManagementSystem from './Hotel/HotelManagementSystem';
-import AgencyManagement from './Agent/AgencyManagement';
-import Dashboard from './Pages/dashboard';
-import { checkAuth, autoLogin, refreshTokens, logoutApi } from './api/authApi';
-import Loader from './components/loader';
-import HotelSalesList from './Hotel/HotelSalesList';
-import Sidebar from './components/Sidebar';
-import SupplierManagement from './Supplier/SupplierManagement';
-import RecentActivitiesPage from './Pages/RecentActivityPage';
-import BookingManagement from './Booking/BookingManagement';
-import CommercialForm from './Booking/CommercialForm';
-import TransportationForm from './Transportation/TransportationForm';
-import SettingsPage from './Pages/SettingsPage';
-import ReportsPage from './Pages/ReportsPage';
-import MultiRoot from './Multi/MultiRoot';
-import './App.css';
+// src/App.jsx
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "./context/AuthContext";
 
-// Layout for authenticated pages
-function Layout({ children, userName, onLogout }) {
+// Auth pages
+import Login from "./Login/login";
+import Register from "./Login/register";
+import ForgotPassword from "./Login/ForgotPassword";
+import ResetPassword from "./Login/ResetPassword";
+
+// Sidebar + Layout
+import Sidebar from "./components/Sidebar";
+import Loader from "./components/loader";
+
+// Pages
+import Dashboard from "./Pages/dashboard";
+import HotelManagementSystem from "./Hotel/HotelManagementSystem";
+import AgencyManagement from "./Agent/AgencyManagement";
+import SupplierManagement from "./Supplier/SupplierManagement";
+import BookingManagement from "./Booking/BookingManagement";
+import CommercialForm from "./Booking/CommercialForm";
+import TransportationForm from "./Transportation/TransportationForm";
+import SettingsPage from "./Pages/SettingsPage";
+import ReportsPage from "./Pages/ReportsPage";
+import RecentActivitiesPage from "./Pages/RecentActivityPage";
+import MultiRoot from "./Multi/MultiRoot";
+import HotelSalesList from "./Hotel/HotelSalesList";
+
+import "./App.css";
+
+
+// ---------------------------
+// Protected Route Component
+// ---------------------------
+function ProtectedRoute({ children }) {
+  const { isAuthenticated } = useContext(AuthContext);
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+}
+
+// ---------------------------
+// Layout Wrapper
+// ---------------------------
+function Layout({ children }) {
+  const { user, logout } = useContext(AuthContext);
+
   return (
     <div className="app-container">
-      <Sidebar userName={userName} onLogout={onLogout} />
+      <Sidebar userName={user?.name} onLogout={logout} />
       <div className="page-content">{children}</div>
     </div>
   );
 }
 
-function ProtectedRoute({ children, isAuthenticated }) {
-  return isAuthenticated ? children : <Navigate to="/backend/login" replace />;
-}
-
+// ---------------------------
+// MAIN APP COMPONENT
+// ---------------------------
 function App() {
-  const [userName, setUserName] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // 🔒 Initial auth check + silent auto-login
-  useEffect(() => {
-    async function verifyAuth() {
-      try {
-        const { isAuthenticated, userFullName } = await checkAuth();
-        if (isAuthenticated) {
-          setUserName(userFullName);
-          setIsAuthenticated(true);
-        } else {
-          // fallback to cookie auto-login
-          const auto = await autoLogin();
-          if (auto) {
-            setUserName(auto.userFullName);
-            setIsAuthenticated(true);
-          }
-        }
-      } catch (err) {
-        console.warn("Auth check failed", err);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    verifyAuth();
-  }, []);
-
-  // 🔁 Periodically refresh tokens (every 10 min)
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      try {
-        if (isAuthenticated) await refreshTokens();
-      } catch (e) {
-        console.warn("Token refresh failed", e);
-      }
-    }, 10 * 6 * 100);
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
-
-  const handleLogout = async () => {
-    try {
-      await logoutApi();
-    } finally {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      setIsAuthenticated(false);
-      setUserName(null);
-    }
-  };
+  const { isLoading, isAuthenticated, user } = useContext(AuthContext);
 
   if (isLoading) return <Loader />;
 
   return (
     <Router>
       <Routes>
-        {/* Auth routes */}
+        {/* PUBLIC ROUTES */}
         <Route
           path="/login"
           element={
-            isAuthenticated ? (
-              <Navigate to="/" replace />
-            ) : (
-              <Login setUserName={setUserName} setIsAuthenticated={setIsAuthenticated} />
-            )
+            isAuthenticated ? <Navigate to="/" replace /> : <Login />
           }
         />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Protected routes */}
+        {/* PROTECTED ROUTES */}
         <Route
           path="/"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
-                <Dashboard userName={userName} />
+            <ProtectedRoute>
+              <Layout>
+                <Dashboard userName={user?.name} />
               </Layout>
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/backend/product/dashboard"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Dashboard userName={user?.name} />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/backend/product/multi"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
+            <ProtectedRoute>
+              <Layout>
                 <MultiRoot />
               </Layout>
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/backend/product/dashboard"
-          element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
-                <Dashboard userName={userName} />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path="/backend/product/settings"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
+            <ProtectedRoute>
+              <Layout>
                 <SettingsPage />
               </Layout>
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/backend/product/recent-activities"
-          element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
-                <RecentActivitiesPage />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+
         <Route
           path="/backend/product/reports"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
+            <ProtectedRoute>
+              <Layout>
                 <ReportsPage />
               </Layout>
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/backend/product/recent-activities"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <RecentActivitiesPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/backend/product/hotel"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
+            <ProtectedRoute>
+              <Layout>
                 <HotelManagementSystem />
               </Layout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/backend/product/agency"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
+            <ProtectedRoute>
+              <Layout>
                 <AgencyManagement />
               </Layout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/backend/product/list"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
+            <ProtectedRoute>
+              <Layout>
                 <HotelSalesList />
               </Layout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/backend/product/supplier"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
+            <ProtectedRoute>
+              <Layout>
                 <SupplierManagement />
               </Layout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/backend/product/booking"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
+            <ProtectedRoute>
+              <Layout>
                 <BookingManagement />
               </Layout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/backend/product/transportation"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
+            <ProtectedRoute>
+              <Layout>
                 <TransportationForm />
               </Layout>
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/backend/product/booking/commercial"
           element={
-            <ProtectedRoute isAuthenticated={isAuthenticated}>
-              <Layout userName={userName} onLogout={handleLogout}>
+            <ProtectedRoute>
+              <Layout>
                 <CommercialForm />
               </Layout>
             </ProtectedRoute>
           }
         />
 
-        <Route path="*" element={<Navigate to="/backend/login" replace />} />
+        {/* FALLBACK */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

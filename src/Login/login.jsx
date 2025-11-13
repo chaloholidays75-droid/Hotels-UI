@@ -17,15 +17,19 @@ function Login({ setUserName, setIsAuthenticated }) {
     password: "",
     rememberMe: false,
   });
+
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  // ✅ Prefill saved credentials & try backend auto-login
+  // ---------------------------------------------------------
+  // ✅ PREFILL email + password from localStorage
+  //    AND try silent autoLogin()
+  // ---------------------------------------------------------
   useEffect(() => {
     (async () => {
-      // ⬇️ Load from localStorage (frontend remember)
+      // Prefill saved login
       const saved = JSON.parse(localStorage.getItem("rememberLogin") || "{}");
       if (saved.email) {
         setFormData({
@@ -35,7 +39,7 @@ function Login({ setUserName, setIsAuthenticated }) {
         });
       }
 
-      // ⬇️ Try backend cookie-based auto-login (silent login)
+      // Try backend cookie auto-login
       try {
         const auto = await autoLogin();
         if (auto) {
@@ -44,11 +48,14 @@ function Login({ setUserName, setIsAuthenticated }) {
           navigate("/");
         }
       } catch {
-        // ignore — no auto login cookie
+        // no cookie — ignore
       }
     })();
   }, [navigate, setIsAuthenticated, setUserName]);
 
+  // ---------------------------------------------------------
+  // Handle input change
+  // ---------------------------------------------------------
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -58,6 +65,9 @@ function Login({ setUserName, setIsAuthenticated }) {
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
+  // ---------------------------------------------------------
+  // Handle form submit
+  // ---------------------------------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
@@ -72,15 +82,19 @@ function Login({ setUserName, setIsAuthenticated }) {
     }
 
     try {
-    const data = await login({
-      email: formData.email,
-      password: formData.password,
-      rememberMe: formData.rememberMe
-    });
+      const data = await login({
+        email: formData.email,
+        password: formData.password,
+        rememberMe: formData.rememberMe,
+      });
+
+      // Store user state
       setUserName(data.userFullName);
       setIsAuthenticated(true);
 
-      // ✅ Save credentials for UI prefill next time
+      // ---------------------------------------------------------
+      // ✅ SAVE email + password for next login
+      // ---------------------------------------------------------
       if (formData.rememberMe) {
         localStorage.setItem(
           "rememberLogin",
@@ -103,6 +117,9 @@ function Login({ setUserName, setIsAuthenticated }) {
     }
   };
 
+  // ---------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg">
@@ -110,12 +127,9 @@ function Login({ setUserName, setIsAuthenticated }) {
           Sign in to your account
         </h2>
 
-        <form
-          className="mt-8 space-y-6"
-          onSubmit={handleSubmit}
-          autoComplete="on"
-        >
-          <div className="rounded-md shadow-sm -space-y-px">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="-space-y-px">
+
             {/* Email */}
             <div className="mb-4">
               <label
@@ -131,7 +145,7 @@ function Login({ setUserName, setIsAuthenticated }) {
                 autoComplete="username"
                 value={formData.email}
                 onChange={handleChange}
-                className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
                 placeholder="Enter your email"
               />
               {errors.email && (
@@ -147,6 +161,7 @@ function Login({ setUserName, setIsAuthenticated }) {
               >
                 Password
               </label>
+
               <div className="relative">
                 <input
                   id="password"
@@ -155,7 +170,7 @@ function Login({ setUserName, setIsAuthenticated }) {
                   autoComplete="current-password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 pr-10"
+                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 pr-10"
                   placeholder="Enter your password"
                 />
                 <button
@@ -166,13 +181,14 @@ function Login({ setUserName, setIsAuthenticated }) {
                   {showPassword ? "🙈" : "👁️"}
                 </button>
               </div>
+
               {errors.password && (
                 <p className="mt-2 text-sm text-red-600">{errors.password}</p>
               )}
             </div>
           </div>
 
-          {/* Remember me + Forgot */}
+          {/* Remember + forgot */}
           <div className="flex items-center justify-between">
             <label className="flex items-center">
               <input
@@ -186,16 +202,15 @@ function Login({ setUserName, setIsAuthenticated }) {
               <span className="ml-2 text-sm text-gray-900">Remember me</span>
             </label>
 
-            <div className="text-sm">
-              <Link
-                to="/forgot"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
-              >
-                Forgot your password?
-              </Link>
-            </div>
+            <Link
+              to="/forgot"
+              className="font-medium text-indigo-600 hover:text-indigo-500 text-sm"
+            >
+              Forgot password?
+            </Link>
           </div>
 
+          {/* General error */}
           {errors.general && (
             <div className="rounded-md bg-red-50 p-4">
               <h3 className="text-sm font-medium text-red-800">
@@ -204,15 +219,14 @@ function Login({ setUserName, setIsAuthenticated }) {
             </div>
           )}
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 px-4 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 disabled:opacity-75"
-            >
-              {isLoading ? "Signing in..." : "Sign in"}
-            </button>
-          </div>
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full py-3 px-4 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 disabled:opacity-75"
+          >
+            {isLoading ? "Signing in..." : "Sign in"}
+          </button>
         </form>
       </div>
     </div>
