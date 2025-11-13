@@ -39,17 +39,17 @@ function Login({ setUserName, setIsAuthenticated }) {
         });
       }
 
-      // Try backend cookie auto-login
-      try {
-        const auto = await autoLogin();
-        if (auto) {
-          setUserName(auto.userFullName);
-          setIsAuthenticated(true);
-          navigate("/");
-        }
-      } catch {
-        // no cookie — ignore
-      }
+      // // Try backend cookie auto-login
+      // try {
+      //   const auto = await autoLogin();
+      //   if (auto) {
+      //     setUserName(auto.userFullName);
+      //     setIsAuthenticated(true);
+      //     navigate("/");
+      //   }
+      // } catch {
+      //   // no cookie — ignore
+      // }
     })();
   }, [navigate, setIsAuthenticated, setUserName]);
 
