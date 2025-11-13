@@ -23,41 +23,84 @@ const decodeJwt = (token) => {
 // }
 
 
+// export async function login({ email, password, rememberMe }) {
+//   try {
+//     console.log("🔍 Debug - Login attempt with:", { email, password, rememberMe });
+//     console.log("🔍 Debug - Request URL:", "/auth/login");
+    
+//     const requestData = { email, password, rememberMe };
+//     console.log("🔍 Debug - Request payload:", JSON.stringify(requestData));
+    
+//     const { data } = await api.post("/auth/login", requestData);
+
+//     console.log("✅ Login successful", data);
+
+//     // Save access token (if returned)
+//     if (data?.accessToken) {
+//       localStorage.setItem("accessToken", data.accessToken);
+//       console.log("🔍 Debug - Access token saved");
+//     }
+
+//     // ✅ Save rememberToken as a secure cookie if backend sent it
+//     if (data?.rememberToken) {
+//       document.cookie = `rememberToken=${data.rememberToken}; Secure; SameSite=None; Domain=.chaloholidayonline.com; Path=/; Max-Age=${
+//         30 * 24 * 60 * 60
+//       }`;
+//       console.log("🔍 Debug - Remember token cookie set");
+//     }
+
+//     return data;
+//   } catch (err) {
+//     console.error("❌ Login failed - Full error:", err);
+//     console.error("❌ Login failed - Response data:", err.response?.data);
+//     console.error("❌ Login failed - Response status:", err.response?.status);
+//     console.error("❌ Login failed - Response headers:", err.response?.headers);
+//     throw err;
+//   }
+// }
+
 export async function login({ email, password, rememberMe }) {
   try {
-    console.log("🔍 Debug - Login attempt with:", { email, password, rememberMe });
-    console.log("🔍 Debug - Request URL:", "/auth/login");
-    
-    const requestData = { email, password, rememberMe };
-    console.log("🔍 Debug - Request payload:", JSON.stringify(requestData));
-    
-    const { data } = await api.post("/auth/login", requestData);
+    console.log("🔍 LOGIN ATTEMPT...");
+    console.log("➡️ Payload:", { email, passwordMasked: password ? "***" : "", rememberMe });
 
-    console.log("✅ Login successful", data);
+    const requestBody = { email, password, rememberMe };
 
-    // Save access token (if returned)
+    console.log("📤 Sending POST /auth/login");
+    console.log("📦 Body Sent:", requestBody);
+
+    const { data } = await api.post("/auth/login", requestBody);
+
+    console.log("✅ LOGIN SUCCESS RESPONSE:", data);
+
+    // ---------------------------------------------
+    // IMPORTANT:
+    // We DO NOT touch cookies here.
+    // Backend sets HttpOnly cookies automatically.
+    // ---------------------------------------------
+
     if (data?.accessToken) {
       localStorage.setItem("accessToken", data.accessToken);
-      console.log("🔍 Debug - Access token saved");
+      console.log("💾 Saved accessToken to localStorage");
     }
 
-    // ✅ Save rememberToken as a secure cookie if backend sent it
-    if (data?.rememberToken) {
-      document.cookie = `rememberToken=${data.rememberToken}; Secure; SameSite=None; Domain=.chaloholidayonline.com; Path=/; Max-Age=${
-        30 * 24 * 60 * 60
-      }`;
-      console.log("🔍 Debug - Remember token cookie set");
+    if (data?.refreshToken) {
+      localStorage.setItem("refreshToken", data.refreshToken);
+      console.log("💾 Saved refreshToken to localStorage");
     }
 
+    console.log("🎉 LOGIN COMPLETED SUCCESSFULLY");
     return data;
+
   } catch (err) {
-    console.error("❌ Login failed - Full error:", err);
-    console.error("❌ Login failed - Response data:", err.response?.data);
-    console.error("❌ Login failed - Response status:", err.response?.status);
-    console.error("❌ Login failed - Response headers:", err.response?.headers);
+    console.error("❌ LOGIN FAILED");
+    console.error("❌ ERROR MESSAGE:", err.message);
+    console.error("❌ STATUS:", err.response?.status);
+    console.error("❌ RESPONSE DATA:", err.response?.data);
     throw err;
   }
 }
+
 export async function autoLogin() {
   // uses rememberToken cookie; server returns fresh tokens
   const { data } = await api.post("/auth/auto-login");
