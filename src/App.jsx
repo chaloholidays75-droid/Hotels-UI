@@ -74,7 +74,7 @@ function App() {
       } catch (e) {
         console.warn("Token refresh failed", e);
       }
-    }, 10 * 60 * 1000);
+    }, 10 * 6 * 100);
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 

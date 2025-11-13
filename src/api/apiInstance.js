@@ -50,10 +50,16 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "https://backend.chaloholidayonline.com/api",
-  withCredentials: true, // ✅ send cookies automatically
+  withCredentials: true,   // ✅ send/receive cookies
+  headers: {
+    "Content-Type": "application/json",  // ✅ prevents urlencoded bug
+    "Accept": "application/json"
+  }
 });
 
-// Add request interceptor for debugging
+// ------------------------------------------------------
+// 🚀 Request Debugger
+// ------------------------------------------------------
 api.interceptors.request.use((config) => {
   console.log("🚀 API Request:", {
     url: config.url,
@@ -61,10 +67,13 @@ api.interceptors.request.use((config) => {
     data: config.data,
     headers: config.headers
   });
+
   return config;
 });
 
-// Add response interceptor for debugging
+// ------------------------------------------------------
+// 🟢 Response Debugger
+// ------------------------------------------------------
 api.interceptors.response.use(
   (response) => {
     console.log("✅ API Response:", {
@@ -74,6 +83,7 @@ api.interceptors.response.use(
     });
     return response;
   },
+
   async (error) => {
     console.error("❌ API Error:", {
       status: error.response?.status,
@@ -84,6 +94,7 @@ api.interceptors.response.use(
         data: error.config?.data
       }
     });
+
     return Promise.reject(error);
   }
 );
