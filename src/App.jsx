@@ -96,7 +96,7 @@ function App() {
       <Routes>
         {/* Auth routes */}
         <Route
-          path="/backend/login"
+          path="/login"
           element={
             isAuthenticated ? (
               <Navigate to="/" replace />
