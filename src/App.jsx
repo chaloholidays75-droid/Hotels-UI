@@ -56,7 +56,13 @@ function Layout({ children }) {
 // MAIN APP COMPONENT
 // ---------------------------
 function App() {
-  const { isLoading, isAuthenticated, user } = useContext(AuthContext);
+  const {
+    isLoading,
+    isAuthenticated,
+    user,
+    setUserName,
+    setIsAuthenticated,
+  } = useContext(AuthContext);
 
   if (isLoading) return <Loader />;
 
@@ -64,12 +70,20 @@ function App() {
     <Router>
       <Routes>
         {/* PUBLIC ROUTES */}
-        <Route
-          path="/login"
-          element={
-            isAuthenticated ? <Navigate to="/" replace /> : <Login />
-          }
-        />
+      <Route
+        path="/login"
+        element={
+          isAuthenticated ? (
+            <Navigate to="/" replace />
+          ) : (
+            <Login
+              setUserName={setUserName}
+              setIsAuthenticated={setIsAuthenticated}
+            />
+          )
+        }
+      />
+
         <Route path="/register" element={<Register />} />
         <Route path="/forgot" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
