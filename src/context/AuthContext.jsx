@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }) => {
   }, [bootstrap]);
 
   const login = useCallback(async (email, password, rememberMe = false) => {
-    const data = await apiLogin(email, password, rememberMe);
+    const data = await apiLogin({ email, password, rememberMe });
     setUser({ name: data.userFullName, role: data.userRole || "Employee" });
     setIsAuthenticated(true);
     scheduleRefresh();
