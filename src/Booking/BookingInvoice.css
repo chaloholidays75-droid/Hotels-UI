@@ -1,0 +1,122 @@
+/* ============================
+   COMPANY HEADER
+   ============================ */
+.invoice-company-header {
+  text-align: center;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #000;
+  margin-bottom: 10px;
+}
+
+.invoice-company-header h1 {
+  font-size: 22px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.invoice-company-header p {
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* ============================
+   TABLE LAYOUT (EXCEL STYLE)
+   ============================ */
+.invoice-wrapper {
+  width: 100%;
+  font-family: Arial, sans-serif;
+  color: #000;
+}
+
+.inv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.inv-table td {
+  border: 1px solid #999;
+  padding: 5px 6px;
+}
+
+/* Labels */
+.inv-label {
+  background: #eeeeee;
+  font-weight: bold;
+  width: 120px;
+}
+
+/* Normal value cell */
+.inv-value {
+  background: #ffffff;
+}
+
+/* Empty spans for Excel 4-column structure */
+.inv-empty {
+  border: none !important;
+  background: white;
+}
+
+/* Highlighted rows */
+.inv-highlight-green {
+  background: #c6efce !important;
+  font-weight: bold;
+}
+
+.inv-highlight-yellow {
+  background: #ffeb9c !important;
+  font-weight: bold;
+}
+
+/* ============================
+   FOOTER SECTIONS
+   ============================ */
+.payable-text {
+  margin-top: 12px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.note {
+  font-style: italic;
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.bank-box {
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid #000;
+  background: #f8f8f8;
+  border-left: 4px solid #000;
+  font-size: 12px;
+}
+
+/* ============================
+   PRINT MODE (A4)
+   ============================ */
+@media print {
+  body.invoice-print-wrapper {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: white;
+  }
+
+  .invoice-wrapper {
+    width: 190mm; /* fits inside A4 with margins */
+  }
+
+  .inv-table td {
+    padding: 4px 5px;
+    font-size: 10px;
+  }
+
+  .invoice-company-header h1 {
+    font-size: 18px;
+  }
+
+  .payable-text {
+    font-size: 14px;
+  }
+}

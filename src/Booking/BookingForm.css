@@ -1071,4 +1071,34 @@
 /* ==============================
    FIX DROPDOWN CLIPPING IN ROOM TABLE
    ============================== */
+/* ---------- A4 PREVIEW MODE ---------- */
+.invoice-a4-preview {
+    width: 210mm;
+    min-height: 297mm;
+    background: #ffffff;
+    margin: 0 auto;
+    padding: 15mm;
+    box-shadow: 0 0 8px rgba(0,0,0,0.25);
+    border: 1px solid #ccc;
+    transform-origin: top center;
+}
 
+/* Scale down A4 to fit screen */
+@media screen {
+    .invoice-a4-preview {
+        transform: scale(0.9); /* optional: change to 0.8 or 1.0 */
+    }
+}
+
+/* In print — full size, no shadow */
+@media print {
+    .invoice-a4-preview {
+        width: 210mm !important;
+        min-height: 297mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        transform: none !important;
+    }
+}

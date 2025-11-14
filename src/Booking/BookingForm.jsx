@@ -13,11 +13,33 @@ import { format } from "date-fns";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
+// ------------------ Success Message Box Component ------------------
+function SuccessMessageBox({ message, onClose }) {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Auto close after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="success-message-box">
+      <div className="success-message-content">
+        <span className="success-icon">✓</span>
+        <span className="success-text">{message}</span>
+        <button className="success-close-btn" onClick={onClose}>×</button>
+      </div>
+    </div>
+  );
+}
+
 const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [agentStaffList, setAgentStaffList] = useState([]);
   const [agentStaffSearch, setAgentStaffSearch] = useState("");
   const [showAgentStaffDropdown, setShowAgentStaffDropdown] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const [booking, setBooking] = useState(
     initialBooking || {
@@ -466,13 +488,25 @@ const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
 
       setLoading(true);
       const res = await bookingApi.createBooking(payload);
-      onSaved?.(res);
+      
+      // Show success message
+      setShowSuccessMessage(true);
+      
+      // Call the onSaved callback after a short delay to show the success message
+      setTimeout(() => {
+        onSaved?.(res);
+      }, 1500);
+      
     } catch (err) {
       console.error(err);
       alert("Failed to save booking. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCloseSuccessMessage = () => {
+    setShowSuccessMessage(false);
   };
 
   // ---------- Validation ----------
@@ -507,6 +541,14 @@ const BookingForm = ({ initialBooking, onSaved, onCancel }) => {
   // ---------- Render ----------
   return (
     <div className="booking-form-container">
+      {/* Success Message Box */}
+      {showSuccessMessage && (
+        <SuccessMessageBox 
+          message="Booking created successfully!" 
+          onClose={handleCloseSuccessMessage}
+        />
+      )}
+      
       <div className="booking-form-grid">
         {/* Agent */}
         <div className="booking-form-box">

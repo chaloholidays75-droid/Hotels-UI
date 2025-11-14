@@ -23,7 +23,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   border: 2px solid #e2e8f0;
   position: relative;
-  font-family: 'Courier New', monospace;
+  /* font-family: 'Courier New', monospace; */
 }
 
 .booking-view-modal-content-ticket::before {
@@ -1191,7 +1191,8 @@
 }
 
 .invoice-preview {
-  font-family: 'Courier New', monospace;
+  /* font-family: 'Courier New', monospace; */
+  font-family: 'Poppins' , sans-serif;
   background: white;
   border: 1px solid #ddd;
 }
@@ -1199,7 +1200,8 @@
 /* Ensure proper display for PDF generation */
 .invoice-print-container {
   padding: 20px;
-  font-family: 'Courier New', monospace;
+  /* font-family: 'Courier New', monospace; */
+  font-family: 'Poppins' , sans-serif;
 }
 
 /* Print styles */
@@ -1372,4 +1374,141 @@
   .invoice-bank-details {
     page-break-before: avoid;
   }
+}
+/* ===== Excel-style invoice layout (scoped) ===== */
+
+.invoice-preview-container {
+  font-family: Calibri, Arial, sans-serif;
+  color: #000;
+}
+
+.invoice-company-header {
+  text-align: center;
+  margin-bottom: 6px;
+  border-bottom: 2px solid #000;
+  padding-bottom: 4px;
+}
+
+.invoice-company-name {
+  color: #c00000; /* red like sample */
+  font-weight: bold;
+  font-size: 18px;
+  margin: 0 0 2px 0;
+}
+
+.invoice-company-address {
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.invoice-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.invoice-preview-table td {
+  border: 1px solid #a0a0a0;
+  padding: 4px 5px;
+  vertical-align: top;
+}
+
+/* blue italic labels */
+.invoice-label {
+  font-weight: bold;
+  font-style: italic;
+  color: #1f4e79;
+}
+
+/* grey background for rate/net rows */
+.invoice-label-grey {
+  background: #d9d9d9;
+}
+
+.invoice-value {
+  color: #000;
+}
+
+.invoice-empty-cell {
+  background: #ffffff;
+}
+
+/* green status like Excel */
+.invoice-status-cell {
+  background: #c6efce;
+  font-weight: bold;
+}
+
+/* yellow balance cell like Excel */
+.invoice-balance-cell {
+  background: #ffeb9c;
+  font-weight: bold;
+}
+
+/* total line */
+.invoice-total-amount {
+  margin-top: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  border-top: 1px solid #000;
+  padding-top: 4px;
+}
+
+.invoice-total-amount span {
+  float: right;
+}
+
+/* note + bank details */
+.invoice-note {
+  margin-top: 6px;
+  font-size: 11px;
+  font-style: italic;
+}
+
+.invoice-bank-details {
+  margin-top: 8px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* logo bottom-right */
+.invoice-logo-row {
+  margin-top: 10px;
+  text-align: right;
+}
+
+.invoice-logo-row img {
+  max-width: 190px;
+  height: auto;
+}
+/* ---------- A4 PREVIEW MODE ---------- */
+.invoice-a4-preview {
+    width: 210mm;
+    min-height: 297mm;
+    background: #ffffff;
+    margin: 0 auto;
+    padding: 15mm;
+    box-shadow: 0 0 8px rgba(0,0,0,0.25);
+    border: 1px solid #ccc;
+    transform-origin: top center;
+}
+
+/* Scale down A4 to fit screen */
+@media screen {
+    .invoice-a4-preview {
+        transform: scale(0.9); /* optional: change to 0.8 or 1.0 */
+    }
+}
+
+/* In print — full size, no shadow */
+@media print {
+    .invoice-a4-preview {
+        width: 210mm !important;
+        min-height: 297mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        transform: none !important;
+    }
 }

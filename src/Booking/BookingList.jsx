@@ -347,7 +347,7 @@ const toggleBookingStatus = async (bookingId, newStatus) => {
           {(booking.bookingRooms || []).map((room, index) => (
             <tr key={index}>
               <td>{booking.ticketNumber} / {index + 1}</td>
-              <td>{room.roomTypeName}</td>
+              <td>{room.name}</td>
               <td>{room.leadGuestName}</td>
               <td>{room.adults}A / {room.children}C</td>
               <td>{(room.childrenAges || []).join(", ") || "-"}</td>

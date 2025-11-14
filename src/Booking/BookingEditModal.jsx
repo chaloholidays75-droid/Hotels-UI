@@ -1,54 +1,97 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import bookingApi from "../api/bookingApi";
 import "./BookingEditModal.css";
 
+import { DateRange } from "react-date-range";
+import { format } from "date-fns";
+import "react-date-range/dist/styles.css";
+import "react-date-range/dist/theme/default.css";
+
+// ------------------ Helpers ------------------
 const sanitizeId = (value) => {
   if (value === null || value === undefined || value === "") return null;
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
 };
 
-// ✅ Converts DB value → editable array format
+let debugShown = false;
+
 const parseList = (val) => {
-  if (!val) return [];
-  if (Array.isArray(val)) return val;
-  if (typeof val === "string") {
-    try {
-      const parsed = JSON.parse(val);
-      if (Array.isArray(parsed)) return parsed;
-    } catch (e) {}
-    return val.split(",").map((x) => x.trim()).filter(Boolean);
+  if (!debugShown) {
+    console.log("parseList first call →", val);
+    debugShown = true;
   }
+
+  if (Array.isArray(val)) return val;
+  if (!val) return [];
+  if (typeof val === "string") {
+    return val
+      .split(",")
+      .map((x) => x.trim())
+      .filter(Boolean);
+  }
+
   return [];
 };
 
-// ✅ Improved ChipList — always controlled & logs live updates
-function ChipList({ values = [], onChange }) {
-  const [inputValue, setInputValue] = useState("");
+const toISODate = (dateObj) => {
+  if (!(dateObj instanceof Date) || isNaN(dateObj)) return "";
+  return dateObj.toISOString().split("T")[0];
+};
 
+const addDays = (iso, days) => {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + days);
+  return toISODate(d);
+};
+
+// ------------------ Message Box Component ------------------
+function SuccessMessageBox({ message, onClose }) {
   useEffect(() => {
-    console.log("🔄 ChipList render →", values);
-  }, [values]);
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000); // Auto close after 3 seconds
+
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className="success-message-box">
+      <div className="success-message-content">
+        <span className="success-icon">✓</span>
+        <span className="success-text">{message}</span>
+        <button className="success-close-btn" onClick={onClose}>×</button>
+      </div>
+    </div>
+  );
+}
+
+// ------------------ ChipList ------------------
+function ChipList({ values = [], onChange, type, onStartTyping, onStopTyping }) {
+  const [inputValue, setInputValue] = useState("");
 
   const addChip = () => {
     const trimmed = inputValue.trim();
     if (!trimmed) return;
-    const updated = [...(values || []), trimmed];
-    console.log("➕ Added chip:", trimmed, "→ New array:", updated);
-    onChange(updated);
+    onChange([...(values || []), trimmed]);
     setInputValue("");
   };
 
   const removeChip = (index) => {
     const updated = values.filter((_, i) => i !== index);
-    console.log("🗑️ Removed chip at index", index, "→", updated);
     onChange(updated);
   };
 
   const editChip = (index, newVal) => {
     const updated = values.map((v, i) => (i === index ? newVal : v));
-    console.log("✏️ Edited chip index", index, "→", updated);
     onChange(updated);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addChip();
+    }
   };
 
   return (
@@ -56,9 +99,14 @@ function ChipList({ values = [], onChange }) {
       {values.map((v, i) => (
         <div className="chip" key={i}>
           <input
-            className="chip-edit-input"
+            className={`chip-edit-input ${
+              type === "guest" ? "guest-chip" : "age-chip"
+            }`}
+            onFocus={onStartTyping}
+            onBlur={onStopTyping}
             value={v}
             onChange={(e) => editChip(i, e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           <button className="chip-remove" onClick={() => removeChip(i)}>
             ✖
@@ -71,10 +119,12 @@ function ChipList({ values = [], onChange }) {
           type="text"
           placeholder="Add..."
           value={inputValue}
+          onFocus={onStartTyping}
+          onBlur={onStopTyping}
           onChange={(e) => setInputValue(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && addChip()}
+          onKeyDown={handleKeyDown}
         />
-        <button className="chip-add-btn" onClick={addChip}>
+        <button className="chip-add-btn tiny" onClick={addChip}>
           + Add
         </button>
       </div>
@@ -82,12 +132,22 @@ function ChipList({ values = [], onChange }) {
   );
 }
 
-export default function BookingEditModal({ editModal, closeEditModal, refreshBookings }) {
+// ------------------ MAIN ------------------
+export default function BookingEditModal({
+  editModal,
+  closeEditModal,
+  refreshBookings,
+}) {
   const b = editModal.booking;
+
+  const calendarRef = useRef(null);
 
   const [fullBooking, setFullBooking] = useState(null);
   const [rooms, setRooms] = useState([]);
   const [roomTypes, setRoomTypes] = useState([]);
+  const [activeEditor, setActiveEditor] = useState(null);
+  const [isTypingChip, setIsTypingChip] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const [bookingData, setBookingData] = useState({
     checkIn: "",
@@ -96,43 +156,85 @@ export default function BookingEditModal({ editModal, closeEditModal, refreshBoo
     specialRequest: "",
   });
 
-  const [loading, setLoading] = useState(false);
-  const today = new Date().toISOString().slice(0, 16);
+  const [showCalendar, setShowCalendar] = useState(false);
 
+  // Close chip popup on click outside (but not while typing)
+  useEffect(() => {
+    const handler = (e) => {
+      if (isTypingChip) return;
+
+      if (
+        e.target.closest(".chip-editor-popup") ||
+        e.target.closest(".collapsed-chip-display")
+      ) {
+        return;
+      }
+
+      setActiveEditor(null);
+    };
+
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [isTypingChip]);
+
+  // DateRange state
+  const [dateRange, setDateRange] = useState([
+    {
+      startDate: b?.checkIn ? new Date(b.checkIn) : new Date(),
+      endDate: b?.checkOut
+        ? new Date(b.checkOut)
+        : new Date(new Date().setDate(new Date().getDate() + 1)),
+      key: "selection",
+    },
+  ]);
+
+  // Calculate nights
   const calculateNights = (ci, co) => {
     if (!ci || !co) return 0;
-    const start = new Date(ci);
-    const end = new Date(co);
-    const diff = end - start;
-    return diff > 0 ? diff / (1000 * 60 * 60 * 24) : 0;
+    return (new Date(co) - new Date(ci)) / (1000 * 60 * 60 * 24);
   };
 
   const nights = calculateNights(bookingData.checkIn, bookingData.checkOut);
 
+  // Close calendar on click outside
+  useEffect(() => {
+    const onClickOutside = (e) => {
+      if (calendarRef.current && !calendarRef.current.contains(e.target)) {
+        setShowCalendar(false);
+      }
+    };
+    if (showCalendar) {
+      document.addEventListener("mousedown", onClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [showCalendar]);
+
+  // Load booking
   useEffect(() => {
     if (!editModal.isOpen || !b?.id) return;
 
     bookingApi.getBookingById(b.id).then((bb) => {
-      console.log("📦 Loaded booking:", bb);
       setFullBooking(bb);
 
       setBookingData({
-        checkIn: new Date(bb.checkIn).toISOString().slice(0, 16),
-        checkOut: new Date(bb.checkOut).toISOString().slice(0, 16),
-        deadline: bb.deadline ? new Date(bb.deadline).toISOString().slice(0, 16) : "",
+        checkIn: toISODate(new Date(bb.checkIn)),
+        checkOut: toISODate(new Date(bb.checkOut)),
+        deadline: bb.deadline ? toISODate(new Date(bb.deadline)) : "",
         specialRequest: bb.specialRequest || "",
       });
 
+      setDateRange([
+        {
+          startDate: new Date(bb.checkIn),
+          endDate: new Date(bb.checkOut),
+          key: "selection",
+        },
+      ]);
+
       bookingApi.getRoomTypesByHotel(bb.hotelId).then((rt) => {
-        console.log("🏨 Room types:", rt);
         setRoomTypes(rt || []);
 
-        const rawRooms =
-          bb.bookingRooms && Array.isArray(bb.bookingRooms)
-            ? bb.bookingRooms
-            : bb.rooms && Array.isArray(bb.rooms)
-            ? bb.rooms
-            : [];
+        const rawRooms = bb.bookingRooms || [];
 
         const mapped = rawRooms.map((r) => ({
           id: r.id,
@@ -145,55 +247,160 @@ export default function BookingEditModal({ editModal, closeEditModal, refreshBoo
           guestNames: parseList(r.guestNames),
         }));
 
-        console.log("🧱 Loaded rooms →", mapped);
         setRooms(mapped);
       });
     });
-  }, [editModal.isOpen]);
+  }, [editModal.isOpen, b?.id]);
 
+  // Handle DateRange selection
+  const handleRangeChange = (item) => {
+    const start = item.selection.startDate;
+    const end = item.selection.endDate;
+
+    setDateRange([item.selection]);
+
+    let ci = toISODate(start);
+    let co = toISODate(end);
+
+    if (new Date(co) <= new Date(ci)) {
+      co = addDays(ci, 1);
+    }
+
+    setBookingData((prev) => ({
+      ...prev,
+      checkIn: ci,
+      checkOut: co,
+      deadline:
+        prev.deadline && new Date(prev.deadline) >= new Date(ci)
+          ? addDays(ci, -1)
+          : prev.deadline,
+    }));
+  };
+
+  // Room update logic with auto-calc adults/children
   const updateRoom = (index, field, value) => {
-    console.log(`✏️ Updating room ${index} field "${field}" →`, value);
     setRooms((prev) =>
-      prev.map((room, i) =>
-        i === index ? { ...room, [field]: Array.isArray(value) ? [...value] : value } : room
-      )
+      prev.map((room, i) => {
+        if (i !== index) return room;
+
+        let updated = {
+          ...room,
+          [field]: Array.isArray(value) ? [...value] : value,
+        };
+
+        if (field === "guestNames" && Array.isArray(value)) {
+          updated.adults = 1 + value.length;
+        }
+
+        if (field === "childrenAges" && Array.isArray(value)) {
+          updated.children = value.length;
+        }
+
+        return updated;
+      })
     );
   };
 
   const addRoom = () => {
-    const newRoom = {
-      id: null,
-      roomTypeId: null,
-      adults: 1,
-      children: 0,
-      childrenAges: [],
-      inclusion: "",
-      leadGuestName: "",
-      guestNames: [],
-    };
-    console.log("➕ Added new room");
-    setRooms((prev) => [...prev, newRoom]);
+    setRooms((prev) => [
+      ...prev,
+      {
+        id: null,
+        roomTypeId: null,
+        adults: 1,
+        children: 0,
+        childrenAges: [],
+        inclusion: "",
+        leadGuestName: "",
+        guestNames: [],
+      },
+    ]);
   };
 
   const removeRoom = (index) => {
-    console.log("🗑️ Removing room index", index);
     setRooms((prev) => prev.filter((_, i) => i !== index));
   };
+
+  // Save
+  const [loading, setLoading] = useState(false);
+const validateRooms = () => {
+  for (let i = 0; i < rooms.length; i++) {
+    const r = rooms[i];
+
+    if (!r.roomTypeId) {
+      alert(`Room ${i + 1}: Please select a Room Type.`);
+      return false;
+    }
+
+    if (!r.leadGuestName || r.leadGuestName.trim() === "") {
+      alert(`Room ${i + 1}: Lead Guest Name is required.`);
+      return false;
+    }
+  }
+
+  return true;
+};
+// const validateRoomCounts = () => {
+//   for (let i = 0; i < rooms.length; i++) {
+//     const r = rooms[i];
+
+//     const adults = r.adults;
+//     const children = r.children;
+//     const guestNames = r.guestNames?.length || 0;
+
+//     const expectedGuestNames = (adults - 1) + children;
+
+//     if (guestNames !== expectedGuestNames) {
+//       alert(
+//         `Room ${i + 1}: Missing guest names.\n\n` +
+//         `Adults: ${adults}\n` +
+//         `Children: ${children}\n\n` +
+//         `Required guest names: ${expectedGuestNames}\n` +
+//         `Added guest names: ${guestNames}\n\n` +
+//         `Please add all remaining adult and child names.`
+//       );
+//       return false;
+//     }
+
+//     // Children ages must match children count
+//     if ((r.childrenAges?.length || 0) !== children) {
+//       alert(
+//         `Room ${i + 1}: Children ages count does not match.\n\n` +
+//         `Children: ${children}\n` +
+//         `Ages added: ${r.childrenAges.length}\n\n` +
+//         `Please enter all ages.`
+//       );
+//       return false;
+//     }
+//   }
+
+//   return true;
+// };
 
   const handleSave = async () => {
     try {
       setLoading(true);
-      console.log("💾 Preparing save payload with current rooms:", rooms);
+//       if (!validateRooms() || !validateRoomCounts()) {
+//   return;
+// }
+
+      if (!validateRooms()) {
+        return; // stop saving
+      }
 
       const cleanedRooms = rooms.map((r) => ({
         id: sanitizeId(r.id),
         roomTypeId: sanitizeId(r.roomTypeId),
         adults: Number(r.adults),
         children: Number(r.children),
-        childrenAges: r.childrenAges && Array.isArray(r.childrenAges) ? r.childrenAges : [],
+        childrenAges: (r.childrenAges || [])
+          .map((x) => Number(x))
+          .filter((x) => !isNaN(x)),
         inclusion: r.inclusion || "",
         leadGuestName: r.leadGuestName || "",
-        guestNames: r.guestNames && Array.isArray(r.guestNames) ? r.guestNames : [],
+        guestNames: (r.guestNames || [])
+          .map((x) => String(x).trim())
+          .filter((x) => x.length > 0),
       }));
 
       const payload = {
@@ -201,32 +408,65 @@ export default function BookingEditModal({ editModal, closeEditModal, refreshBoo
         agencyId: sanitizeId(fullBooking?.agencyId),
         supplierId: sanitizeId(fullBooking?.supplierId),
         agencyStaffId: sanitizeId(fullBooking?.agencyStaffId),
-        checkIn: bookingData.checkIn ? new Date(bookingData.checkIn).toISOString() : null,
-        checkOut: bookingData.checkOut ? new Date(bookingData.checkOut).toISOString() : null,
-        deadline: bookingData.deadline ? new Date(bookingData.deadline).toISOString() : null,
+        checkIn: bookingData.checkIn
+          ? new Date(bookingData.checkIn).toISOString()
+          : null,
+        checkOut: bookingData.checkOut
+          ? new Date(bookingData.checkOut).toISOString()
+          : null,
+        deadline: bookingData.deadline
+          ? new Date(bookingData.deadline).toISOString()
+          : null,
         specialRequest: bookingData.specialRequest,
         numberOfRooms: cleanedRooms.length,
-        numberOfPeople: cleanedRooms.reduce((sum, r) => sum + r.adults + r.children, 0),
+        numberOfPeople: cleanedRooms.reduce(
+          (sum, r) => sum + r.adults + r.children,
+          0
+        ),
         bookingRooms: cleanedRooms,
       };
 
-      console.log("🧾 Payload to send:", JSON.stringify(payload, null, 2));
+      console.log(
+        "🔥 FINAL PAYLOAD SENT TO BACKEND:",
+        JSON.stringify(payload, null, 2)
+      );
+
       await bookingApi.updateBooking(b.id, payload);
 
+      // Show success message
+      setShowSuccessMessage(true);
+      
       refreshBookings();
-      closeEditModal();
+      
+      // Close modal after a short delay to show the success message
+      setTimeout(() => {
+        closeEditModal();
+      }, 1500);
+      
     } catch (err) {
-      console.error("❌ SAVE ERROR:", err);
+      console.error("SAVE ERROR:", err);
       alert("Failed to update booking!");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleCloseSuccessMessage = () => {
+    setShowSuccessMessage(false);
+  };
+
   if (!editModal.isOpen) return null;
 
   return (
     <div className="edit-modal">
+      {/* Success Message Box */}
+      {showSuccessMessage && (
+        <SuccessMessageBox 
+          message="Booking updated successfully!" 
+          onClose={handleCloseSuccessMessage}
+        />
+      )}
+      
       <div className="edit-container">
         <div className="edit-header">
           <h2>Edit Booking</h2>
@@ -234,49 +474,82 @@ export default function BookingEditModal({ editModal, closeEditModal, refreshBoo
         </div>
 
         <div className="edit-body">
-          {/* --- Booking Info --- */}
+          {/* Basic Info */}
           <div className="row-3">
             <div className="input-block">
               <label>Agency</label>
-              <input type="text" value={fullBooking?.agencyName || ""} disabled />
+              <input
+                type="text"
+                value={fullBooking?.agencyName || ""}
+                disabled
+              />
             </div>
             <div className="input-block">
               <label>Hotel</label>
-              <input type="text" value={fullBooking?.hotelName || ""} disabled />
+              <input
+                type="text"
+                value={fullBooking?.hotelName || ""}
+                disabled
+              />
             </div>
             <div className="input-block">
               <label>Supplier</label>
-              <input type="text" value={fullBooking?.supplierName || ""} disabled />
+              <input
+                type="text"
+                value={fullBooking?.supplierName || ""}
+                disabled
+              />
             </div>
           </div>
 
-          {/* --- Dates --- */}
+          {/* Date Range UI */}
           <div className="row-3">
             <div className="input-block">
-              <label>Check-In</label>
-              <input
-                type="datetime-local"
-                value={bookingData.checkIn}
-                min={today}
-                onChange={(e) => setBookingData({ ...bookingData, checkIn: e.target.value })}
-              />
+              <label>Check-In *</label>
+              <div
+                className="booking-clickable-date-input"
+                onClick={() => setShowCalendar((s) => !s)}
+              >
+                {bookingData.checkIn
+                  ? format(new Date(bookingData.checkIn), "d MMM yyyy")
+                  : "Select"}
+              </div>
             </div>
+
             <div className="input-block">
-              <label>Check-Out</label>
-              <input
-                type="datetime-local"
-                value={bookingData.checkOut}
-                min={bookingData.checkIn || today}
-                onChange={(e) => setBookingData({ ...bookingData, checkOut: e.target.value })}
-              />
+              <label>Check-Out *</label>
+              <div
+                className="booking-clickable-date-input"
+                onClick={() => setShowCalendar((s) => !s)}
+              >
+                {bookingData.checkOut
+                  ? format(new Date(bookingData.checkOut), "d MMM yyyy")
+                  : "Select"}
+              </div>
             </div>
+
             <div className="input-block">
               <label>Nights</label>
-              <input type="number" value={nights} disabled />
+              <input type="text" disabled value={nights} />
             </div>
           </div>
 
-          {/* --- Room Table --- */}
+          {/* Date Range Popup */}
+          {showCalendar && (
+            <div className="booking-date-range-wrapper" ref={calendarRef}>
+              <DateRange
+                ranges={dateRange}
+                onChange={handleRangeChange}
+                months={1}
+                direction="horizontal"
+                moveRangeOnFirstSelection={false}
+                minDate={new Date()}
+                rangeColors={["#2a5adf"]}
+              />
+            </div>
+          )}
+
+          {/* Rooms Table */}
           <div className="room-table-wrapper">
             <table className="room-table">
               <thead>
@@ -296,10 +569,14 @@ export default function BookingEditModal({ editModal, closeEditModal, refreshBoo
                 {rooms.map((r, i) => (
                   <tr key={i}>
                     <td>{i + 1}</td>
+
+                    {/* Type */}
                     <td>
                       <select
                         value={r.roomTypeId ?? ""}
-                        onChange={(e) => updateRoom(i, "roomTypeId", sanitizeId(e.target.value))}
+                        onChange={(e) =>
+                          updateRoom(i, "roomTypeId", sanitizeId(e.target.value))
+                        }
                       >
                         <option value="">Select</option>
                         {roomTypes.map((rt) => (
@@ -309,53 +586,110 @@ export default function BookingEditModal({ editModal, closeEditModal, refreshBoo
                         ))}
                       </select>
                     </td>
+
+                    {/* Adults */}
                     <td>
                       <input
                         type="number"
                         min="1"
                         value={r.adults}
-                        onChange={(e) => updateRoom(i, "adults", Number(e.target.value))}
+                        onChange={(e) =>
+                          updateRoom(i, "adults", Number(e.target.value))
+                        }
                       />
                     </td>
+
+                    {/* Children */}
                     <td>
                       <input
                         type="number"
                         min="0"
                         value={r.children}
-                        onChange={(e) => updateRoom(i, "children", Number(e.target.value))}
+                        onChange={(e) =>
+                          updateRoom(i, "children", Number(e.target.value))
+                        }
                       />
                     </td>
-                    <td>
-                      <ChipList
-                        values={r.childrenAges}
-                        onChange={(newVal) => updateRoom(i, "childrenAges", newVal)}
-                      />
+
+                    {/* Children Ages */}
+                    <td style={{ position: "relative" }}>
+                      <div
+                        className="collapsed-chip-display"
+                        onClick={() => setActiveEditor(`ages-${i}`)}
+                      >
+                        {r.childrenAges.length
+                          ? r.childrenAges.join(", ")
+                          : "—"}
+                      </div>
+
+                      {activeEditor === `ages-${i}` && (
+                        <div className="chip-editor-popup">
+                          <ChipList
+                            values={r.childrenAges}
+                            onChange={(newVal) =>
+                              updateRoom(i, "childrenAges", newVal)
+                            }
+                            type="age"
+                            onStartTyping={() => setIsTypingChip(true)}
+                            onStopTyping={() => setIsTypingChip(false)}
+                          />
+                        </div>
+                      )}
                     </td>
+
+                    {/* Lead Guest */}
                     <td>
                       <input
                         type="text"
                         value={r.leadGuestName}
-                        onChange={(e) => updateRoom(i, "leadGuestName", e.target.value)}
+                        onChange={(e) =>
+                          updateRoom(i, "leadGuestName", e.target.value)
+                        }
                       />
                     </td>
-                    <td>
-                      <ChipList
-                        values={r.guestNames}
-                        onChange={(newVal) => updateRoom(i, "guestNames", newVal)}
-                      />
+
+                    {/* Guest Names */}
+                    <td style={{ position: "relative" }}>
+                      <div
+                        className="collapsed-chip-display"
+                        onClick={() => setActiveEditor(`guests-${i}`)}
+                      >
+                        {r.guestNames.length
+                          ? r.guestNames.join(", ")
+                          : "—"}
+                      </div>
+
+                      {activeEditor === `guests-${i}` && (
+                        <div className="chip-editor-popup">
+                          <ChipList
+                            values={r.guestNames}
+                            onChange={(newVal) =>
+                              updateRoom(i, "guestNames", newVal)
+                            }
+                            type="guest"
+                            onStartTyping={() => setIsTypingChip(true)}
+                            onStopTyping={() => setIsTypingChip(false)}
+                          />
+                        </div>
+                      )}
                     </td>
+
+                    {/* Inclusion */}
                     <td>
                       <input
                         type="text"
                         value={r.inclusion}
-                        onChange={(e) => updateRoom(i, "inclusion", e.target.value)}
+                        onChange={(e) =>
+                          updateRoom(i, "inclusion", e.target.value)
+                        }
                       />
                     </td>
+
+                    {/* Remove */}
                     <td>
                       <button
                         className="remove-room-btn"
                         onClick={() => removeRoom(i)}
-                        title="Remove this room"
                       >
                         🗑️
                       </button>
@@ -372,17 +706,17 @@ export default function BookingEditModal({ editModal, closeEditModal, refreshBoo
             </div>
           </div>
 
-          {/* --- Notes --- */}
+          {/* Special Request + Deadline */}
           <div className="split-row">
             <div className="special-block">
               <label>Special Request</label>
               <textarea
                 value={bookingData.specialRequest}
                 onChange={(e) =>
-                  setBookingData({
-                    ...bookingData,
+                  setBookingData((prev) => ({
+                    ...prev,
                     specialRequest: e.target.value,
-                  })
+                  }))
                 }
               ></textarea>
             </div>
@@ -390,14 +724,25 @@ export default function BookingEditModal({ editModal, closeEditModal, refreshBoo
             <div className="deadline-block">
               <label>Deadline</label>
               <input
-                type="datetime-local"
+                type="date"
                 value={bookingData.deadline}
-                onChange={(e) => setBookingData({ ...bookingData, deadline: e.target.value })}
+                max={
+                  bookingData.checkIn
+                    ? addDays(bookingData.checkIn, -1)
+                    : undefined
+                }
+                onChange={(e) =>
+                  setBookingData((prev) => ({
+                    ...prev,
+                    deadline: e.target.value,
+                  }))
+                }
               />
             </div>
           </div>
         </div>
 
+        {/* Footer */}
         <div className="edit-footer">
           <button onClick={closeEditModal}>Cancel</button>
           <button disabled={loading} onClick={handleSave}>
